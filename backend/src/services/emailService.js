@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const WebsiteSettings = require("../models/WebsiteSettings");
 const {
   EMAIL_FROM,
   ADMIN_NOTIFICATION_EMAIL,
@@ -6,7 +7,8 @@ const {
   SMTP_PORT,
   SMTP_SECURE,
   SMTP_USER,
-  SMTP_PASS
+  SMTP_PASS,
+  HAS_REAL_SMTP
 } = require("../config/env");
 
 let transporter;
@@ -16,8 +18,8 @@ function getTransporter() {
     return transporter;
   }
 
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    throw new Error("SMTP configuration is incomplete. Set SMTP_HOST, SMTP_USER, and SMTP_PASS.");
+  if (!HAS_REAL_SMTP) {
+    throw new Error("SMTP configuration is incomplete. Set real SMTP_HOST, SMTP_USER, and SMTP_PASS values.");
   }
 
   transporter = nodemailer.createTransport({
@@ -45,23 +47,6 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
   });
 }
 
-async function sendAdminOtpEmail(email, otpCode, purpose = "login") {
-  const subject = purpose === "verify_email" ? "Verify your admin email" : "Your Tara Maa admin OTP";
-  const text = purpose === "verify_email"
-    ? `Your verification OTP is ${otpCode}. It expires in 10 minutes.`
-    : `Your login OTP is ${otpCode}. It expires in 10 minutes.`;
-  const html = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
-      <h2>${purpose === "verify_email" ? "Verify Admin Email" : "Admin Login OTP"}</h2>
-      <p>${purpose === "verify_email" ? "Use the code below to verify your admin email address." : "Use the code below to complete your admin login."}</p>
-      <p style="font-size: 28px; font-weight: 700; letter-spacing: 6px;">${otpCode}</p>
-      <p>This code expires in 10 minutes.</p>
-    </div>
-  `;
-
-  return sendEmail({ to: email, subject, text, html });
-}
-
 async function sendPasswordResetEmail(email, resetToken) {
   const subject = "Tara Maa admin password reset";
   const text = `Your password reset token is ${resetToken}. It expires in 30 minutes.`;
@@ -77,9 +62,19 @@ async function sendPasswordResetEmail(email, resetToken) {
   return sendEmail({ to: email, subject, text, html });
 }
 
+async function getNotificationEmail() {
+  const settings = await WebsiteSettings.findOne({ siteKey: "primary" })
+    .select("masterEmail contactInfo.email")
+    .lean();
+
+  return settings?.masterEmail || ADMIN_NOTIFICATION_EMAIL || settings?.contactInfo?.email || "";
+}
+
 async function sendQuoteRequestEmail(quoteRequest) {
-  if (!ADMIN_NOTIFICATION_EMAIL) {
-    throw new Error("ADMIN_NOTIFICATION_EMAIL is not configured.");
+  const notificationEmail = await getNotificationEmail();
+
+  if (!notificationEmail) {
+    throw new Error("Notification email is not configured.");
   }
 
   const subject = `New quote request from ${quoteRequest.name}`;
@@ -105,7 +100,7 @@ async function sendQuoteRequestEmail(quoteRequest) {
   `;
 
   return sendEmail({
-    to: ADMIN_NOTIFICATION_EMAIL,
+    to: notificationEmail,
     replyTo: quoteRequest.email,
     subject,
     text,
@@ -113,9 +108,51 @@ async function sendQuoteRequestEmail(quoteRequest) {
   });
 }
 
+function buildQuoteReply({ name, message }) {
+  const safeName = name?.trim() || "Customer";
+  const safeMessage = message?.trim() || "Thank you for your enquiry regarding the requested product. We have received your request and will share the details with you shortly.";
+  const alreadyTemplated = /^dear\b/i.test(safeMessage) && /team\s+tms/i.test(safeMessage);
+
+  if (alreadyTemplated) {
+    return {
+      subject: `Response to your enquiry from Tara Maa Solutions`,
+      text: safeMessage,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111827;">
+          <p>${safeMessage.replace(/\n/g, "<br/>")}</p>
+        </div>
+      `
+    };
+  }
+
+  return {
+    subject: `Response to your enquiry from Tara Maa Solutions`,
+    text: `Dear ${safeName},\n\n${safeMessage}\n\nThank you for contacting us.\n\nRegards,\nTeam TMS`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111827;">
+        <p>Dear ${safeName},</p>
+        <p>${safeMessage.replace(/\n/g, "<br/>")}</p>
+        <p>Thank you for contacting us.</p>
+        <p>Regards,<br/>Team TMS</p>
+      </div>
+    `
+  };
+}
+
+async function sendQuoteResponseEmail({ to, name, subject, message }) {
+  const composed = buildQuoteReply({ name, message });
+  return sendEmail({
+    to,
+    subject: subject?.trim() || composed.subject,
+    text: composed.text,
+    html: composed.html
+  });
+}
+
 module.exports = {
   sendEmail,
-  sendAdminOtpEmail,
   sendPasswordResetEmail,
-  sendQuoteRequestEmail
+  sendQuoteRequestEmail,
+  sendQuoteResponseEmail,
+  buildQuoteReply
 };

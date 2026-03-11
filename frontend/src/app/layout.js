@@ -1,5 +1,6 @@
 import "./globals.css";
-import ThemeToggle from "../components/ThemeToggle";
+import ToolsDock from "../components/ToolsDock";
+import SiteHeader from "../components/SiteHeader";
 import { SITE_NAME, SITE_URL, DEFAULT_DESCRIPTION } from "../lib/seo";
 
 export const metadata = {
@@ -65,7 +66,8 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className="bg-siteBg text-siteText transition-colors duration-300">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <ThemeToggle />
+        <SiteHeader />
+        <ToolsDock />
         {children}
       </body>
     </html>

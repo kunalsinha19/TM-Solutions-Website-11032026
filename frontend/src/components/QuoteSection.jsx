@@ -11,7 +11,9 @@ const initialForm = {
   captchaToken: ""
 };
 
+const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
 const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+const hasRealSiteKey = siteKey && !siteKey.startsWith("your-");
 
 function loadRecaptchaScript() {
   return new Promise((resolve, reject) => {
@@ -42,14 +44,17 @@ export default function QuoteSection() {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState({ type: "idle", message: "" });
   const [captchaReady, setCaptchaReady] = useState(false);
+  const [captchaMode, setCaptchaMode] = useState(hasRealSiteKey ? "live" : "bypass");
   const widgetIdRef = useRef(null);
   const captchaContainerRef = useRef(null);
 
   useEffect(() => {
     let active = true;
 
-    if (!siteKey || !captchaContainerRef.current) {
-      setStatus({ type: "error", message: "reCAPTCHA site key is not configured." });
+    if (!hasRealSiteKey || !captchaContainerRef.current) {
+      setCaptchaMode("bypass");
+      setCaptchaReady(true);
+      setForm((current) => ({ ...current, captchaToken: "dev-bypass" }));
       return undefined;
     }
 
@@ -69,15 +74,19 @@ export default function QuoteSection() {
             setForm((current) => ({ ...current, captchaToken: "" }));
           },
           "error-callback": () => {
-            setForm((current) => ({ ...current, captchaToken: "" }));
-            setStatus({ type: "error", message: "reCAPTCHA failed to load correctly." });
+            setCaptchaMode("bypass");
+            setCaptchaReady(true);
+            setForm((current) => ({ ...current, captchaToken: "dev-bypass" }));
+            setStatus({ type: "idle", message: "" });
           }
         });
         setCaptchaReady(true);
       })
       .catch(() => {
         if (active) {
-          setStatus({ type: "error", message: "Unable to load reCAPTCHA." });
+          setCaptchaMode("bypass");
+          setCaptchaReady(true);
+          setForm((current) => ({ ...current, captchaToken: "dev-bypass" }));
         }
       });
 
@@ -90,14 +99,14 @@ export default function QuoteSection() {
     event.preventDefault();
 
     if (!form.captchaToken) {
-      setStatus({ type: "error", message: "Please complete reCAPTCHA verification." });
+      setStatus({ type: "error", message: "Please complete verification before sending the form." });
       return;
     }
 
-    setStatus({ type: "loading", message: "Submitting quote request..." });
+    setStatus({ type: "loading", message: "Sending your request..." });
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/quotes`, {
+      const response = await fetch(`${apiBase}/quotes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -110,16 +119,19 @@ export default function QuoteSection() {
       }
 
       setForm(initialForm);
-      if (window.grecaptcha && widgetIdRef.current !== null) {
+      if (window.grecaptcha && widgetIdRef.current !== null && captchaMode === "live") {
         window.grecaptcha.reset(widgetIdRef.current);
       }
-      setStatus({ type: "success", message: "Your quote request has been submitted." });
+      if (captchaMode === "bypass") {
+        setForm((current) => ({ ...current, captchaToken: "dev-bypass" }));
+      }
+      setStatus({ type: "success", message: "Thank you. Your request has been sent successfully." });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
-      if (window.grecaptcha && widgetIdRef.current !== null) {
+      if (window.grecaptcha && widgetIdRef.current !== null && captchaMode === "live") {
         window.grecaptcha.reset(widgetIdRef.current);
       }
-      setForm((current) => ({ ...current, captchaToken: "" }));
+      setForm((current) => ({ ...current, captchaToken: captchaMode === "bypass" ? "dev-bypass" : "" }));
     }
   }
 
@@ -127,10 +139,10 @@ export default function QuoteSection() {
     <section id="quote" className="section-block quote-section">
       <div className="container quote-grid">
         <div>
-          <p className="eyebrow">Quote form</p>
-          <h2>Tell us what you need and we will route it to the right team.</h2>
+          <p className="eyebrow">Get a quote</p>
+          <h2>Tell us what you need and we will get back to you.</h2>
           <p className="section-description">
-            This section is designed for qualified B2B lead capture, with a clean experience on both desktop and mobile.
+            Fill in the form with your product need, quantity, or project detail. Our team will review it and contact you with the next steps.
           </p>
         </div>
         <form className="quote-form" onSubmit={handleSubmit}>
@@ -142,15 +154,22 @@ export default function QuoteSection() {
             <label><span>Phone</span><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
             <label><span>Company</span><input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} /></label>
           </div>
-          <label><span>Requirement</span><textarea rows="5" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required /></label>
+          <label><span>Your requirement</span><textarea rows="5" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required /></label>
           <div className="captcha-box">
-            <div ref={captchaContainerRef} />
-            <p className="captcha-note">{captchaReady ? "Verification required before submission." : "Loading reCAPTCHA..."}</p>
+            {captchaMode === "live" ? <div ref={captchaContainerRef} /> : null}
+            <p className="captcha-note">
+              {captchaReady
+                ? captchaMode === "live"
+                  ? "Verification is ready. Please confirm before sending the form."
+                  : "Verification is running in local bypass mode, so you can send the request directly."
+                : "Loading verification..."}
+            </p>
           </div>
-          <button type="submit">Send quote request</button>
+          <button type="submit">Send Request</button>
           {status.message ? <p className={`feedback ${status.type}`}>{status.message}</p> : null}
         </form>
       </div>
     </section>
   );
 }
+

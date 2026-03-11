@@ -9,5 +9,6 @@ router.post("/", quoteController.createQuoteRequest);
 router.get("/", protect, quoteController.getQuoteRequests);
 router.get("/:id", protect, validateObjectId(), quoteController.getQuoteRequestById);
 router.put("/:id", protect, validateObjectId(), quoteController.updateQuoteRequest);
+router.post("/:id/reply", protect, validateObjectId(), quoteController.replyToQuoteRequest);
 
 module.exports = router;

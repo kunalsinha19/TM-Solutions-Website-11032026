@@ -3,16 +3,16 @@ import SectionHeading from "./SectionHeading";
 
 const services = [
   {
-    title: "Catalog-driven discovery",
-    description: "Organized product presentation that helps procurement and operations teams compare fit fast."
+    title: "Easy product search",
+    description: "Find products by category and quickly understand what they are used for."
   },
   {
-    title: "Technical consultation",
-    description: "We translate requirements into product recommendations with practical, business-ready guidance."
+    title: "Helpful guidance",
+    description: "If you are not sure which product fits your need, we help you choose the right option."
   },
   {
-    title: "Quote acceleration",
-    description: "A direct inquiry funnel that captures intent, validates leads, and reduces back-and-forth."
+    title: "Quick quote support",
+    description: "Send your requirement and our team will get back to you with the next steps."
   }
 ];
 
@@ -22,8 +22,8 @@ export default function WhatWeDoSection() {
       <div className="container">
         <SectionHeading
           eyebrow="What we do"
-          title="We connect product expertise with a faster digital sales process."
-          description="The website is built to educate, segment, and convert B2B buyers without overwhelming them."
+          title="We make industrial buying simpler for your business."
+          description="You do not need to search through confusing technical pages. We show products clearly and help you reach the right team quickly."
         />
         <div className="feature-grid">
           {services.map((service, index) => (

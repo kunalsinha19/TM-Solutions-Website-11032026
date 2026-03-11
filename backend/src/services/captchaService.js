@@ -1,11 +1,21 @@
-const { CAPTCHA_SECRET } = require("../config/env");
+const { CAPTCHA_SECRET, NODE_ENV, CAPTCHA_BYPASS, HAS_REAL_CAPTCHA } = require("../config/env");
 
 async function validateCaptcha(token, remoteIp) {
-  if (!CAPTCHA_SECRET || !token) {
+  const devBypassAllowed = NODE_ENV !== "production" || CAPTCHA_BYPASS;
+
+  if (!HAS_REAL_CAPTCHA) {
+    return {
+      success: devBypassAllowed,
+      provider: "google-recaptcha",
+      reason: devBypassAllowed ? "bypassed-local-development" : "missing-secret-or-site-key"
+    };
+  }
+
+  if (!token) {
     return {
       success: false,
       provider: "google-recaptcha",
-      reason: "missing-secret-or-token"
+      reason: "missing-token"
     };
   }
 

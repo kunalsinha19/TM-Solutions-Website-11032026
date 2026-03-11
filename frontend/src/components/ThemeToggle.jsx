@@ -5,8 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 const STORAGE_KEY = "tara-maa-theme";
 
 function applyTheme(nextTheme) {
-  const root = document.documentElement;
-  root.classList.toggle("dark", nextTheme === "dark");
+  document.documentElement.classList.toggle("dark", nextTheme === "dark");
 }
 
 function getPreferredTheme() {
@@ -16,6 +15,23 @@ function getPreferredTheme() {
   }
 
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon-svg">
+      <circle cx="12" cy="12" r="4.25" fill="currentColor" />
+      <path d="M12 2.5v2.2M12 19.3v2.2M4.7 4.7l1.6 1.6M17.7 17.7l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.7 19.3l1.6-1.6M17.7 6.3l1.6-1.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon-svg">
+      <path d="M19.2 14.8A7.9 7.9 0 0 1 9.2 4.8a8.7 8.7 0 1 0 10 10Z" fill="currentColor" />
+    </svg>
+  );
 }
 
 export default function ThemeToggle() {
@@ -49,14 +65,9 @@ export default function ThemeToggle() {
   }
 
   return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={toggleTheme}
-      className="fixed right-4 top-4 z-50 inline-flex items-center gap-2 rounded-full border border-siteBorder bg-white/80 px-4 py-2 text-sm font-medium text-slate-900 shadow-lg backdrop-blur transition hover:-translate-y-0.5 dark:border-white/10 dark:bg-slate-900/75 dark:text-white"
-    >
-      <span>{theme === "dark" ? "Light" : "Dark"}</span>
-      <span className="text-xs uppercase tracking-[0.2em]">{theme === "dark" ? "Sun" : "Moon"}</span>
+    <button type="button" aria-label={label} onClick={toggleTheme} className="theme-toggle">
+      <span className="theme-toggle-icon" aria-hidden="true">{theme === "dark" ? <SunIcon /> : <MoonIcon />}</span>
+      <span className="theme-toggle-text">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
     </button>
   );
 }

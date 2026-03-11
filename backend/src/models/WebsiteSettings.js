@@ -160,8 +160,9 @@ const websiteSettingsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-websiteSettingsSchema.index({ siteKey: 1 }, { unique: true });
 websiteSettingsSchema.index({ siteName: 1 });
 websiteSettingsSchema.index({ defaultMetaTitle: 1, defaultMetaDescription: 1 });
 
 module.exports = mongoose.model("WebsiteSettings", websiteSettingsSchema);
+
+

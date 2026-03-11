@@ -244,6 +244,29 @@ function validateSettingsPayload(req, _res, next) {
   return next();
 }
 
+function validateSettingsLogoPayload(req, _res, next) {
+  const payload = req.body || {};
+  const errors = [];
+
+  if (!isObject(payload)) {
+    return next(new ApiError(400, "Request body must be an object"));
+  }
+
+  validateStringField(payload.logoUrl, "logoUrl", errors, {
+    required: true,
+    allowEmpty: false,
+    max: 500,
+    absoluteUrl: true
+  });
+
+  if (errors.length > 0) {
+    return next(new ApiError(400, "Settings logo validation failed", errors));
+  }
+
+  return next();
+}
+
 module.exports = {
-  validateSettingsPayload
+  validateSettingsPayload,
+  validateSettingsLogoPayload
 };

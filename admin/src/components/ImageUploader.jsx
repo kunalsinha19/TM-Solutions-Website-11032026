@@ -1,5 +1,19 @@
 import { useRef } from "react";
 
+const FRONTEND_ASSET_BASE = (import.meta.env.VITE_FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+
+function resolvePreviewSrc(image) {
+  if (!image) {
+    return "https://placehold.co/800x600?text=Image";
+  }
+
+  if (/^(https?:|data:)/i.test(image)) {
+    return image;
+  }
+
+  return `${FRONTEND_ASSET_BASE}${image.startsWith("/") ? image : `/${image}`}`;
+}
+
 export default function ImageUploader({ images, setImages }) {
   const inputRef = useRef(null);
 
@@ -51,11 +65,13 @@ export default function ImageUploader({ images, setImages }) {
       <div className="image-grid">
         {(images || []).map((image, index) => (
           <div key={`${image}-${index}`} className="image-card">
-            <img src={image || "https://placehold.co/320x200?text=Image"} alt="Product preview" />
+            <div className="image-preview-frame">
+              <img src={resolvePreviewSrc(image)} alt="Product preview" />
+            </div>
             <input
               value={image}
               onChange={(event) => updateUrl(index, event.target.value)}
-              placeholder="https://example.com/image.jpg or uploaded base64"
+              placeholder="https://example.com/image.jpg, /products/image.jpg, or uploaded base64"
             />
             <button type="button" className="danger" onClick={() => removeImage(index)}>
               Remove

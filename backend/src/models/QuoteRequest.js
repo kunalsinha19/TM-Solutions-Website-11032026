@@ -60,6 +60,22 @@ const quoteRequestSchema = new mongoose.Schema(
       enum: ["new", "reviewed", "closed"],
       default: "new",
       index: true
+    },
+    replySubject: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 200
+    },
+    replyMessage: {
+      type: String,
+      default: "",
+      maxlength: 5000
+    },
+    repliedAt: {
+      type: Date,
+      default: null,
+      index: true
     }
   },
   { timestamps: true }

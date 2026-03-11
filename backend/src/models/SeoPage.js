@@ -63,10 +63,10 @@ const seoPageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-seoPageSchema.index({ slug: 1 }, { unique: true });
 seoPageSchema.index({ status: 1, slug: 1 });
 seoPageSchema.index({ status: 1, updatedAt: -1 });
 seoPageSchema.index({ metaTitle: 1, metaDescription: 1 });
 seoPageSchema.index({ title: "text", metaTitle: "text", metaDescription: "text" });
 
 module.exports = mongoose.model("SeoPage", seoPageSchema);
+

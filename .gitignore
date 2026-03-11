@@ -6,3 +6,5 @@ coverage
 .env.local
 .turbo
 *.log
+backend/uploads
+frontend/tmp_contains.txt

@@ -3,28 +3,9 @@ const bcrypt = require("bcryptjs");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/apiError");
 const { generateToken } = require("../utils/jwt");
-const generateOtp = require("../utils/generateOtp");
 const Admin = require("../models/Admin");
-const OtpVerification = require("../models/OtpVerification");
 const PasswordResetToken = require("../models/PasswordResetToken");
-const {
-  sendAdminOtpEmail,
-  sendPasswordResetEmail
-} = require("../services/emailService");
-
-const issueOtp = async (email, purpose) => {
-  const code = generateOtp();
-  await OtpVerification.create({
-    email,
-    code,
-    purpose,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-  });
-
-  await sendAdminOtpEmail(email, code, purpose);
-
-  return code;
-};
+const { sendPasswordResetEmail } = require("../services/emailService");
 
 exports.registerAdmin = asyncHandler(async (req, res) => {
   const { name, email, backupEmail, password } = req.body;
@@ -35,43 +16,27 @@ exports.registerAdmin = asyncHandler(async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const admin = await Admin.create({ name, email, backupEmail, passwordHash });
-  await issueOtp(admin.email, "verify_email");
+  const admin = await Admin.create({
+    name,
+    email,
+    backupEmail,
+    passwordHash,
+    isEmailVerified: true,
+    isActive: true
+  });
 
   res.status(201).json({
     success: true,
-    message: "Admin created. Verification OTP sent to email.",
+    message: "Admin created successfully.",
     adminId: admin._id
   });
-});
-
-exports.verifyEmailOtp = asyncHandler(async (req, res) => {
-  const { email, otp } = req.body;
-  const record = await OtpVerification.findOne({
-    email,
-    code: otp,
-    purpose: "verify_email",
-    used: false,
-    expiresAt: { $gt: new Date() }
-  }).sort({ createdAt: -1 });
-
-  if (!record) {
-    throw new ApiError(400, "Invalid or expired OTP");
-  }
-
-  record.used = true;
-  await record.save();
-
-  await Admin.findOneAndUpdate({ email }, { isEmailVerified: true });
-
-  res.json({ success: true, message: "Email verified successfully" });
 });
 
 exports.login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const admin = await Admin.findOne({ email });
 
-  if (!admin) {
+  if (!admin || !admin.isActive) {
     throw new ApiError(401, "Invalid credentials");
   }
 
@@ -80,44 +45,19 @@ exports.login = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid credentials");
   }
 
-  if (!admin.isEmailVerified) {
-    throw new ApiError(403, "Email is not verified yet");
-  }
-
-  await issueOtp(admin.email, "login");
-
-  res.json({ success: true, message: "Login OTP sent to admin email" });
-});
-
-exports.verifyLoginOtp = asyncHandler(async (req, res) => {
-  const { email, otp } = req.body;
-  const record = await OtpVerification.findOne({
-    email,
-    code: otp,
-    purpose: "login",
-    used: false,
-    expiresAt: { $gt: new Date() }
-  }).sort({ createdAt: -1 });
-
-  if (!record) {
-    throw new ApiError(400, "Invalid or expired OTP");
-  }
-
-  record.used = true;
-  await record.save();
-
-  const admin = await Admin.findOneAndUpdate(
-    { email },
+  const updatedAdmin = await Admin.findByIdAndUpdate(
+    admin._id,
     { lastLoginAt: new Date() },
     { new: true }
   ).select("-passwordHash");
 
-  const token = generateToken({ id: admin._id, email: admin.email, role: admin.role });
+  const token = generateToken({ id: updatedAdmin._id, email: updatedAdmin.email, role: updatedAdmin.role });
 
   res.json({
     success: true,
     token,
-    admin
+    admin: updatedAdmin,
+    message: "Login successful"
   });
 });
 

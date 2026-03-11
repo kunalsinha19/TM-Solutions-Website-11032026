@@ -8,17 +8,55 @@ export default function AboutSection() {
         <AnimatedReveal>
           <SectionHeading
             eyebrow="About us"
-            title="A business-focused product company with a strong digital front door."
-            description="Tara Maa Solutions is positioned to serve industrial and enterprise buyers with responsive service, structured product communication, and dependable lead handling."
+            title="A modern B2B platform for industrial printing, finishing, and office automation."
+            description="Tara Maa Solutions helps businesses discover, compare, and source reliable equipment, consumables, and workflow tools with clarity and confidence."
           />
         </AnimatedReveal>
         <AnimatedReveal delay={0.1} className="about-panel">
-          <ul>
-            <li>Built to support scalable B2B inquiries</li>
-            <li>Designed for SEO landing pages and product visibility</li>
-            <li>Responsive across desktop, tablet, and mobile</li>
-            <li>Optimized for quote collection and follow-up</li>
-          </ul>
+          <div className="about-copy">
+            <p>
+              We believe the future of industrial procurement is digital, transparent, and data-driven. Our platform blends technology,
+              industry expertise, and guided quote workflows so teams can make smarter buying decisions and modernize production environments.
+            </p>
+            <p>
+              Beyond product listings, we aim to be a knowledge and innovation hub for the printing and finishing industry by offering
+              insights, analytics, and structured guidance that reduce guesswork and improve outcomes.
+            </p>
+            <p>
+              We curate dependable machines, lamination systems, finishing equipment, sublimation tools, office automation products,
+              and industrial consumables from trusted manufacturers and suppliers. The goal is simple: make procurement clear,
+              faster, and more predictable for every business.
+            </p>
+            <div className="about-mission">
+              <div>
+                <p className="eyebrow">Vision</p>
+                <p>
+                  To become a trusted global platform for industrial printing, finishing, and automation solutions, enabling businesses
+                  to grow through innovation, accessibility, and data-driven procurement.
+                </p>
+              </div>
+              <div>
+                <p className="eyebrow">Mission</p>
+                <ul>
+                  <li>Simplify the procurement of industrial equipment and consumables.</li>
+                  <li>Connect manufacturers, distributors, and businesses through one unified marketplace.</li>
+                  <li>Provide technology-driven tools and analytics for smarter operational decisions.</li>
+                  <li>Build a reliable, transparent ecosystem for the printing and finishing industry.</li>
+                </ul>
+              </div>
+            </div>
+            <div className="about-offer">
+              <p className="eyebrow">What we offer</p>
+              <ul>
+                <li>Industrial printing and finishing equipment</li>
+                <li>Lamination and binding solutions</li>
+                <li>Office automation tools</li>
+                <li>Sublimation and custom printing equipment</li>
+                <li>Industrial consumables</li>
+                <li>Workflow and procurement support</li>
+              </ul>
+            </div>
+          </div>
         </AnimatedReveal>
       </div>
     </section>

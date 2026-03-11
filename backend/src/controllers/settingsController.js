@@ -45,6 +45,31 @@ exports.updateSettings = asyncHandler(async (req, res) => {
   res.json({ success: true, settings });
 });
 
+exports.updateLogo = asyncHandler(async (req, res) => {
+  const { logoUrl } = req.body;
+
+  if (!logoUrl) {
+    throw new ApiError(400, "logoUrl is required");
+  }
+
+  const existing = await WebsiteSettings.findOne({ siteKey: "primary" });
+
+  if (!existing) {
+    const created = await WebsiteSettings.create({
+      siteKey: "primary",
+      siteName: "Tara Maa Solutions",
+      logoUrl
+    });
+
+    return res.json({ success: true, settings: created });
+  }
+
+  existing.logoUrl = logoUrl;
+  await existing.save();
+
+  return res.json({ success: true, settings: existing });
+});
+
 exports.deleteSettings = asyncHandler(async (_req, res) => {
   const settings = await WebsiteSettings.findOneAndDelete({ siteKey: "primary" });
 

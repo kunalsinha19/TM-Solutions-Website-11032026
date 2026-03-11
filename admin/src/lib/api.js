@@ -1,4 +1,7 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const rawApiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const normalizedBase = rawApiBase.replace(/\/$/, "");
+const safeLocalBase = normalizedBase.replace(/^https:\/\/(localhost|127\.0\.0\.1)(?::\d+)?/i, (match) => match.replace("https://", "http://"));
+const API_BASE = safeLocalBase.endsWith("/api") ? safeLocalBase : `${safeLocalBase}/api`;
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -19,18 +22,34 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  requestLoginOtp: (email, password) =>
+  login: (email, password) =>
     request("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password })
     }),
-  verifyLoginOtp: (email, otp) =>
-    request("/auth/verify-login-otp", {
-      method: "POST",
-      body: JSON.stringify({ email, otp })
-    }),
   getProfile: (token) =>
     request("/auth/me", {
+      headers: { Authorization: `Bearer ${token}` }
+    }),
+  getAdmins: (token) =>
+    request("/admins", {
+      headers: { Authorization: `Bearer ${token}` }
+    }),
+  createAdmin: (token, payload) =>
+    request("/admins", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    }),
+  updateAdmin: (token, id, payload) =>
+    request(`/admins/${id}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    }),
+  deleteAdmin: (token, id) =>
+    request(`/admins/${id}`, {
+      method: "DELETE",
       headers: { Authorization: `Bearer ${token}` }
     }),
   getProducts: () => request("/products"),
@@ -97,11 +116,41 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)
     }),
+  replyToQuote: (token, id, payload) =>
+    request(`/quotes/${id}/reply`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    }),
   getSettings: () => request("/settings"),
   saveSettings: (token, payload) =>
     request("/settings", {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)
-    })
+    }),
+  updateLogo: (token, logoUrl) =>
+    request("/settings/logo", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ logoUrl })
+    }),
+  uploadMedia: async (token, file) => {
+    const data = new FormData();
+    data.append("file", file);
+
+    const response = await fetch(`${API_BASE}/media/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: data
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(payload.message || "Upload failed");
+    }
+
+    return payload;
+  }
 };

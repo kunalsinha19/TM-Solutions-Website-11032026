@@ -96,7 +96,6 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-productSchema.index({ slug: 1 }, { unique: true });
 productSchema.index({ status: 1, slug: 1 });
 productSchema.index({ category: 1, status: 1, createdAt: -1 });
 productSchema.index({ isFeatured: 1, status: 1, updatedAt: -1 });
@@ -104,3 +103,4 @@ productSchema.index({ seoTitle: 1, seoDescription: 1 });
 productSchema.index({ name: "text", shortDescription: "text", description: "text", tags: "text" });
 
 module.exports = mongoose.model("Product", productSchema);
+

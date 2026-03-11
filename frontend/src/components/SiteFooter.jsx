@@ -3,12 +3,15 @@ export default function SiteFooter() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div>
-          <p className="eyebrow">Tara Maa Solutions</p>
-          <p className="footer-copy">Reliable product sourcing, stronger digital discovery, and faster B2B quote conversion.</p>
+          <div className="footer-brand">
+            <span className="brand-kicker">Industrial product support</span>
+            <p className="brand-title footer-brand-title">Tara Maa Solutions</p>
+          </div>
+          <p className="footer-copy">Simple product browsing, clear communication, and quick support for your business.</p>
         </div>
         <div className="footer-links">
-          <a href="#categories">Categories</a>
-          <a href="#quote">Quote</a>
+          <a href="#categories">Products</a>
+          <a href="#quote">Get a Quote</a>
           <a href="#top">Back to top</a>
         </div>
       </div>
