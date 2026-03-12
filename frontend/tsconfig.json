@@ -1,20 +1,16 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "allowJs": true,
     "noEmit": true,
     "incremental": true,
     "isolatedModules": true,
     "jsx": "preserve",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
     "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
+      { "name": "next" }
     ]
   },
   "include": [
@@ -25,7 +21,5 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
