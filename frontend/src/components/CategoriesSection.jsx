@@ -315,8 +315,7 @@ export default function CategoriesSection() {
           sourcePage: "homepage-product-showcase",
           message: `Product enquiry for ${activeProduct.name}. Required quantity: ${quoteForm.quantity.trim()}.`,
           captchaToken: "dev-bypass"
-        })
-      });
+        }),\n        signal: controller.signal\n      });\n      clearTimeout(timeoutId);
 
       const data = await response.json().catch(() => ({}));
 
@@ -326,8 +325,7 @@ export default function CategoriesSection() {
 
       setQuoteForm(quickQuoteInitial);
       setQuoteStatus({ type: "success", message: `Quote request sent for ${activeProduct.name}. Our team will contact you soon.` });
-    } catch (error) {
-      setQuoteStatus({ type: "error", message: error.message });
+    } catch (error) {\n      const message = error.name === "AbortError" ? "Request timed out. Please try again." : error.message;\n      setQuoteStatus({ type: "error", message });
     }
   }
 
@@ -641,6 +639,7 @@ export default function CategoriesSection() {
     </section>
   );
 }
+
 
 
 

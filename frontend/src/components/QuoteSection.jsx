@@ -109,8 +109,7 @@ export default function QuoteSection() {
       const response = await fetch(`${apiBase}/quotes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
-      });
+        body: JSON.stringify(form),\n        signal: controller.signal\n      });\n      clearTimeout(timeoutId);
 
       const data = await response.json().catch(() => ({}));
 
@@ -126,8 +125,7 @@ export default function QuoteSection() {
         setForm((current) => ({ ...current, captchaToken: "dev-bypass" }));
       }
       setStatus({ type: "success", message: "Thank you. Your request has been sent successfully." });
-    } catch (error) {
-      setStatus({ type: "error", message: error.message });
+    } catch (error) {\n      const message = error.name === "AbortError" ? "Request timed out. Please try again." : error.message;\n      setStatus({ type: "error", message });
       if (window.grecaptcha && widgetIdRef.current !== null && captchaMode === "live") {
         window.grecaptcha.reset(widgetIdRef.current);
       }
@@ -172,4 +170,5 @@ export default function QuoteSection() {
     </section>
   );
 }
+
 

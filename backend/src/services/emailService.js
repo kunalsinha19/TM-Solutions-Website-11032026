@@ -11,6 +11,8 @@ const {
   HAS_REAL_SMTP
 } = require("../config/env");
 
+const EMAIL_TIMEOUT_MS = Number(process.env.EMAIL_TIMEOUT_MS || 15000);
+
 let transporter;
 
 function getTransporter() {
@@ -29,22 +31,40 @@ function getTransporter() {
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS
-    }
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: EMAIL_TIMEOUT_MS
   });
 
   return transporter;
 }
 
+function withTimeout(promise, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      const timer = setTimeout(() => {
+        clearTimeout(timer);
+        reject(new Error(`${label} timed out after ${EMAIL_TIMEOUT_MS}ms`));
+      }, EMAIL_TIMEOUT_MS);
+    })
+  ]);
+}
+
 async function sendEmail({ to, subject, html, text, replyTo }) {
   const mailTransporter = getTransporter();
-  return mailTransporter.sendMail({
-    from: EMAIL_FROM,
-    to,
-    replyTo,
-    subject,
-    text,
-    html
-  });
+  return withTimeout(
+    mailTransporter.sendMail({
+      from: EMAIL_FROM,
+      to,
+      replyTo,
+      subject,
+      text,
+      html
+    }),
+    "Email send"
+  );
 }
 
 async function sendPasswordResetEmail(email, resetToken) {

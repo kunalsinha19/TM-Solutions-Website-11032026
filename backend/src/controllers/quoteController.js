@@ -19,13 +19,16 @@ exports.createQuoteRequest = asyncHandler(async (req, res) => {
     captchaVerified: true
   });
 
-  let notification = { sent: false, reason: "smtp-not-configured" };
+  const notification = { sent: false, reason: "smtp-not-configured" };
 
-  try {
-    await sendQuoteRequestEmail(quoteRequest);
-    notification = { sent: true };
-  } catch (error) {
-    notification = { sent: false, reason: error.message };
+  if (HAS_REAL_SMTP) {
+    setImmediate(async () => {
+      try {
+        await sendQuoteRequestEmail(quoteRequest);
+      } catch (error) {
+        console.error("Quote email failed:", error.message);
+      }
+    });
   }
 
   res.status(201).json({ success: true, quoteRequest, notification });
@@ -75,13 +78,17 @@ exports.replyToQuoteRequest = asyncHandler(async (req, res) => {
   let delivery = "draft";
 
   if (HAS_REAL_SMTP) {
-    await sendQuoteResponseEmail({
-      to: quoteRequest.email,
-      name: quoteRequest.name,
-      subject,
-      message
-    });
-    delivery = "sent";
+    try {
+      await sendQuoteResponseEmail({
+        to: quoteRequest.email,
+        name: quoteRequest.name,
+        subject,
+        message
+      });
+      delivery = "sent";
+    } catch (error) {
+      delivery = "failed";
+    }
   }
 
   quoteRequest.replySubject = subject || preview.subject;
