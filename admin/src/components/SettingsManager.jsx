@@ -1,6 +1,21 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 
+const defaultWhatWeDoItems = [
+  {
+    title: "Easy product search",
+    description: "Find products by category and quickly understand what they are used for."
+  },
+  {
+    title: "Helpful guidance",
+    description: "If you are not sure which product fits your need, we help you choose the right option."
+  },
+  {
+    title: "Quick quote support",
+    description: "Send your requirement and our team will get back to you with the next steps."
+  }
+];
+
 const emptySettings = {
   siteName: "",
   siteUrl: "",
@@ -14,7 +29,40 @@ const emptySettings = {
   socialLinks: [],
   analytics: { googleAnalyticsId: "" },
   seoDefaults: { robots: "index,follow", ogImage: "" },
-  homepage: { heroTitle: "", heroSubtitle: "", featuredProductIds: [] }
+  homepage: {
+    heroTitle: "We help you find the right industrial product without wasting time.",
+    heroSubtitle: "Browse products, check categories, and send us your requirement in a few simple steps. We keep the process clear, fast, and easy to understand.",
+    featuredProductIds: [],
+    aboutTitle: "A modern B2B platform for industrial printing, finishing, and office automation.",
+    aboutDescription: "Tara Maa Solutions helps businesses discover, compare, and source reliable equipment, consumables, and workflow tools with clarity and confidence.",
+    aboutIntro: "We believe the future of industrial procurement is digital, transparent, and data-driven. Our platform blends technology, industry expertise, and guided quote workflows so teams can make smarter buying decisions and modernize production environments.",
+    aboutParagraphs: [
+      "Beyond product listings, we aim to be a knowledge and innovation hub for the printing and finishing industry by offering insights, analytics, and structured guidance that reduce guesswork and improve outcomes.",
+      "We curate dependable machines, lamination systems, finishing equipment, sublimation tools, office automation products, and industrial consumables from trusted manufacturers and suppliers. The goal is simple: make procurement clear, faster, and more predictable for every business."
+    ],
+    aboutImageUrl: "",
+    visionTitle: "Vision",
+    visionDescription: "To become a trusted global platform for industrial printing, finishing, and automation solutions, enabling businesses to grow through innovation, accessibility, and data-driven procurement.",
+    missionTitle: "Mission",
+    missionItems: [
+      "Simplify the procurement of industrial equipment and consumables.",
+      "Connect manufacturers, distributors, and businesses through one unified marketplace.",
+      "Provide technology-driven tools and analytics for smarter operational decisions.",
+      "Build a reliable, transparent ecosystem for the printing and finishing industry."
+    ],
+    offerTitle: "What we offer",
+    offerItems: [
+      "Industrial printing and finishing equipment",
+      "Lamination and binding solutions",
+      "Office automation tools",
+      "Sublimation and custom printing equipment",
+      "Industrial consumables",
+      "Workflow and procurement support"
+    ],
+    whatWeDoTitle: "We make industrial buying simpler for your business.",
+    whatWeDoDescription: "You do not need to search through confusing technical pages. We show products clearly and help you reach the right team quickly.",
+    whatWeDoItems: defaultWhatWeDoItems
+  }
 };
 
 export default function SettingsManager({ token }) {
@@ -57,6 +105,30 @@ export default function SettingsManager({ token }) {
     const nextLinks = [...form.socialLinks];
     nextLinks[index] = { ...nextLinks[index], [key]: value };
     setForm({ ...form, socialLinks: nextLinks });
+  }
+
+  function updateHomepageField(key, value) {
+    setForm({ ...form, homepage: { ...form.homepage, [key]: value } });
+  }
+
+  function updateArrayField(key, index, value) {
+    const next = [...(form.homepage[key] || [])];
+    next[index] = value;
+    updateHomepageField(key, next);
+  }
+
+  function addArrayFieldItem(key, value = "") {
+    updateHomepageField(key, [...(form.homepage[key] || []), value]);
+  }
+
+  function removeArrayFieldItem(key, index) {
+    updateHomepageField(key, (form.homepage[key] || []).filter((_, current) => current !== index));
+  }
+
+  function updateWhatWeDoItem(index, key, value) {
+    const items = [...(form.homepage.whatWeDoItems || [])];
+    items[index] = { ...items[index], [key]: value };
+    updateHomepageField("whatWeDoItems", items);
   }
 
   function handleLogoFileChange(event) {
@@ -175,7 +247,7 @@ export default function SettingsManager({ token }) {
         </div>
         <div className="grid-two">
           <label><span>Contact email</span><input value={form.contactInfo.email} onChange={(e) => setForm({ ...form, contactInfo: { ...form.contactInfo, email: e.target.value } })} /></label>
-          <label><span>Master email</span><input value={form.masterEmail} onChange={(e) => setForm({ ...form, masterEmail: e.target.value })} /></label>
+          <label><span>Master email</span><input value={form.masterEmail} onChange={(e) => setForm({ ...form, masterEmail: e.target.value } })} /></label>
         </div>
         <div className="grid-two">
           <label><span>Contact phone</span><input value={form.contactInfo.phone} onChange={(e) => setForm({ ...form, contactInfo: { ...form.contactInfo, phone: e.target.value } })} /></label>
@@ -196,24 +268,82 @@ export default function SettingsManager({ token }) {
           <label><span>Default OG image</span><input value={form.seoDefaults.ogImage} onChange={(e) => setForm({ ...form, seoDefaults: { ...form.seoDefaults, ogImage: e.target.value } })} /></label>
         </div>
         <div className="grid-two">
-          <label><span>Homepage hero title</span><input value={form.homepage.heroTitle} onChange={(e) => setForm({ ...form, homepage: { ...form.homepage, heroTitle: e.target.value } })} /></label>
-          <label><span>Homepage hero subtitle</span><input value={form.homepage.heroSubtitle} onChange={(e) => setForm({ ...form, homepage: { ...form.homepage, heroSubtitle: e.target.value } })} /></label>
+          <label><span>Homepage hero title</span><input value={form.homepage.heroTitle} onChange={(e) => updateHomepageField("heroTitle", e.target.value)} /></label>
+          <label><span>Homepage hero subtitle</span><input value={form.homepage.heroSubtitle} onChange={(e) => updateHomepageField("heroSubtitle", e.target.value)} /></label>
         </div>
+
         <div className="stack">
-          <div className="row gap-sm align-center">
-            <span className="label">Social links</span>
-            <button type="button" className="secondary" onClick={() => setForm({ ...form, socialLinks: [...form.socialLinks, { label: "", url: "" }] })}>Add Social Link</button>
-          </div>
-          {form.socialLinks.map((link, index) => (
-            <div key={`social-${index}`} className="grid-two">
-              <input value={link.label} placeholder="Label" onChange={(e) => updateSocialLink(index, "label", e.target.value)} />
-              <div className="row gap-sm">
-                <input value={link.url} placeholder="https://..." onChange={(e) => updateSocialLink(index, "url", e.target.value)} />
-                <button type="button" className="danger" onClick={() => setForm({ ...form, socialLinks: form.socialLinks.filter((_, currentIndex) => currentIndex !== index) })}>Remove</button>
-              </div>
+          <h4>About section</h4>
+          <label><span>About title</span><input value={form.homepage.aboutTitle} onChange={(e) => updateHomepageField("aboutTitle", e.target.value)} /></label>
+          <label><span>About description</span><textarea rows="3" value={form.homepage.aboutDescription} onChange={(e) => updateHomepageField("aboutDescription", e.target.value)} /></label>
+          <label><span>Intro paragraph</span><textarea rows="4" value={form.homepage.aboutIntro} onChange={(e) => updateHomepageField("aboutIntro", e.target.value)} /></label>
+          <label><span>About image URL (optional)</span><input value={form.homepage.aboutImageUrl} onChange={(e) => updateHomepageField("aboutImageUrl", e.target.value)} /></label>
+
+          <div className="stack">
+            <div className="row gap-sm align-center">
+              <span className="label">About paragraphs</span>
+              <button type="button" className="secondary" onClick={() => addArrayFieldItem("aboutParagraphs")}>+ Add paragraph</button>
             </div>
-          ))}
+            {form.homepage.aboutParagraphs.map((paragraph, index) => (
+              <div key={`about-paragraph-${index}`} className="row gap-sm">
+                <textarea rows="3" value={paragraph} onChange={(e) => updateArrayField("aboutParagraphs", index, e.target.value)} />
+                <button type="button" className="danger" onClick={() => removeArrayFieldItem("aboutParagraphs", index)}>Remove</button>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid-two">
+            <label><span>Vision title</span><input value={form.homepage.visionTitle} onChange={(e) => updateHomepageField("visionTitle", e.target.value)} /></label>
+            <label><span>Mission title</span><input value={form.homepage.missionTitle} onChange={(e) => updateHomepageField("missionTitle", e.target.value)} /></label>
+          </div>
+          <label><span>Vision description</span><textarea rows="3" value={form.homepage.visionDescription} onChange={(e) => updateHomepageField("visionDescription", e.target.value)} /></label>
+
+          <div className="stack">
+            <div className="row gap-sm align-center">
+              <span className="label">Mission items</span>
+              <button type="button" className="secondary" onClick={() => addArrayFieldItem("missionItems")}>+ Add item</button>
+            </div>
+            {form.homepage.missionItems.map((item, index) => (
+              <div key={`mission-item-${index}`} className="row gap-sm">
+                <input value={item} onChange={(e) => updateArrayField("missionItems", index, e.target.value)} />
+                <button type="button" className="danger" onClick={() => removeArrayFieldItem("missionItems", index)}>Remove</button>
+              </div>
+            ))}
+          </div>
+
+          <div className="stack">
+            <div className="row gap-sm align-center">
+              <span className="label">What we offer</span>
+              <button type="button" className="secondary" onClick={() => addArrayFieldItem("offerItems")}>+ Add item</button>
+            </div>
+            <input value={form.homepage.offerTitle} onChange={(e) => updateHomepageField("offerTitle", e.target.value)} />
+            {form.homepage.offerItems.map((item, index) => (
+              <div key={`offer-item-${index}`} className="row gap-sm">
+                <input value={item} onChange={(e) => updateArrayField("offerItems", index, e.target.value)} />
+                <button type="button" className="danger" onClick={() => removeArrayFieldItem("offerItems", index)}>Remove</button>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <div className="stack">
+          <h4>What we do section</h4>
+          <label><span>Section title</span><input value={form.homepage.whatWeDoTitle} onChange={(e) => updateHomepageField("whatWeDoTitle", e.target.value)} /></label>
+          <label><span>Section description</span><textarea rows="3" value={form.homepage.whatWeDoDescription} onChange={(e) => updateHomepageField("whatWeDoDescription", e.target.value)} /></label>
+          <div className="stack">
+            <div className="row gap-sm align-center">
+              <span className="label">Cards</span>
+              <button type="button" className="secondary" onClick={() => updateHomepageField("whatWeDoItems", [...(form.homepage.whatWeDoItems || []), { title: "", description: "" }])}>+ Add card</button>
+            </div>
+            {form.homepage.whatWeDoItems.map((item, index) => (
+              <div key={`wtd-${index}`} className="grid-two">
+                <input value={item.title} placeholder="Title" onChange={(e) => updateWhatWeDoItem(index, "title", e.target.value)} />
+                <input value={item.description} placeholder="Description" onChange={(e) => updateWhatWeDoItem(index, "description", e.target.value)} />
+              </div>
+            ))}
+          </div>
+        </div>
+
         <button type="submit">Save Settings</button>
         {status ? <p className="muted small">{status}</p> : null}
       </form>

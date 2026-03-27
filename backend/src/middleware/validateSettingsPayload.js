@@ -79,6 +79,21 @@ function validateStringField(value, field, errors, options = {}) {
   }
 }
 
+function validateStringArray(value, field, errors, options = {}) {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!Array.isArray(value)) {
+    pushError(errors, field, `${field} must be an array`);
+    return;
+  }
+
+  value.forEach((entry, index) => {
+    validateStringField(entry, `${field}[${index}]`, errors, options);
+  });
+}
+
 function validateContactInfo(contactInfo, errors) {
   if (contactInfo === undefined) {
     return;
@@ -180,6 +195,35 @@ function validateHomepage(homepage, errors) {
   validateStringField(homepage.heroSubtitle, "homepage.heroSubtitle", errors, {
     max: 500
   });
+  validateStringField(homepage.aboutTitle, "homepage.aboutTitle", errors, { max: 180 });
+  validateStringField(homepage.aboutDescription, "homepage.aboutDescription", errors, { max: 500 });
+  validateStringField(homepage.aboutIntro, "homepage.aboutIntro", errors, { max: 700 });
+  validateStringField(homepage.aboutImageUrl, "homepage.aboutImageUrl", errors, { max: 500, absoluteUrl: true });
+  validateStringField(homepage.visionTitle, "homepage.visionTitle", errors, { max: 80 });
+  validateStringField(homepage.visionDescription, "homepage.visionDescription", errors, { max: 600 });
+  validateStringField(homepage.missionTitle, "homepage.missionTitle", errors, { max: 80 });
+  validateStringField(homepage.offerTitle, "homepage.offerTitle", errors, { max: 80 });
+  validateStringField(homepage.whatWeDoTitle, "homepage.whatWeDoTitle", errors, { max: 140 });
+  validateStringField(homepage.whatWeDoDescription, "homepage.whatWeDoDescription", errors, { max: 500 });
+
+  validateStringArray(homepage.aboutParagraphs, "homepage.aboutParagraphs", errors, { max: 700 });
+  validateStringArray(homepage.missionItems, "homepage.missionItems", errors, { max: 200 });
+  validateStringArray(homepage.offerItems, "homepage.offerItems", errors, { max: 200 });
+
+  if (homepage.whatWeDoItems !== undefined) {
+    if (!Array.isArray(homepage.whatWeDoItems)) {
+      pushError(errors, "homepage.whatWeDoItems", "homepage.whatWeDoItems must be an array");
+    } else {
+      homepage.whatWeDoItems.forEach((item, index) => {
+        if (!isObject(item)) {
+          pushError(errors, `homepage.whatWeDoItems[${index}]`, "Each item must be an object");
+          return;
+        }
+        validateStringField(item.title, `homepage.whatWeDoItems[${index}].title`, errors, { max: 120 });
+        validateStringField(item.description, `homepage.whatWeDoItems[${index}].description`, errors, { max: 220 });
+      });
+    }
+  }
 
   if (homepage.featuredProductIds !== undefined) {
     if (!Array.isArray(homepage.featuredProductIds)) {
@@ -270,3 +314,4 @@ module.exports = {
   validateSettingsPayload,
   validateSettingsLogoPayload
 };
+

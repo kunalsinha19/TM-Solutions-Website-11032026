@@ -6,7 +6,7 @@ import AnimatedReveal from "./AnimatedReveal";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
 
-export default function HeroSection() {
+export default function HeroSection({ content }) {
   const [counts, setCounts] = useState({ products: 0, categories: 0 });
 
   useEffect(() => {
@@ -67,14 +67,17 @@ export default function HeroSection() {
     }
   ], [counts]);
 
+  const heroTitle = content?.heroTitle || "We help you find the right industrial product without wasting time.";
+  const heroSubtitle = content?.heroSubtitle || "Browse products, check categories, and send us your requirement in a few simple steps. We keep the process clear, fast, and easy to understand.";
+
   return (
     <section className="hero-section">
       <div className="hero-backdrop" />
       <div className="container hero-grid">
         <AnimatedReveal className="hero-copy">
-          <h1>We help you find the right industrial product without wasting time.</h1>
+          <h1>{heroTitle}</h1>
           <p className="hero-text">
-            Browse products, check categories, and send us your requirement in a few simple steps. We keep the process clear, fast, and easy to understand.
+            {heroSubtitle}
           </p>
           <div className="hero-actions">
             <a href="#quote" className="button-primary">Get a Quote</a>

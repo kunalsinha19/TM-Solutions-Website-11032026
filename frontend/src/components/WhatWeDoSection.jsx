@@ -1,7 +1,7 @@
 import AnimatedReveal from "./AnimatedReveal";
 import SectionHeading from "./SectionHeading";
 
-const services = [
+const fallbackServices = [
   {
     title: "Easy product search",
     description: "Find products by category and quickly understand what they are used for."
@@ -16,18 +16,24 @@ const services = [
   }
 ];
 
-export default function WhatWeDoSection() {
+export default function WhatWeDoSection({ content }) {
+  const title = content?.whatWeDoTitle || "We make industrial buying simpler for your business.";
+  const description = content?.whatWeDoDescription || "You do not need to search through confusing technical pages. We show products clearly and help you reach the right team quickly.";
+  const services = Array.isArray(content?.whatWeDoItems) && content.whatWeDoItems.length
+    ? content.whatWeDoItems
+    : fallbackServices;
+
   return (
     <section className="section-block section-soft">
       <div className="container">
         <SectionHeading
           eyebrow="What we do"
-          title="We make industrial buying simpler for your business."
-          description="You do not need to search through confusing technical pages. We show products clearly and help you reach the right team quickly."
+          title={title}
+          description={description}
         />
         <div className="feature-grid">
           {services.map((service, index) => (
-            <AnimatedReveal key={service.title} delay={index * 0.08} className="feature-card">
+            <AnimatedReveal key={`${service.title}-${index}`} delay={index * 0.08} className="feature-card">
               <h3>{service.title}</h3>
               <p>{service.description}</p>
             </AnimatedReveal>

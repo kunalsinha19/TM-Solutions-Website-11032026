@@ -24,9 +24,10 @@ async function fetchJson(path) {
 }
 
 export async function getHomepageData() {
-  const [productsResponse, categoriesResponse] = await Promise.all([
+  const [productsResponse, categoriesResponse, settingsResponse] = await Promise.all([
     fetchJson("/products"),
-    fetchJson("/categories")
+    fetchJson("/categories"),
+    fetchJson("/settings")
   ]);
 
   const categories = Array.isArray(categoriesResponse?.categories)
@@ -39,6 +40,7 @@ export async function getHomepageData() {
 
   return {
     categories,
-    products
+    products,
+    settings: settingsResponse?.settings || null
   };
 }

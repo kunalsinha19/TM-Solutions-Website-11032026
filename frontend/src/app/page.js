@@ -9,6 +9,7 @@ import {
   buildOrganizationSchema,
   buildWebsiteSchema
 } from "../lib/seo";
+import { getHomepageData } from "../lib/site-data";
 
 export const metadata = buildMetadata({
   title: "Industrial Products and Quote-Driven B2B Website",
@@ -16,8 +17,10 @@ export const metadata = buildMetadata({
   path: "/"
 });
 
-export default function HomePage() {
+export default async function HomePage() {
   const structuredData = [buildOrganizationSchema(), buildWebsiteSchema()];
+  const { settings } = await getHomepageData();
+  const homepage = settings?.homepage || {};
 
   return (
     <>
@@ -29,10 +32,10 @@ export default function HomePage() {
         />
       ))}
       <main id="top">
-        <HeroSection />
-        <WhatWeDoSection />
+        <HeroSection content={homepage} />
+        <WhatWeDoSection content={homepage} />
         <CategoriesSection />
-        <AboutSection />
+        <AboutSection content={homepage} />
         <QuoteSection />
         <SiteFooter />
       </main>

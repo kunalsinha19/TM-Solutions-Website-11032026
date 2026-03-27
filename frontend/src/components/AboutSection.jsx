@@ -1,61 +1,89 @@
 import AnimatedReveal from "./AnimatedReveal";
 import SectionHeading from "./SectionHeading";
 
-export default function AboutSection() {
+const fallbackContent = {
+  aboutTitle: "A modern B2B platform for industrial printing, finishing, and office automation.",
+  aboutDescription: "Tara Maa Solutions helps businesses discover, compare, and source reliable equipment, consumables, and workflow tools with clarity and confidence.",
+  aboutIntro: "We believe the future of industrial procurement is digital, transparent, and data-driven. Our platform blends technology, industry expertise, and guided quote workflows so teams can make smarter buying decisions and modernize production environments.",
+  aboutParagraphs: [
+    "Beyond product listings, we aim to be a knowledge and innovation hub for the printing and finishing industry by offering insights, analytics, and structured guidance that reduce guesswork and improve outcomes.",
+    "We curate dependable machines, lamination systems, finishing equipment, sublimation tools, office automation products, and industrial consumables from trusted manufacturers and suppliers. The goal is simple: make procurement clear, faster, and more predictable for every business."
+  ],
+  visionTitle: "Vision",
+  visionDescription: "To become a trusted global platform for industrial printing, finishing, and automation solutions, enabling businesses to grow through innovation, accessibility, and data-driven procurement.",
+  missionTitle: "Mission",
+  missionItems: [
+    "Simplify the procurement of industrial equipment and consumables.",
+    "Connect manufacturers, distributors, and businesses through one unified marketplace.",
+    "Provide technology-driven tools and analytics for smarter operational decisions.",
+    "Build a reliable, transparent ecosystem for the printing and finishing industry."
+  ],
+  offerTitle: "What we offer",
+  offerItems: [
+    "Industrial printing and finishing equipment",
+    "Lamination and binding solutions",
+    "Office automation tools",
+    "Sublimation and custom printing equipment",
+    "Industrial consumables",
+    "Workflow and procurement support"
+  ]
+};
+
+export default function AboutSection({ content }) {
+  const data = { ...fallbackContent, ...(content || {}) };
+  const paragraphs = Array.isArray(data.aboutParagraphs) && data.aboutParagraphs.length
+    ? data.aboutParagraphs
+    : fallbackContent.aboutParagraphs;
+  const missionItems = Array.isArray(data.missionItems) && data.missionItems.length
+    ? data.missionItems
+    : fallbackContent.missionItems;
+  const offerItems = Array.isArray(data.offerItems) && data.offerItems.length
+    ? data.offerItems
+    : fallbackContent.offerItems;
+
   return (
     <section className="section-block about-section">
       <div className="container about-grid">
         <AnimatedReveal>
           <SectionHeading
             eyebrow="About us"
-            title="A modern B2B platform for industrial printing, finishing, and office automation."
-            description="Tara Maa Solutions helps businesses discover, compare, and source reliable equipment, consumables, and workflow tools with clarity and confidence."
+            title={data.aboutTitle}
+            description={data.aboutDescription}
           />
           <div className="about-intro">
-            <p>
-              We believe the future of industrial procurement is digital, transparent, and data-driven. Our platform blends technology,
-              industry expertise, and guided quote workflows so teams can make smarter buying decisions and modernize production environments.
-            </p>
+            <p>{data.aboutIntro}</p>
           </div>
         </AnimatedReveal>
         <AnimatedReveal delay={0.1} className="about-panel">
+          {data.aboutImageUrl ? (
+            <div className="about-image">
+              <img src={data.aboutImageUrl} alt="About Tara Maa Solutions" />
+            </div>
+          ) : null}
           <div className="about-copy">
-            <p>
-              Beyond product listings, we aim to be a knowledge and innovation hub for the printing and finishing industry by offering
-              insights, analytics, and structured guidance that reduce guesswork and improve outcomes.
-            </p>
-            <p>
-              We curate dependable machines, lamination systems, finishing equipment, sublimation tools, office automation products,
-              and industrial consumables from trusted manufacturers and suppliers. The goal is simple: make procurement clear,
-              faster, and more predictable for every business.
-            </p>
+            {paragraphs.map((paragraph, index) => (
+              <p key={`about-paragraph-${index}`}>{paragraph}</p>
+            ))}
             <div className="about-mission">
               <div>
-                <p className="eyebrow">Vision</p>
-                <p>
-                  To become a trusted global platform for industrial printing, finishing, and automation solutions, enabling businesses
-                  to grow through innovation, accessibility, and data-driven procurement.
-                </p>
+                <p className="eyebrow">{data.visionTitle || "Vision"}</p>
+                <p>{data.visionDescription}</p>
               </div>
               <div>
-                <p className="eyebrow">Mission</p>
+                <p className="eyebrow">{data.missionTitle || "Mission"}</p>
                 <ul>
-                  <li>Simplify the procurement of industrial equipment and consumables.</li>
-                  <li>Connect manufacturers, distributors, and businesses through one unified marketplace.</li>
-                  <li>Provide technology-driven tools and analytics for smarter operational decisions.</li>
-                  <li>Build a reliable, transparent ecosystem for the printing and finishing industry.</li>
+                  {missionItems.map((item, index) => (
+                    <li key={`mission-${index}`}>{item}</li>
+                  ))}
                 </ul>
               </div>
             </div>
             <div className="about-offer">
-              <p className="eyebrow">What we offer</p>
+              <p className="eyebrow">{data.offerTitle || "What we offer"}</p>
               <ul>
-                <li>Industrial printing and finishing equipment</li>
-                <li>Lamination and binding solutions</li>
-                <li>Office automation tools</li>
-                <li>Sublimation and custom printing equipment</li>
-                <li>Industrial consumables</li>
-                <li>Workflow and procurement support</li>
+                {offerItems.map((item, index) => (
+                  <li key={`offer-${index}`}>{item}</li>
+                ))}
               </ul>
             </div>
           </div>

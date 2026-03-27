@@ -154,6 +154,86 @@ const websiteSettingsSchema = new mongoose.Schema(
         type: [mongoose.Schema.Types.ObjectId],
         ref: "Product",
         default: []
+      },
+      aboutTitle: {
+        type: String,
+        default: "",
+        maxlength: 180
+      },
+      aboutDescription: {
+        type: String,
+        default: "",
+        maxlength: 500
+      },
+      aboutIntro: {
+        type: String,
+        default: "",
+        maxlength: 700
+      },
+      aboutParagraphs: {
+        type: [String],
+        default: []
+      },
+      aboutImageUrl: {
+        type: String,
+        default: "",
+        maxlength: 500,
+        validate: urlValidator
+      },
+      visionTitle: {
+        type: String,
+        default: "",
+        maxlength: 80
+      },
+      visionDescription: {
+        type: String,
+        default: "",
+        maxlength: 600
+      },
+      missionTitle: {
+        type: String,
+        default: "",
+        maxlength: 80
+      },
+      missionItems: {
+        type: [String],
+        default: []
+      },
+      offerTitle: {
+        type: String,
+        default: "",
+        maxlength: 80
+      },
+      offerItems: {
+        type: [String],
+        default: []
+      },
+      whatWeDoTitle: {
+        type: String,
+        default: "",
+        maxlength: 140
+      },
+      whatWeDoDescription: {
+        type: String,
+        default: "",
+        maxlength: 500
+      },
+      whatWeDoItems: {
+        type: [
+          {
+            title: {
+              type: String,
+              default: "",
+              maxlength: 120
+            },
+            description: {
+              type: String,
+              default: "",
+              maxlength: 220
+            }
+          }
+        ],
+        default: []
       }
     }
   },
@@ -164,5 +244,6 @@ websiteSettingsSchema.index({ siteName: 1 });
 websiteSettingsSchema.index({ defaultMetaTitle: 1, defaultMetaDescription: 1 });
 
 module.exports = mongoose.model("WebsiteSettings", websiteSettingsSchema);
+
 
 
