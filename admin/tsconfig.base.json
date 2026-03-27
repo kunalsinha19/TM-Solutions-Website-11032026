@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tara-maa/shared-types": [
+        "packages/shared-types/src"
+      ],
+      "@tara-maa/validation": [
+        "packages/validation/src"
+      ],
+      "@tara-maa/ui": [
+        "packages/ui/src"
+      ]
+    }
+  }
+}
