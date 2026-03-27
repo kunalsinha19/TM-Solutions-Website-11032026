@@ -1755,3 +1755,4 @@ html.dark .tools-burger span { background: #f8fafc; }
 
 
 
+\n\n.about-intro {\n  margin-top: 1.5rem;\n  padding: 1.25rem 1.4rem;\n  border-radius: 22px;\n  background: rgba(255,255,255,0.78);\n  border: 1px solid var(--border);\n  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);\n}\nhtml.dark .about-intro {\n  background: rgba(15, 23, 42, 0.72);\n  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.48);\n}\n.about-intro p { margin: 0; }\n

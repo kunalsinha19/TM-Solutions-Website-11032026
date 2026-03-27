@@ -11,13 +11,15 @@ export default function AboutSection() {
             title="A modern B2B platform for industrial printing, finishing, and office automation."
             description="Tara Maa Solutions helps businesses discover, compare, and source reliable equipment, consumables, and workflow tools with clarity and confidence."
           />
-        </AnimatedReveal>
-        <AnimatedReveal delay={0.1} className="about-panel">
-          <div className="about-copy">
+          <div className="about-intro">
             <p>
               We believe the future of industrial procurement is digital, transparent, and data-driven. Our platform blends technology,
               industry expertise, and guided quote workflows so teams can make smarter buying decisions and modernize production environments.
             </p>
+          </div>
+        </AnimatedReveal>
+        <AnimatedReveal delay={0.1} className="about-panel">
+          <div className="about-copy">
             <p>
               Beyond product listings, we aim to be a knowledge and innovation hub for the printing and finishing industry by offering
               insights, analytics, and structured guidance that reduce guesswork and improve outcomes.
