@@ -391,13 +391,9 @@ html.dark .products-highlight-pill { background: rgba(15,23,42,0.62); }
   overflow-wrap: anywhere;
 }
 
-.about-mission {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
+.about-mission {\n  display: grid;\n  grid-template-columns: 1fr;\n  gap: 1rem;\n}
 
-.about-mission ul,
+.about-mission > div {\n  padding: 0.85rem 0.95rem;\n  border-radius: 16px;\n  background: rgba(255,255,255,0.5);\n  border: 1px solid var(--border);\n}\nhtml.dark .about-mission > div { background: rgba(15,23,42,0.5); }\n\n.about-mission ul,
 .about-offer ul {
   margin: 0;
   padding-left: 1.2rem;
@@ -1743,5 +1739,6 @@ html.dark .tools-burger span { background: #f8fafc; }
   }
 }
 \n\n.quick-quote-subtext {\n  margin: 0;\n  color: var(--muted);\n  font-size: 0.95rem;\n}\n
+
 
 
