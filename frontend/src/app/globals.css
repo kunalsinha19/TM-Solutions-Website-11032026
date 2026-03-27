@@ -368,9 +368,7 @@ html.dark .products-highlight-pill { background: rgba(15,23,42,0.62); }
 .products-highlight-pill span { font-size: 0.82rem; color: var(--muted); }
 .empty-live-products p { margin: 0.35rem 0; color: var(--muted); }
 .about-panel ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.8rem; }
-.about-grid {
-  align-items: start;
-}
+.about-grid {\n  align-items: stretch;\n}
 
 .about-panel {\n  display: grid;\n  gap: 1.2rem;\n  justify-self: stretch;\n  max-width: 100%;\n}
 
@@ -1726,3 +1724,4 @@ html.dark .tools-burger span { background: #f8fafc; }
   }
 }
 \n\n.quick-quote-subtext {\n  margin: 0;\n  color: var(--muted);\n  font-size: 0.95rem;\n}\n
+

@@ -45,7 +45,7 @@ module.exports = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:3000",
   CLIENT_URLS: parseClientUrls(),
-  EMAIL_FROM: process.env.EMAIL_FROM || "noreply@taramaasolutions.com",
+  EMAIL_FROM: process.env.EMAIL_FROM || process.env.SMTP_USER || "noreply@taramaasolutions.com",
   ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL || "kunal.nic10@gmail.com",
   SMTP_HOST: process.env.SMTP_HOST || "",
   SMTP_PORT: Number(process.env.SMTP_PORT || 587),
@@ -58,3 +58,4 @@ module.exports = {
   HAS_REAL_SMTP: !isPlaceholder(process.env.SMTP_HOST) && !isPlaceholder(process.env.SMTP_USER) && !isPlaceholder(process.env.SMTP_PASS),
   HAS_REAL_CAPTCHA: !isPlaceholder(process.env.CAPTCHA_SECRET) && !isPlaceholder(process.env.CAPTCHA_SITE_KEY)
 };
+
