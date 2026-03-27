@@ -5,5 +5,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 4173
+  },
+  preview: {
+    host: true,
+    port: 8080,
+    allowedHosts: [
+      "tm-solutions-website-11032026-production-afe1.up.railway.app",
+      "localhost",
+      "127.0.0.1"
+    ]
   }
 });
