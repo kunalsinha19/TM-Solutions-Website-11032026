@@ -372,19 +372,11 @@ html.dark .products-highlight-pill { background: rgba(15,23,42,0.62); }
   align-items: start;
 }
 
-.about-panel {
-  display: grid;
-  gap: 1.2rem;
-}
+.about-panel {\n  display: grid;\n  gap: 1.2rem;\n  justify-self: stretch;\n  max-width: 100%;\n}
 
-.about-copy {
-  display: grid;
-  gap: 1rem;
-}
+.about-copy {\n  display: grid;\n  gap: 1rem;\n  max-width: 100%;\n}
 
-.about-copy p {
-  margin: 0;
-}
+.about-copy p {\n  margin: 0;\n  overflow-wrap: anywhere;\n}
 
 .about-mission {
   display: grid;
@@ -400,11 +392,7 @@ html.dark .products-highlight-pill { background: rgba(15,23,42,0.62); }
   gap: 0.6rem;
 }
 
-.about-offer {
-  margin-top: 0.6rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--border);
-}
+.about-offer {\n  margin-top: 0.6rem;\n  padding-top: 0.6rem;\n  border-top: 1px solid var(--border);\n}
 
 @media (max-width: 980px) {
   .about-mission {
@@ -1737,3 +1725,4 @@ html.dark .tools-burger span { background: #f8fafc; }
     display: none;
   }
 }
+\n\n.quick-quote-subtext {\n  margin: 0;\n  color: var(--muted);\n  font-size: 0.95rem;\n}\n

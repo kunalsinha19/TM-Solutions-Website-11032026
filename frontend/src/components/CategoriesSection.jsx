@@ -534,8 +534,7 @@ export default function CategoriesSection() {
                         className="product-quick-quote product-quick-quote-inline"
                       >
                         <div>
-                          <p className="eyebrow">Quick quote</p>
-                          <h3>Send your requirement for {activeProduct.name}</h3>
+                          <p className="eyebrow">Quick quote</p>\n                          <h3>Send your requirement for {activeProduct.name}</h3>\n                          <p className="quick-quote-subtext">Fill these four fields and we will review your request and get back to you.</p>
                           <p className="section-description">Fill these four fields and we will review your request and get back to you.</p>
                         </div>
                         <form className="product-quick-quote-form" onSubmit={handleQuickQuoteSubmit}>
@@ -642,6 +641,8 @@ export default function CategoriesSection() {
     </section>
   );
 }
+
+
 
 
 
