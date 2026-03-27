@@ -6,6 +6,22 @@ function isPlaceholder(value) {
   return !value || /^your-|^replace-|example\.com$/.test(String(value));
 }
 
+function parseClientUrls() {
+  const list = [];
+  const rawList = process.env.CLIENT_URLS || "";
+  rawList
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .forEach((entry) => list.push(entry));
+
+  if (process.env.CLIENT_URL) {
+    list.push(process.env.CLIENT_URL.trim());
+  }
+
+  return Array.from(new Set(list));
+}
+
 const NODE_ENV = process.env.NODE_ENV || "development";
 const PORT = Number(process.env.PORT || 5000);
 const MONGODB_URI = process.env.MONGODB_URI || "";
@@ -28,6 +44,7 @@ module.exports = {
   JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:3000",
+  CLIENT_URLS: parseClientUrls(),
   EMAIL_FROM: process.env.EMAIL_FROM || "noreply@taramaasolutions.com",
   ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL || "kunal.nic10@gmail.com",
   SMTP_HOST: process.env.SMTP_HOST || "",

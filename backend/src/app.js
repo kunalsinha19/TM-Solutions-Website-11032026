@@ -6,12 +6,19 @@ const morgan = require("morgan");
 const routes = require("./routes");
 const rateLimit = require("./middleware/rateLimit");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
-const { CLIENT_URL } = require("./config/env");
+const { CLIENT_URL, CLIENT_URLS } = require("./config/env");
 
 const app = express();
 app.set("trust proxy", 1);
 
-const allowedOrigins = [CLIENT_URL, "http://localhost:4173", "http://127.0.0.1:4173", "http://localhost:3000", "http://127.0.0.1:3000"].filter(Boolean);
+const allowedOrigins = Array.from(new Set([
+  ...(CLIENT_URLS || []),
+  CLIENT_URL,
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000"
+].filter(Boolean)));
 
 app.use(cors({
   origin(origin, callback) {
