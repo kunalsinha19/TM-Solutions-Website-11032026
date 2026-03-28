@@ -293,92 +293,109 @@ export default function CategoriesSection() {
           })}
         </AnimatedReveal>
 
-        <div className="showcase-grid">
-          {pagedProducts.map((product) => (
-            <motion.button
-              type="button"
-              key={product.id}
-              className={`product-tile ${activeProduct?.id === product.id ? "active" : ""}`}
-              onClick={() => handleProductSelect(product)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="product-tile-media">
-                {product.image ? (
-                  <motion.img
-                    layoutId={`product-image-${product.id}`}
-                    src={product.image}
-                    alt={product.name}
-                  />
+        <div className="product-browser-layout">
+          <div className="product-card-grid">
+            {pagedProducts.map((product) => (
+              <motion.button
+                type="button"
+                key={product.id}
+                className={`product-tile ${activeProduct?.id === product.id ? "active" : ""}`}
+                onClick={() => handleProductSelect(product)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="product-tile-inner">
+                  <div className="product-tile-media">
+                    {product.image ? (
+                      <motion.img
+                        layoutId={`product-image-${product.id}`}
+                        className="product-tile-image"
+                        src={product.image}
+                        alt={product.name}
+                      />
+                    ) : (
+                      <div className="product-tile-placeholder">No image</div>
+                    )}
+                  </div>
+                  <div className="product-tile-copy">
+                    <div className="product-tile-head">
+                      <span className="product-tile-badge">{product.category}</span>
+                      <strong>{product.price > 0 ? formatInrAmount(product.price) : "Request price"}</strong>
+                    </div>
+                    <h4>{product.name}</h4>
+                    <p>{product.shortDescription || product.detail}</p>
+                  </div>
+                </div>
+              </motion.button>
+            ))}
+
+            <div className="pagination-row">
+              <button type="button" className="secondary" onClick={goPrevPage} disabled={page === 0}>Previous</button>
+              <span>{page + 1} / {Math.max(pageCount, 1)}</span>
+              <button type="button" className="secondary" onClick={goNextPage} disabled={page + 1 >= pageCount}>Next</button>
+            </div>
+          </div>
+
+          <div className="product-detail-column">
+            <div className="product-detail-sticky">
+              <AnimatePresence mode="wait">
+                {activeProduct ? (
+                  <motion.div
+                    key={`detail-${activeProduct.id}`}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 16 }}
+                    transition={{ duration: 0.3 }}
+                    className="product-detail-panel"
+                  >
+                    <div className="product-detail-kicker-row">
+                      <span className="product-detail-badge">{activeProduct.category}</span>
+                      <div className="product-detail-price">
+                        <p>Indicative price</p>
+                        <strong>{activeProduct.price > 0 ? formatInrAmount(activeProduct.price) : "Request price"}</strong>
+                      </div>
+                    </div>
+                    <div className="product-detail-section">
+                      <div className="product-detail-section-head">
+                        <h3>{activeProduct.name}</h3>
+                      </div>
+                      <p className="product-detail-summary">{activeProduct.description || activeProduct.shortDescription}</p>
+                    </div>
+                    {activeProduct.tags.length ? (
+                      <div className="product-detail-section product-detail-list">
+                        {activeProduct.tags.map((tag) => (
+                          <div key={tag} className="product-detail-list-item">
+                            <span>Tag</span>
+                            <strong>{tag}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {activeProduct.images.length ? (
+                      <div className="product-detail-section product-detail-gallery">
+                        {activeProduct.images.slice(0, 4).map((img) => (
+                          <div key={img} className="product-detail-thumb">
+                            <img src={img} alt={activeProduct.name} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div className="product-detail-section">
+                      <div className="product-detail-actions">
+                        <button type="button" onClick={openQuoteForm}>Select Quick Quote</button>
+                        <a href="#quote" className="secondary">Get a Quote</a>
+                      </div>
+                    </div>
+                  </motion.div>
                 ) : (
-                  <div className="product-tile-placeholder">No image</div>
+                  <div className="product-detail-panel empty-live-products">
+                    <p>No published products found yet.</p>
+                    <p>Add products in the admin panel to see them here.</p>
+                  </div>
                 )}
-              </div>
-              <div className="product-tile-body">
-                <h3>{product.name}</h3>
-                <p>{product.shortDescription || product.detail}</p>
-                <div className="product-meta">
-                  <span>{product.category}</span>
-                  {product.price > 0 ? <strong>{formatInrAmount(product.price)}</strong> : <strong>Request price</strong>}
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
+              </AnimatePresence>
 
-        <div className="pagination-row">
-          <button type="button" className="secondary" onClick={goPrevPage} disabled={page === 0}>Previous</button>
-          <span>{page + 1} / {Math.max(pageCount, 1)}</span>
-          <button type="button" className="secondary" onClick={goNextPage} disabled={page + 1 >= pageCount}>Next</button>
-        </div>
-
-        <AnimatePresence mode="wait">
-          {activeProduct ? (
-            <motion.div
-              key={`detail-${activeProduct.id}`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 16 }}
-              transition={{ duration: 0.3 }}
-              className="product-detail-panel"
-            >
-              <div className="product-detail-card">
-                <div className="product-detail-media">
-                  {activeProduct.image ? (
-                    <motion.img
-                      layoutId={`product-image-${activeProduct.id}`}
-                      src={activeProduct.image}
-                      alt={activeProduct.name}
-                    />
-                  ) : (
-                    <div className="product-tile-placeholder">No image</div>
-                  )}
-                </div>
-                <div className="product-detail-content">
-                  <div className="product-detail-header">
-                    <div>
-                      <span className="product-info-chip">{activeProduct.category}</span>
-                      <h3>{activeProduct.name}</h3>
-                      <p>{activeProduct.description || activeProduct.shortDescription}</p>
-                    </div>
-                    <div className="product-detail-price">
-                      <p>Indicative price</p>
-                      <strong>{activeProduct.price > 0 ? formatInrAmount(activeProduct.price) : "Request price"}</strong>
-                    </div>
-                  </div>
-                  <div className="product-detail-tags">
-                    {activeProduct.tags.map((tag) => (
-                      <span key={tag}>{tag}</span>
-                    ))}
-                  </div>
-                  <div className="product-detail-actions">
-                    <button type="button" onClick={openQuoteForm}>Select Quick Quote</button>
-                    <a href="#quote" className="secondary">Get a Quote</a>
-                  </div>
-                </div>
-              </div>
-
-              {showQuoteForm ? (
+              {showQuoteForm && activeProduct ? (
                 <div
                   key={`quote-${activeProduct.id}`}
                   ref={quoteFormRef}
@@ -413,16 +430,10 @@ export default function CategoriesSection() {
                   </form>
                 </div>
               ) : null}
-            </motion.div>
-          ) : (
-            <div className="product-detail-panel empty-live-products">
-              <p>No published products found yet.</p>
-              <p>Add products in the admin panel to see them here.</p>
             </div>
-          )}
-        </AnimatePresence>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
-
