@@ -330,9 +330,9 @@ export default function CategoriesSection() {
             ))}
 
             <div className="pagination-row">
-              <button type="button" className="secondary" onClick={goPrevPage} disabled={page === 0}>Previous</button>
+              <button type="button" className="button-secondary" onClick={goPrevPage} disabled={page === 0}>Previous</button>
               <span>{page + 1} / {Math.max(pageCount, 1)}</span>
-              <button type="button" className="secondary" onClick={goNextPage} disabled={page + 1 >= pageCount}>Next</button>
+              <button type="button" className="button-secondary" onClick={goNextPage} disabled={page + 1 >= pageCount}>Next</button>
             </div>
           </div>
 
@@ -382,8 +382,8 @@ export default function CategoriesSection() {
                     ) : null}
                     <div className="product-detail-section">
                       <div className="product-detail-actions">
-                        <button type="button" onClick={openQuoteForm}>Select Quick Quote</button>
-                        <a href="#quote" className="secondary">Get a Quote</a>
+                        <button type="button" className="button-primary" onClick={openQuoteForm}>Select Quick Quote</button>
+                        <a href="#quote" className="button-secondary">Get a Quote</a>
                       </div>
                     </div>
                   </motion.div>
@@ -437,3 +437,4 @@ export default function CategoriesSection() {
     </section>
   );
 }
+
