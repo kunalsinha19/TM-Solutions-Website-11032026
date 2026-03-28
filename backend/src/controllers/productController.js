@@ -10,15 +10,17 @@ exports.createProduct = asyncHandler(async (req, res) => {
 });
 
 exports.getProducts = asyncHandler(async (_req, res) => {
-  const products = await Product.find().populate("category").sort({ createdAt: -1 });
+  const products = await Product.find().populate("category").sort({ createdAt: -1 }).lean();
+  res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   res.json({ success: true, products });
 });
 
 exports.getProductById = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id).populate("category");
+  const product = await Product.findById(req.params.id).populate("category").lean();
   if (!product) {
     throw new ApiError(404, "Product not found");
   }
+  res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=600");
   res.json({ success: true, product });
 });
 

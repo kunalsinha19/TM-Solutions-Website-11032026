@@ -10,15 +10,17 @@ exports.createCategory = asyncHandler(async (req, res) => {
 });
 
 exports.getCategories = asyncHandler(async (_req, res) => {
-  const categories = await Category.find().sort({ createdAt: -1 });
+  const categories = await Category.find().sort({ createdAt: -1 }).lean();
+  res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   res.json({ success: true, categories });
 });
 
 exports.getCategoryById = asyncHandler(async (req, res) => {
-  const category = await Category.findById(req.params.id);
+  const category = await Category.findById(req.params.id).lean();
   if (!category) {
     throw new ApiError(404, "Category not found");
   }
+  res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=600");
   res.json({ success: true, category });
 });
 

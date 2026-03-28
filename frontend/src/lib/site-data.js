@@ -10,7 +10,7 @@ const API_BASE = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL);
 async function fetchJson(path) {
   try {
     const response = await fetch(`${API_BASE}${path}`, {
-      cache: "no-store"
+      next: { revalidate: 60 }
     });
 
     if (!response.ok) {

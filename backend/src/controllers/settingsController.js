@@ -17,7 +17,7 @@ exports.createSettings = asyncHandler(async (req, res) => {
 });
 
 exports.getSettings = asyncHandler(async (_req, res) => {
-  const settings = await WebsiteSettings.findOne({ siteKey: "primary" });
+  const settings = await WebsiteSettings.findOne({ siteKey: "primary" }).lean();
 
   if (!settings) {
     return res.status(200).json({
@@ -27,6 +27,7 @@ exports.getSettings = asyncHandler(async (_req, res) => {
     });
   }
 
+  res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   return res.json({ success: true, settings });
 });
 
