@@ -313,7 +313,7 @@ export default function ProductManager({ token }) {
                 <article key={product._id} className="list-card">
                   <div>
                     <strong>{product.name}</strong>
-                    <p className="muted small">{product.sku} · {product.status} · {product.category?.name || "No category"}</p>
+                    <p className="muted small">{product.sku} | {product.status} | {product.category?.name || "No category"}</p>
                   </div>
                   <div className="row gap-sm">
                     <button type="button" className="secondary" onClick={() => startEdit(product)}>Edit</button>
@@ -329,3 +329,4 @@ export default function ProductManager({ token }) {
     </div>
   );
 }
+

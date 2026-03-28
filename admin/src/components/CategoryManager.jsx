@@ -220,7 +220,7 @@ export default function CategoryManager({ token }) {
                 <article key={category._id} className="list-card">
                   <div>
                     <strong>{category.name}</strong>
-                    <p className="muted small">{category.slug} · {category.isActive ? "Active" : "Inactive"}</p>
+                    <p className="muted small">{category.slug} | {category.isActive ? "Active" : "Inactive"}</p>
                   </div>
                   <div className="row gap-sm">
                     <button type="button" className="secondary" onClick={() => startEdit(category)}>Edit</button>
@@ -239,3 +239,4 @@ export default function CategoryManager({ token }) {
     </div>
   );
 }
+

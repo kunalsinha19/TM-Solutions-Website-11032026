@@ -178,7 +178,7 @@ export default function AdminManager({ token, profile }) {
               <article key={admin._id} className="list-card">
                 <div>
                   <strong>{admin.name}{admin.email === "kunal.nic10@gmail.com" ? " (Primary Admin)" : ""}</strong>
-                  <p className="muted small">{admin.email} · {admin.role} · {admin.isActive ? "Active" : "Inactive"}</p>
+                  <p className="muted small">{admin.email} | {admin.role} | {admin.isActive ? "Active" : "Inactive"}</p>
                   <p className="muted small">Backup: {admin.backupEmail}</p>
                   {String(admin._id) === String(profile?._id) ? <p className="muted small">Current logged-in admin</p> : null}
                 </div>
@@ -195,3 +195,4 @@ export default function AdminManager({ token, profile }) {
     </div>
   );
 }
+

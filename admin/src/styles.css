@@ -25,6 +25,13 @@ select {
   font: inherit;
 }
 
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid rgba(180, 83, 9, 0.25);
+  border-color: #caa56a;
+}
+
 button {
   border: 0;
   border-radius: 14px;
@@ -61,6 +68,13 @@ select {
   border: 1px solid #d8d2c5;
   border-radius: 14px;
   background: #fff;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid rgba(180, 83, 9, 0.25);
+  border-color: #caa56a;
 }
 
 label {
@@ -313,6 +327,21 @@ code {
   border-radius: 18px;
   background: #fff;
   border: 1px solid #e5dece;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.list-card:hover,
+.quote-card:hover,
+.guidance-card:hover,
+.example-card:hover {
+  transform: translateY(-1px);
+  border-color: #d6cbb5;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+}
+
+.list-card strong {
+  font-size: 1rem;
+  color: #0f172a;
 }
 
 .quote-main {
@@ -502,14 +531,6 @@ code {
   .nav-item-row {
     grid-template-columns: minmax(0, 1fr) 36px;
   }
-}.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-.pagination-controls .muted {
-  font-weight: 600;
 }
 
 .pagination-controls {
@@ -517,10 +538,20 @@ code {
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #e5dece;
 }
+
+.pagination-controls button {
+  min-width: 110px;
+}
+
 .pagination-controls .muted {
   font-weight: 600;
 }
+
 
 
 .logo-upload-block {
@@ -598,3 +629,7 @@ code {
     width: 100%;
   }
 }
+
+
+
+
