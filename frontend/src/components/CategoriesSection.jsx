@@ -107,9 +107,9 @@ export default function CategoriesSection() {
           return;
         }
 
-        const liveProducts = Array.isArray(productsResponse?.products)
-          ? productsResponse.products.filter((product) => product?.status === "published")
-          : [];
+        const allProducts = Array.isArray(productsResponse?.products) ? productsResponse.products : [];
+        const publishedProducts = allProducts.filter((product) => product?.status === "published");
+        const liveProducts = publishedProducts.length ? publishedProducts : allProducts;
 
         const liveCategories = Array.isArray(categoriesResponse?.categories)
           ? categoriesResponse.categories.filter((category) => category?.isActive !== false)
@@ -425,3 +425,4 @@ export default function CategoriesSection() {
     </section>
   );
 }
+
