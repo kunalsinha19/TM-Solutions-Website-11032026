@@ -1750,10 +1750,13 @@ html.dark .tools-burger span { background: #f8fafc; }
     display: none;
   }
 }
-\n\n.quick-quote-subtext {\n  margin: 0;\n  color: var(--muted);\n  font-size: 0.95rem;\n}\n
+.quick-quote-subtext {  margin: 0;  color: var(--muted);  font-size: 0.95rem;}
 
 
 
 
-\n\n.about-intro {\n  margin-top: 1.5rem;\n  padding: 1.25rem 1.4rem;\n  border-radius: 22px;\n  background: rgba(255,255,255,0.78);\n  border: 1px solid var(--border);\n  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);\n}\nhtml.dark .about-intro {\n  background: rgba(15, 23, 42, 0.72);\n  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.48);\n}\n.about-intro p { margin: 0; }\n
-\n\n.about-image {\n  width: 100%;\n  overflow: hidden;\n  border-radius: 18px;\n  border: 1px solid var(--border);\n}\n.about-image img {\n  width: 100%;\n  display: block;\n  object-fit: cover;\n  max-height: 220px;\n}\n
+.about-intro {  margin-top: 1.5rem;  padding: 1.25rem 1.4rem;  border-radius: 22px;  background: rgba(255,255,255,0.78);  border: 1px solid var(--border);  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);}html.dark .about-intro {  background: rgba(15, 23, 42, 0.72);  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.48);}.about-intro p { margin: 0; }
+.about-image {  width: 100%;  overflow: hidden;  border-radius: 18px;  border: 1px solid var(--border);}.about-image img {  width: 100%;  display: block;  object-fit: cover;  max-height: 220px;}
+
+
+
