@@ -246,8 +246,30 @@ export default function SettingsManager({ token }) {
           </div>
         </div>
         <div className="grid-two">
-          <label><span>Contact email</span><input value={form.contactInfo.email} onChange={(e) => setForm({ ...form, contactInfo: { ...form.contactInfo, email: e.target.value } })} /></label>
-          <label><span>Master email</span><input value={form.masterEmail} onChange={(e) => setForm({ ...form, masterEmail: e.target.value } })} /></label>
+          <label>
+            <span>Contact email</span>
+            <input
+              value={form.contactInfo.email}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  contactInfo: { ...form.contactInfo, email: e.target.value }
+                })
+              }
+            />
+          </label>
+          <label>
+            <span>Master email</span>
+            <input
+              value={form.masterEmail}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  masterEmail: e.target.value
+                })
+              }
+            />
+          </label>
         </div>
         <div className="grid-two">
           <label><span>Contact phone</span><input value={form.contactInfo.phone} onChange={(e) => setForm({ ...form, contactInfo: { ...form.contactInfo, phone: e.target.value } })} /></label>
