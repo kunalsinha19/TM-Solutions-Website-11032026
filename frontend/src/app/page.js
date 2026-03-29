@@ -31,7 +31,7 @@ export default async function HomePage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(entry) }}
         />
       ))}
-      <main id="top">
+      <main id="top" className="brand-mode">
         <HeroSection content={homepage} />
         <WhatWeDoSection content={homepage} />
         <CategoriesSection />
@@ -42,3 +42,4 @@ export default async function HomePage() {
     </>
   );
 }
+

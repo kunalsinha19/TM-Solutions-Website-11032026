@@ -1896,3 +1896,104 @@ html.brand .button-secondary {
   color: #e2e8f0;
   border-color: rgba(59, 130, 246, 0.35);
 }
+
+html.brand main.brand-mode {
+  display: flex;
+  flex-direction: column;
+}
+
+html.brand #categories {
+  order: 1;
+  padding-top: 3.5rem;
+}
+
+html.brand .hero-section {
+  order: 2;
+  min-height: 70vh;
+}
+
+html.brand .hero-section::after {
+  background: linear-gradient(180deg, rgba(2, 8, 23, 0) 0%, rgba(2, 8, 23, 0.7) 70%, rgba(2, 8, 23, 0.95) 100%);
+}
+
+html.brand .contact-us-button {
+  position: fixed;
+  top: 1rem;
+  right: 16.5rem;
+  z-index: 60;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #111827;
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.15rem;
+  font-weight: 700;
+  box-shadow: 0 16px 36px rgba(2, 6, 23, 0.35);
+}
+
+html.brand .contact-us-button:hover {
+  filter: brightness(0.96);
+}
+
+@media (max-width: 1200px) {
+  html.brand .contact-us-button { right: 14rem; }
+}
+
+@media (max-width: 1024px) {
+  html.brand .contact-us-button { display: none; }
+}
+
+.contact-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.6);
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  z-index: 200;
+}
+
+.contact-modal-card {
+  width: min(520px, 100%);
+  background: linear-gradient(180deg, rgba(7, 21, 46, 0.98), rgba(8, 24, 56, 0.96));
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 24px;
+  padding: 1.5rem;
+  color: #f8fafc;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.55);
+}
+
+.contact-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.contact-modal-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-modal-form input {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #f8fafc;
+}
+
+.contact-modal-form button {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #111827;
+  font-weight: 700;
+}
+
+.contact-modal-success {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.contact-modal-success h4 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #fbbf24;
+}

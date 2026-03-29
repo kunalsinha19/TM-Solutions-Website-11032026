@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import TranslateWidget from "./TranslateWidget";
-import ThemeToggle from "./ThemeToggle";
+import TranslateWidget from "./TranslateWidget";\nimport ThemeToggle from "./ThemeToggle";\nimport ContactUsButton from "./ContactUsButton";
 
 export default function ToolsDock() {
   const [isMobile, setIsMobile] = useState(false);
@@ -23,11 +22,7 @@ export default function ToolsDock() {
   }, []);
 
   if (!isMobile) {
-    return (
-      <>
-        <TranslateWidget />
-        <ThemeToggle />
-      </>
+    return (\n      <>\n        <ContactUsButton />\n        <TranslateWidget />\n        <ThemeToggle />\n      </>
     );
   }
 
@@ -47,3 +42,4 @@ export default function ToolsDock() {
     </div>
   );
 }
+
