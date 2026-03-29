@@ -104,6 +104,26 @@ html.dark .site-header::before {
   padding: 0;
 }
 
+html.brand body {
+  background:
+    radial-gradient(circle at 15% 18%, rgba(59, 130, 246, 0.35), transparent 32%),
+    radial-gradient(circle at 85% 12%, rgba(251, 191, 36, 0.18), transparent 26%),
+    radial-gradient(circle at 70% 80%, rgba(14, 116, 144, 0.25), transparent 30%),
+    linear-gradient(180deg, #020b1f 0%, #071a3a 55%, #0a1f44 100%);
+}
+
+html.brand {
+  --bg: #04142d;
+  --surface: rgba(8, 24, 56, 0.88);
+  --panel: #0a1f44;
+  --text: #f8fafc;
+  --muted: #c7d2fe;
+  --border: rgba(59, 130, 246, 0.28);
+  --accent: #fbbf24;
+  --accent-dark: #f59e0b;
+  --shadow: 0 30px 90px rgba(2, 6, 23, 0.55);
+}
+
 .site-header-mark.has-logo img {
   width: 100%;
   height: 100%;
@@ -1791,3 +1811,26 @@ html.dark .tools-burger span { background: #f8fafc; }
     text-align: left;
   }
 }
+
+html.brand .site-header {
+  background: linear-gradient(135deg, rgba(6, 20, 45, 0.96), rgba(10, 31, 68, 0.92));
+  border-color: rgba(251, 191, 36, 0.22);
+  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.55);
+}
+
+html.brand .site-header::before {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.24), transparent 42%);
+}
+
+html.brand .theme-toggle {
+  background: linear-gradient(135deg, rgba(6, 20, 45, 0.95), rgba(10, 31, 68, 0.9));
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.55);
+}
+
+html.brand .theme-toggle-icon {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.18);
+}
+
+

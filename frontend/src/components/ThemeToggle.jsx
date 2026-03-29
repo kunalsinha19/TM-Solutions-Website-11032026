@@ -6,11 +6,12 @@ const STORAGE_KEY = "tara-maa-theme";
 
 function applyTheme(nextTheme) {
   document.documentElement.classList.toggle("dark", nextTheme === "dark");
+  document.documentElement.classList.toggle("brand", nextTheme === "brand");
 }
 
 function getPreferredTheme() {
   const saved = window.localStorage.getItem(STORAGE_KEY);
-  if (saved === "light" || saved === "dark") {
+  if (saved === "light" || saved === "dark" || saved === "brand") {
     return saved;
   }
 
@@ -34,9 +35,21 @@ function MoonIcon() {
   );
 }
 
+function BrandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon-svg">
+      <path d="M12 2l2.2 4.9 5.3.5-4 3.6 1.2 5.2-4.7-2.7-4.7 2.7 1.2-5.2-4-3.6 5.3-.5L12 2z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export default function ThemeToggle() {
   const [theme, setTheme] = useState("light");
-  const label = useMemo(() => (theme === "dark" ? "Switch to light mode" : "Switch to dark mode"), [theme]);
+  const label = useMemo(() => {
+    if (theme === "dark") return "Switch to brand mode";
+    if (theme === "brand") return "Switch to light mode";
+    return "Switch to dark mode";
+  }, [theme]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -58,16 +71,19 @@ export default function ThemeToggle() {
   }, []);
 
   function toggleTheme() {
-    const nextTheme = theme === "dark" ? "light" : "dark";
+    const nextTheme = theme === "light" ? "dark" : theme === "dark" ? "brand" : "light";
     setTheme(nextTheme);
     window.localStorage.setItem(STORAGE_KEY, nextTheme);
     applyTheme(nextTheme);
   }
 
+  const buttonText = theme === "dark" ? "Brand mode" : theme === "brand" ? "Light mode" : "Dark mode";
+  const icon = theme === "dark" ? <BrandIcon /> : theme === "brand" ? <SunIcon /> : <MoonIcon />;
+
   return (
     <button type="button" aria-label={label} onClick={toggleTheme} className="theme-toggle">
-      <span className="theme-toggle-icon" aria-hidden="true">{theme === "dark" ? <SunIcon /> : <MoonIcon />}</span>
-      <span className="theme-toggle-text">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+      <span className="theme-toggle-icon" aria-hidden="true">{icon}</span>
+      <span className="theme-toggle-text">{buttonText}</span>
     </button>
   );
 }

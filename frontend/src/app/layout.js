@@ -49,14 +49,16 @@ const themeScript = `
     const storageKey = "tara-maa-theme";
     const savedTheme = window.localStorage.getItem(storageKey);
     const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const resolvedTheme = savedTheme === "light" || savedTheme === "dark"
+    const resolvedTheme = savedTheme === "light" || savedTheme === "dark" || savedTheme === "brand"
       ? savedTheme
       : systemDark
         ? "dark"
         : "light";
     document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+    document.documentElement.classList.toggle("brand", resolvedTheme === "brand");
   } catch (error) {
     document.documentElement.classList.remove("dark");
+    document.documentElement.classList.remove("brand");
   }
 })();
 `;
