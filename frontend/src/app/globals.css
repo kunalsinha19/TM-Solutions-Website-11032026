@@ -1834,3 +1834,65 @@ html.brand .theme-toggle-icon {
 }
 
 
+
+html.brand .hero-backdrop {
+  background:
+    linear-gradient(180deg, rgba(4, 12, 28, 0.15) 0%, rgba(4, 12, 28, 0.42) 58%, rgba(4, 12, 28, 0.92) 100%),
+    linear-gradient(90deg, rgba(4, 12, 28, 0.65), rgba(4, 12, 28, 0.38)),
+    url("/hero-industrial-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.6;
+}
+
+html.brand .hero-copy h1 {
+  color: #f8fafc;
+}
+
+html.brand .hero-text {
+  color: #dbeafe;
+}
+
+html.brand .hero-card {
+  border: 1px solid rgba(59, 130, 246, 0.32);
+  background: rgba(6, 20, 45, 0.6);
+}
+
+html.brand .hero-stat-grid div {
+  background: rgba(6, 20, 45, 0.75);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+}
+
+html.brand .site-header-title,
+html.brand .site-header-subtitle {
+  color: #f8fafc;
+}
+
+html.brand .category-tab {
+  background: rgba(6, 20, 45, 0.9);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #e2e8f0;
+}
+
+html.brand .category-tab.active {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #111827;
+}
+
+html.brand .product-tile-inner,
+html.brand .product-detail-panel,
+html.brand .product-quick-quote {
+  background: rgba(7, 21, 46, 0.86);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+html.brand .product-tile-copy p,
+html.brand .product-detail-summary {
+  color: #dbeafe;
+}
+
+html.brand .button-secondary {
+  background: rgba(8, 24, 56, 0.7);
+  color: #e2e8f0;
+  border-color: rgba(59, 130, 246, 0.35);
+}
