@@ -1919,7 +1919,7 @@ html.brand .hero-section::after {
 html.brand .contact-us-button {
   position: fixed;
   top: 1rem;
-  right: 16.5rem;
+  right: 22rem;
   z-index: 60;
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   color: #111827;
@@ -1934,66 +1934,52 @@ html.brand .contact-us-button:hover {
   filter: brightness(0.96);
 }
 
-@media (max-width: 1200px) {
-  html.brand .contact-us-button { right: 14rem; }
+@media (max-width: 1280px) {
+  html.brand .contact-us-button { right: 20rem; }
+  html.brand .translate-toggle { right: 11.4rem; }
 }
 
-@media (max-width: 1024px) {
-  html.brand .contact-us-button { display: none; }
+@media (max-width: 1120px) {
+  html.brand .contact-us-button { right: 18rem; }
+  html.brand .translate-toggle { right: 10.6rem; }
 }
 
-.contact-modal {
+
+
+
+
+.tools-dock-desktop {
   position: fixed;
-  inset: 0;
-  background: rgba(2, 6, 23, 0.6);
-  display: grid;
-  place-items: center;
-  padding: 1.5rem;
-  z-index: 200;
-}
-
-.contact-modal-card {
-  width: min(520px, 100%);
-  background: linear-gradient(180deg, rgba(7, 21, 46, 0.98), rgba(8, 24, 56, 0.96));
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  border-radius: 24px;
-  padding: 1.5rem;
-  color: #f8fafc;
-  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.55);
-}
-
-.contact-modal-header {
+  top: 1rem;
+  right: 1rem;
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-
-.contact-modal-form {
-  display: grid;
-  gap: 1rem;
-}
-
-.contact-modal-form input {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  color: #f8fafc;
-}
-
-.contact-modal-form button {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #111827;
-  font-weight: 700;
-}
-
-.contact-modal-success {
-  display: grid;
+  align-items: center;
   gap: 0.6rem;
+  z-index: 70;
 }
 
-.contact-modal-success h4 {
+.tools-dock-desktop .contact-us-button,
+.tools-dock-desktop .translate-toggle,
+.tools-dock-desktop .theme-toggle {
+  position: static;
+  top: auto;
+  right: auto;
   margin: 0;
-  font-size: 1.4rem;
-  color: #fbbf24;
+}
+
+.tools-dock-desktop .contact-us-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.6rem;
+  padding: 0 1.1rem;
+}
+
+.tools-dock-desktop .translate-toggle,
+.tools-dock-desktop .theme-toggle {
+  height: 2.6rem;
+}
+
+@media (max-width: 1120px) {
+  .tools-dock-desktop { gap: 0.4rem; }
 }

@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const routes = require("./routes");
 const rateLimit = require("./middleware/rateLimit");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
-const { CLIENT_URL, CLIENT_URLS, NODE_ENV } = require("./config/env");
+const { CLIENT_URL, CLIENT_URLS, ADMIN_URL, ADMIN_URLS, NODE_ENV } = require("./config/env");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -18,7 +18,9 @@ const productionOrigins = [
 
 const allowedOrigins = Array.from(new Set([
   ...(CLIENT_URLS || []),
+  ...(ADMIN_URLS || []),
   CLIENT_URL,
+  ADMIN_URL,
   ...(NODE_ENV === "production" ? productionOrigins : []),
   "http://localhost:4173",
   "http://127.0.0.1:4173",
@@ -26,9 +28,16 @@ const allowedOrigins = Array.from(new Set([
   "http://127.0.0.1:3000"
 ].filter(Boolean)));
 
+const railwayOriginPattern = /\\.up\\.railway\\.app$|\\.railway\\.app$/i;
+
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const isAllowed = allowedOrigins.includes(origin) || railwayOriginPattern.test(origin);
+    if (isAllowed) {
       return callback(null, true);
     }
 
@@ -52,3 +61,5 @@ app.use(notFound);
 app.use(errorHandler);
 
 module.exports = app;
+
+

@@ -25,11 +25,11 @@ export default function ToolsDock() {
 
   if (!isMobile) {
     return (
-      <>
+      <div className="tools-dock-desktop">
         <ContactUsButton />
         <TranslateWidget />
         <ThemeToggle />
-      </>
+      </div>
     );
   }
 
