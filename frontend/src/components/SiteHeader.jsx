@@ -56,7 +56,7 @@ export default function SiteHeader() {
         </div>
         <div className="site-header-copy">
           <p className="site-header-title">Tara Maa Solutions</p>
-          <p className="site-header-subtitle">Trusted industrial supplier</p>
+          <p className="site-header-subtitle">Leading Digital Innovations</p>
         </div>
       </div>
     </motion.header>

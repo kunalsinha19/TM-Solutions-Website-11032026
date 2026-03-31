@@ -3,20 +3,20 @@ import SectionHeading from "./SectionHeading";
 
 const fallbackContent = {
   aboutTitle: "A modern B2B platform for industrial printing, finishing, and office automation.",
-  aboutDescription: "Tara Maa Solutions helps businesses discover, compare, and source reliable equipment, consumables, and workflow tools with clarity and confidence.",
-  aboutIntro: "We believe the future of industrial procurement is digital, transparent, and data-driven. Our platform blends technology, industry expertise, and guided quote workflows so teams can make smarter buying decisions and modernize production environments.",
+  aboutDescription: "Tara Maa Solutions is a digital-first B2B platform powering the next era of industrial procurement.",
+  aboutIntro: "We drive digital transformation across printing, finishing, and automation by combining AI-assisted discovery, smart sourcing, and workflow intelligence. Our platform connects manufacturers, distributors, and enterprises into a unified marketplace that learns from data and improves decisions in real time.",
   aboutParagraphs: [
-    "Beyond product listings, we aim to be a knowledge and innovation hub for the printing and finishing industry by offering insights, analytics, and structured guidance that reduce guesswork and improve outcomes.",
-    "We curate dependable machines, lamination systems, finishing equipment, sublimation tools, office automation products, and industrial consumables from trusted manufacturers and suppliers. The goal is simple: make procurement clear, faster, and more predictable for every business."
+    "Automation, predictive insights, and guided procurement journeys reduce downtime, standardize vendor choices, and help teams scale with confidence. From intelligent recommendations to structured approvals, every interaction is designed to be transparent, fast, and measurable.",
+    "Built for global growth, we deliver secure, scalable infrastructure that modernizes production environments, connects supply chains, and keeps operations future-ready as new technologies emerge."
   ],
   visionTitle: "Vision",
-  visionDescription: "To become a trusted global platform for industrial printing, finishing, and automation solutions, enabling businesses to grow through innovation, accessibility, and data-driven procurement.",
+  visionDescription: "To become the global, AI-powered operating system for industrial procurement and production modernization.",
   missionTitle: "Mission",
   missionItems: [
-    "Simplify the procurement of industrial equipment and consumables.",
-    "Connect manufacturers, distributors, and businesses through one unified marketplace.",
-    "Provide technology-driven tools and analytics for smarter operational decisions.",
-    "Build a reliable, transparent ecosystem for the printing and finishing industry."
+    "Accelerate digital transformation with intelligent, automation-first procurement workflows.",
+    "Connect manufacturers, distributors, and enterprises through a single, data-driven marketplace.",
+    "Deliver smart insights that improve cost, speed, and operational performance at scale.",
+    "Build a future-ready ecosystem that evolves with emerging industrial technologies."
   ],
   offerTitle: "What we offer",
   offerItems: [

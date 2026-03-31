@@ -42,6 +42,7 @@ export default function ToolsDock() {
       </button>
       {open ? (
         <div className="tools-panel">
+          <ContactUsButton variant="panel" />
           <TranslateWidget />
           <ThemeToggle />
         </div>

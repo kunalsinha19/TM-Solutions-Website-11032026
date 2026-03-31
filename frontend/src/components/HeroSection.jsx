@@ -81,7 +81,7 @@ export default function HeroSection({ content }) {
           </p>
           <div className="hero-actions">
             <a href="#quote" className="button-primary">Get a Quote</a>
-            <a href="#categories" className="button-secondary">See Products</a>
+            <a href="#categories" className="button-secondary">Explore Products</a>
           </div>
         </AnimatedReveal>
 

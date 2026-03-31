@@ -10,6 +10,10 @@
   --muted: #4b5563;
   --border: rgba(23, 32, 51, 0.08);
   --accent: #b45309;
+  --primary: #00f5ff;
+  --secondary: #7b61ff;
+  --dark-bg: #0a0a0f;
+  --glass: rgba(255,255,255,0.08);
   --accent-dark: #8a3f08;
   --shadow: 0 26px 80px rgba(17, 24, 39, 0.12);
 }
@@ -1958,7 +1962,7 @@ html.brand .contact-us-button:hover {
   z-index: 70;
 }
 
-.tools-dock-desktop .contact-us-button,
+.tools-dock-desktop .contact-us-trigger,
 .tools-dock-desktop .translate-toggle,
 .tools-dock-desktop .theme-toggle {
   position: static;
@@ -1967,7 +1971,7 @@ html.brand .contact-us-button:hover {
   margin: 0;
 }
 
-.tools-dock-desktop .contact-us-button {
+.tools-dock-desktop .contact-us-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1982,4 +1986,189 @@ html.brand .contact-us-button:hover {
 
 @media (max-width: 1120px) {
   .tools-dock-desktop { gap: 0.4rem; }
+}
+.contact-us-trigger {
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-us-trigger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+}
+
+html.dark .contact-us-trigger {
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.contact-us-panel {
+  width: 100%;
+  text-align: center;
+}
+
+.contact-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 12, 24, 0.55);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  z-index: 80;
+  animation: modalFade 0.2s ease;
+}
+
+.contact-modal-card {
+  width: min(520px, calc(100% - 2rem));
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 24px 80px rgba(2, 6, 23, 0.35);
+  color: #f8fafc;
+  position: relative;
+  animation: modalPop 0.24s ease;
+}
+
+html:not(.dark) .contact-modal-card {
+  background: rgba(255, 255, 255, 0.85);
+  color: #0f172a;
+}
+
+.contact-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: none;
+  background: rgba(15, 23, 42, 0.12);
+  color: inherit;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.contact-modal-header h3 {
+  margin: 0.4rem 0 0.25rem;
+}
+
+.contact-modal-form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.contact-modal-form label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.contact-modal-form input,
+.contact-modal-form textarea {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 0.75rem 0.9rem;
+  background: rgba(15, 23, 42, 0.22);
+  color: inherit;
+}
+
+html:not(.dark) .contact-modal-form input,
+html:not(.dark) .contact-modal-form textarea {
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+}
+
+@keyframes modalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+html.brand body {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(0, 245, 255, 0.18), transparent 35%),
+    radial-gradient(circle at 85% 10%, rgba(123, 97, 255, 0.18), transparent 38%),
+    linear-gradient(180deg, #05070f 0%, #0b1020 100%);
+}
+
+html.brand .hero-copy h1 {
+  background: linear-gradient(90deg, #00f5ff, #7b61ff, #00f5ff);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: brandGlowText 4s linear infinite;
+}
+
+html.brand .button-primary {
+  background: linear-gradient(90deg, #00f5ff, #7b61ff);
+  border: none;
+  color: #0a0a0f;
+  box-shadow: 0 16px 40px rgba(0, 245, 255, 0.35);
+}
+
+html.brand .button-primary:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 20px 46px rgba(123, 97, 255, 0.45);
+}
+
+html.brand .button-secondary {
+  border-color: rgba(0, 245, 255, 0.45);
+  color: #e2e8f0;
+}
+
+html.brand .product-tile-inner,
+html.brand .product-detail-panel {
+  box-shadow: 0 24px 80px rgba(2, 6, 23, 0.55);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+html.brand .product-tile-inner:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 28px 90px rgba(0, 245, 255, 0.25);
+}
+
+html.brand .hero-card {
+  background: rgba(6, 10, 24, 0.78);
+  border: 1px solid rgba(0, 245, 255, 0.18);
+}
+
+@keyframes brandGlowText {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.tools-panel .contact-us-trigger {
+  position: static;
+  width: 100%;
+  height: 2.8rem;
+  justify-content: center;
+}
+
+.tools-panel {
+  animation: toolsSlide 0.22s ease;
+}
+
+@keyframes toolsSlide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+html.brand .contact-us-trigger {
+  background: rgba(6, 10, 24, 0.6);
+  color: #e2f7ff;
+  border: 1px solid rgba(0, 245, 255, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 245, 255, 0.18);
+}
+
+html.brand .contact-us-trigger:hover {
+  box-shadow: 0 18px 40px rgba(123, 97, 255, 0.32);
 }
