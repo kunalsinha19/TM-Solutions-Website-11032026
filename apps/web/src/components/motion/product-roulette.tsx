@@ -17,7 +17,7 @@ export function ProductRoulette({ products }: { products: Product[] }) {
   const reel = [...products, ...products];
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-panel py-5 shadow-soft">
+    <div className="marquee-container relative overflow-hidden rounded-[2rem] border border-border/70 bg-panel py-5 shadow-soft" title="Hover to pause">
       {/* Fade edges */}
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-panel to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-panel to-transparent" />
