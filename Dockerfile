@@ -30,5 +30,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 USER nextjs
 EXPOSE 3000
 
-# In a workspace monorepo the standalone server.js sits under the app path
-CMD ["node", "apps/web/server.js"]
+# Use sh -c so HOSTNAME is set in the process environment even if the
+# container runtime overwrites the Docker ENV with the container hostname.
+CMD ["sh", "-c", "HOSTNAME=0.0.0.0 node apps/web/server.js"]
