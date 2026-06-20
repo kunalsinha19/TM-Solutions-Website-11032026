@@ -1,7 +1,24 @@
 import Link from "next/link";
 import type { Product } from "@tara-maa/shared-types";
 
-export function ProductCard({ product }: { product: Product }) {
+function getFirstImageUrl(images: Product["images"]): string | null {
+  if (!images?.length) return null;
+  const first = images[0];
+  return typeof first === "string" ? first : (first as { url: string }).url || null;
+}
+
+function getFirstImageAlt(images: Product["images"], fallback: string): string {
+  if (!images?.length) return fallback;
+  const first = images[0];
+  return typeof first === "string" ? fallback : ((first as { alt?: string }).alt || fallback);
+}
+
+export function ProductCard({ product }: { product: Product & { price?: number } }) {
+  const imgUrl = getFirstImageUrl(product.images);
+  const imgAlt = getFirstImageAlt(product.images, product.name);
+  const categoryOrTag = product.tags?.[0] ?? "";
+  const price = product.price;
+
   return (
     <Link
       href={`/products/${product.slug}`}
@@ -17,11 +34,11 @@ export function ProductCard({ product }: { product: Product }) {
         </span>
       )}
 
-      {/* Image placeholder */}
+      {/* Image */}
       <div className="mb-5 flex h-44 items-center justify-center rounded-[1.25rem] bg-surface border border-border/50 overflow-hidden">
-        {product.images && product.images[0] ? (
+        {imgUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={product.images[0].url} alt={product.images[0].alt || product.name} className="h-full w-full object-cover" />
+          <img src={imgUrl} alt={imgAlt} className="h-full w-full object-cover" />
         ) : (
           <div className="flex flex-col items-center gap-2 text-border">
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -29,31 +46,43 @@ export function ProductCard({ product }: { product: Product }) {
               <circle cx="12" cy="13" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
               <path d="M4 22l6-5 5 4 4-3 9 7" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
             </svg>
-            <span className="text-xs">Product Image</span>
+            <span className="text-xs">No image yet</span>
           </div>
         )}
       </div>
 
-      {/* SKU + Category */}
+      {/* Category + SKU row */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted bg-surface px-2 py-0.5 rounded-full border border-border/60">
-          {product.sku}
-        </span>
-        {product.tags?.[0] && (
-          <span className="text-[10px] font-medium uppercase tracking-wide text-accent/80">
-            {product.tags[0]}
+        {categoryOrTag && (
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-accent/80">
+            {categoryOrTag}
+          </span>
+        )}
+        {product.sku && (
+          <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted bg-surface px-2 py-0.5 rounded-full border border-border/60 ml-auto">
+            {product.sku}
           </span>
         )}
       </div>
 
       <h3 className="text-lg font-semibold leading-snug">{product.name}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted flex-1">{product.shortDescription}</p>
+      <p className="mt-2 text-sm leading-relaxed text-muted flex-1">
+        {product.shortDescription || product.metaDescription}
+      </p>
 
-      <div className="mt-5 flex items-center gap-1.5 text-sm font-semibold text-accent group-hover:gap-2.5 transition-all duration-200">
-        View details
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+      {/* Price + CTA row */}
+      <div className="mt-5 flex items-center justify-between">
+        <span className="text-sm font-bold text-text">
+          {price && price > 0
+            ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price)
+            : "Price on request"}
+        </span>
+        <span className="flex items-center gap-1.5 text-sm font-semibold text-accent group-hover:gap-2.5 transition-all duration-200">
+          View details
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
       </div>
     </Link>
   );
