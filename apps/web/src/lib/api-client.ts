@@ -29,9 +29,20 @@ async function request<T>(path: string, init?: NextRequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function getProducts(): Promise<Product[]> {
+  const raw = await request<unknown>("/products", { next: { revalidate: 60 } });
+  if (Array.isArray(raw)) return raw as Product[];
+  if (raw && typeof raw === "object") {
+    const wrapped = raw as Record<string, unknown>;
+    if (Array.isArray(wrapped.products)) return wrapped.products as Product[];
+    if (Array.isArray(wrapped.data)) return wrapped.data as Product[];
+  }
+  return [];
+}
+
 export const apiClient = {
   getSettings: () => request<SiteSettings>("/settings", { next: { revalidate: 60 } }),
-  getProducts: () => request<Product[]>("/products", { next: { revalidate: 60 } }),
+  getProducts,
   getProduct: (slug: string) => request<Product>(`/products/${slug}`, { next: { revalidate: 60 } }),
   getSeoPage: (slug: string) => request<SeoPage>(`/seo-pages/${slug}`, { next: { revalidate: 60 } }),
   submitQuote: (payload: QuoteRequest) =>
