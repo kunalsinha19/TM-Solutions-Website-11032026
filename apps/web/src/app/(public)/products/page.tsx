@@ -3,11 +3,12 @@ import { apiClient } from "../../../lib/api-client";
 import { ProductCard } from "../../../components/products/product-card";
 import { Reveal } from "../../../components/motion/reveal";
 import { FloatingOrb } from "../../../components/motion/floating-orb";
+import { ProductsClient } from "../../../components/products/products-client";
 import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Products",
-  description: "Browse TM Solutions' full industrial product catalog — automation, valves, sensors, and more."
+  description: "Browse TM Solutions' full product catalog — office accessories, sublimation printing, automation, and more."
 };
 
 export default async function ProductsPage() {
@@ -18,21 +19,20 @@ export default async function ProductsPage() {
       {/* ── HERO ── */}
       <section className="relative overflow-hidden px-6 pb-16 pt-16">
         <FloatingOrb size={400} top="-20%" right="-10%" color="rgba(180,83,9,0.08)" />
-
         <div className="relative mx-auto max-w-7xl">
           <Reveal>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Product Catalog</p>
             <h1 className="mt-3 text-4xl font-extrabold tracking-tight lg:text-5xl">
-              Industrial Products & Equipment
+              Our Products
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-muted">
-              Browse our full catalog of automation components, valves, sensors, and process equipment. Click any product to view specs and request a quote.
+              Browse our catalog, filter by category, and request a quote for any product in minutes.
             </p>
           </Reveal>
         </div>
       </section>
 
-      {/* ── PRODUCT GRID ── */}
+      {/* ── PRODUCT GRID (client component handles category filter + search) ── */}
       <section className="px-6 pb-24">
         <div className="mx-auto max-w-7xl">
           {products.length === 0 ? (
@@ -45,13 +45,7 @@ export default async function ProductsPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {products.map((product, i) => (
-                <Reveal key={product.slug} delay={(i % 3) * 0.08}>
-                  <ProductCard product={product} />
-                </Reveal>
-              ))}
-            </div>
+            <ProductsClient products={products} />
           )}
         </div>
       </section>
@@ -61,7 +55,7 @@ export default async function ProductsPage() {
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl font-bold">Can't Find What You Need?</h2>
           <p className="mt-3 text-muted">
-            Our catalog is growing. If you need a specific product, part number, or custom specification — describe it in a quote request and our team will source it.
+            Our catalog is growing. If you need a specific product, part number, or custom specification — describe it and our team will source it.
           </p>
           <Link
             href="/quote"

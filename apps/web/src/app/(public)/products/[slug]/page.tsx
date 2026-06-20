@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { apiClient } from "../../../../lib/api-client";
 import { QuoteForm } from "../../../../components/forms/quote-form";
@@ -24,7 +25,8 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await apiClient.getProduct(slug);
+  const product = await apiClient.getProduct(slug).catch(() => null);
+  if (!product) notFound();
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
