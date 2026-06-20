@@ -2,6 +2,12 @@
   "name": "tara-maa-solutions",
   "private": true,
   "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "admin",
+    "frontend"
+  ],
   "scripts": {
     "install:frontend": "npm --prefix frontend install",
     "install:backend": "npm --prefix backend install",
@@ -10,6 +16,8 @@
     "build:backend": "npm --prefix backend run build",
     "build:prod": "npm run build:frontend && npm run build:backend",
     "start:frontend": "npm --prefix frontend run start:prod",
-    "start:backend": "npm --prefix backend run start:prod"
+    "start:backend": "npm --prefix backend run start:prod",
+    "build:web": "npm run build --workspace=@tara-maa/web",
+    "start:web": "node apps/web/.next/standalone/server.js"
   }
 }
