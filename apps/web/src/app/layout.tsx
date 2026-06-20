@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteFooter } from "../components/layout/site-footer";
 import { SiteHeader } from "../components/layout/site-header";
 import { ScrollToTop } from "../components/layout/scroll-to-top";
+import { apiClient } from "../lib/api-client";
 
 export const metadata: Metadata = {
   title: {
@@ -20,9 +21,11 @@ export const metadata: Metadata = {
 // Runs synchronously before first paint — eliminates the light-mode flash on dark/green preference.
 const themeScript = `(function(){try{var t=localStorage.getItem('tara-maa-theme');if(t==='dark'||t==='green'||t==='light'){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
 
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: Readonly<{ children: ReactNode }>) {
+  const logoUrl = await apiClient.getSiteLogo();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -31,7 +34,7 @@ export default function RootLayout({
       </head>
       <body>
         <ScrollToTop />
-        <SiteHeader />
+        <SiteHeader logoUrl={logoUrl} />
         <main className="relative z-10">{children}</main>
         <SiteFooter />
       </body>

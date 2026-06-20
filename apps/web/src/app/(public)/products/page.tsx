@@ -10,6 +10,8 @@ import {
   CategoryFilterSkeleton,
 } from "../../../components/products/product-grid-skeleton";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Products",
   description:
