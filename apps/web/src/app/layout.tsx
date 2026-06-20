@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SiteFooter } from "../components/layout/site-footer";
 import { SiteHeader } from "../components/layout/site-header";
+import { ScrollToTop } from "../components/layout/scroll-to-top";
 
 export const metadata: Metadata = {
   title: {
@@ -16,12 +17,20 @@ export const metadata: Metadata = {
   }
 };
 
+// Runs synchronously before first paint — eliminates the light-mode flash on dark/green preference.
+const themeScript = `(function(){try{var t=localStorage.getItem('tara-maa-theme');if(t==='dark'||t==='green'||t==='light'){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
+
 export default function RootLayout({
   children
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
+        <ScrollToTop />
         <SiteHeader />
         <main className="relative z-10">{children}</main>
         <SiteFooter />

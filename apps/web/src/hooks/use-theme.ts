@@ -5,28 +5,30 @@ import type { ThemeMode } from "../lib/theme";
 
 const STORAGE_KEY = "tara-maa-theme";
 
-export function useThemeMode(defaultMode: ThemeMode = "system") {
-  const [mode, setMode] = useState<ThemeMode>(defaultMode);
+export function useThemeMode() {
+  const [mode, setModeState] = useState<ThemeMode>("light");
 
+  // Read persisted theme once on mount
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
-    if (stored) {
-      setMode(stored);
-    }
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
+      if (stored === "dark" || stored === "green" || stored === "light") {
+        setModeState(stored);
+      }
+    } catch {}
   }, []);
 
+  // Apply theme to <html> whenever mode changes
   useEffect(() => {
-    const root = document.documentElement;
-    const resolved =
-      mode === "system"
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light"
-        : mode;
-
-    root.dataset.theme = resolved;
-    window.localStorage.setItem(STORAGE_KEY, mode);
+    document.documentElement.dataset.theme = mode;
+    try {
+      localStorage.setItem(STORAGE_KEY, mode);
+    } catch {}
   }, [mode]);
+
+  function setMode(next: ThemeMode) {
+    setModeState(next);
+  }
 
   return { mode, setMode };
 }

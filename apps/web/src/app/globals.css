@@ -31,9 +31,25 @@
   color-scheme: dark;
 }
 
+/* ── Green / Nature theme ── */
+:root[data-theme="green"] {
+  --color-surface: #f0fdf4;
+  --color-panel: #ffffff;
+  --color-border: #bbf7d0;
+  --color-text: #064e3b;
+  --color-muted: #4b7a5e;
+  --color-accent: #059669;
+  --color-accent-light: #d1fae5;
+  --color-warm: #047857;
+  --color-gold: #10b981;
+  color-scheme: light;
+}
+
 html,
 body {
   min-height: 100%;
+  /* Keep smooth only for within-page anchor scrolls.
+     Next.js page transitions use behavior:"instant" via ScrollToTop. */
   scroll-behavior: smooth;
 }
 
@@ -143,6 +159,17 @@ a {
   animation: skeleton-wave 1.6s linear infinite;
 }
 
+:root[data-theme="green"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    #bbf7d0 0%,
+    #f0fdf4 40%,
+    #bbf7d0 80%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-wave 1.6s linear infinite;
+}
+
 /* ---- Glass card ---- */
 .glass {
   background: rgba(255, 255, 255, 0.08);
@@ -198,25 +225,29 @@ body::before {
   align-items: center !important;
 }
 
-/* The actual language <select> */
+/* The actual language <select> — solid bg so it's visible on any theme */
 .goog-te-gadget .goog-te-combo {
   margin: 0 !important;
   font-size: 11px !important;
   font-family: var(--font-sans) !important;
   border: 1px solid var(--color-border) !important;
   border-radius: 9999px !important;
-  background: transparent !important;
+  background: var(--color-panel) !important;
   color: var(--color-muted) !important;
-  padding: 3px 10px !important;
+  padding: 4px 12px !important;
   outline: none !important;
   cursor: pointer !important;
-  max-width: 110px !important;
-  transition: border-color 0.2s, color 0.2s;
+  max-width: 120px !important;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  appearance: none !important;
+  -webkit-appearance: none !important;
 }
 
-.goog-te-gadget .goog-te-combo:hover {
+.goog-te-gadget .goog-te-combo:hover,
+.goog-te-gadget .goog-te-combo:focus {
   border-color: var(--color-accent) !important;
   color: var(--color-text) !important;
+  background: var(--color-panel) !important;
 }
 
 /* Hide the "Powered by Google Translate" logo row */

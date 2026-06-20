@@ -20,12 +20,13 @@ export function SiteHeader() {
       <header className="sticky top-0 z-40 border-b border-border/50 bg-surface/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white text-[10px] font-bold shadow-glow-sm group-hover:shadow-glow transition-shadow duration-300">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white text-[11px] font-extrabold tracking-tight shadow-glow-sm ring-2 ring-accent/20 group-hover:shadow-glow group-hover:ring-accent/40 transition-all duration-300">
               TMS
             </span>
-            <span className="text-base font-bold tracking-wide text-text">
-              Tara Maa <span className="text-accent">Solutions</span>
+            <span className="text-sm font-bold tracking-wide" style={{ textShadow: "0 0 1px rgba(0,0,0,0.08)" }}>
+              <span className="text-text">Tara Maa </span>
+              <span className="text-accent">Solutions</span>
             </span>
           </Link>
 
