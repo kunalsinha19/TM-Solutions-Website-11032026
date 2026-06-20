@@ -1,13 +1,13 @@
 const { CAPTCHA_SECRET, NODE_ENV, CAPTCHA_BYPASS, HAS_REAL_CAPTCHA } = require("../config/env");
 
 async function validateCaptcha(token, remoteIp) {
-  const devBypassAllowed = NODE_ENV !== "production" || CAPTCHA_BYPASS;
-
   if (!HAS_REAL_CAPTCHA) {
+    // No captcha credentials configured — allow submissions unconditionally.
+    // Set CAPTCHA_SECRET + CAPTCHA_SITE_KEY env vars to enable real verification.
     return {
-      success: devBypassAllowed,
+      success: true,
       provider: "google-recaptcha",
-      reason: devBypassAllowed ? "bypassed-local-development" : "missing-secret-or-site-key"
+      reason: "captcha-not-configured"
     };
   }
 

@@ -1,23 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { apiClient } from "../../../../lib/api-client";
 import { QuoteForm } from "../../../../components/forms/quote-form";
 import { Reveal } from "../../../../components/motion/reveal";
-
-function getImageUrl(img: unknown): string | null {
-  if (!img) return null;
-  if (typeof img === "string") return img;
-  const o = img as Record<string, unknown>;
-  return typeof o.url === "string" ? o.url : null;
-}
-
-function getImageAlt(img: unknown, fallback: string): string {
-  if (!img || typeof img === "string") return fallback;
-  const o = img as Record<string, unknown>;
-  return typeof o.alt === "string" && o.alt ? o.alt : fallback;
-}
+import { ProductGallery } from "../../../../components/products/product-gallery";
 
 export async function generateMetadata({
   params
@@ -42,8 +29,12 @@ export default async function ProductDetailPage({
   const product = await apiClient.getProduct(slug).catch(() => null);
   if (!product) notFound();
 
-  const heroImgUrl = getImageUrl(product.images?.[0]);
-  const heroImgAlt = getImageAlt(product.images?.[0], product.name);
+  // Normalize to { url, alt } array for the gallery component
+  const galleryImages = (product.images ?? []).map((img) => {
+    if (typeof img === "string") return { url: img as string, alt: product.name };
+    const o = img as unknown as Record<string, unknown>;
+    return { url: String(o.url ?? ""), alt: String(o.alt ?? product.name) };
+  }).filter((img) => img.url);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
@@ -60,48 +51,10 @@ export default async function ProductDetailPage({
         {/* ── LEFT: Product details ── */}
         <article>
           <Reveal>
-            {/* Hero image */}
-            <div className="relative mb-8 h-72 overflow-hidden rounded-[2rem] border border-border/70 bg-panel shadow-card sm:h-96">
-              {heroImgUrl ? (
-                <Image
-                  src={heroImgUrl}
-                  alt={heroImgAlt}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 60vw"
-                  priority
-                />
-              ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-border">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                    <rect x="6" y="9" width="36" height="30" rx="4" stroke="currentColor" strokeWidth="2"/>
-                    <circle cx="18" cy="20" r="4" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M6 33l9-8 8 6 6-5 13 10" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-                  </svg>
-                  <span className="text-sm">Product Image Coming Soon</span>
-                </div>
-              )}
+            {/* Interactive gallery */}
+            <div className="mb-8">
+              <ProductGallery images={galleryImages} productName={product.name} />
             </div>
-
-            {/* Thumbnail gallery */}
-            {product.images && product.images.length > 1 && (
-              <div className="mb-6 flex gap-3 overflow-x-auto pb-2">
-                {product.images.slice(1).map((img, i) => {
-                  const thumbUrl = getImageUrl(img);
-                  return thumbUrl ? (
-                    <div key={i} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border">
-                      <Image
-                        src={thumbUrl}
-                        alt={getImageAlt(img, `${product.name} ${i + 2}`)}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    </div>
-                  ) : null;
-                })}
-              </div>
-            )}
 
             {/* Tags */}
             {product.tags && product.tags.length > 0 && (
