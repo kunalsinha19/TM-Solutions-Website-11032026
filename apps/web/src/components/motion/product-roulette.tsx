@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@tara-maa/shared-types";
 
@@ -25,6 +26,8 @@ export function ProductRoulette({ products }: { products: Product[] }) {
         {reel.map((product, index) => {
           const imgUrl = getImageUrl(product);
           const categoryTag = product.tags?.[0] ?? "";
+          // Prioritise the first copy so hero LCP fires immediately
+          const isPriority = index < products.length;
 
           return (
             <Link
@@ -33,18 +36,24 @@ export function ProductRoulette({ products }: { products: Product[] }) {
               className="flex w-[260px] shrink-0 flex-col gap-3 rounded-[1.5rem] border border-border/60 bg-surface p-4 hover:border-accent/30 transition-colors duration-200"
             >
               {/* Image thumbnail */}
-              <div className="flex h-32 items-center justify-center rounded-[1rem] bg-panel border border-border/40 overflow-hidden">
+              <div className="relative h-32 overflow-hidden rounded-[1rem] bg-panel border border-border/40">
                 {imgUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imgUrl} alt={product.name} className="h-full w-full object-cover" />
+                  <Image
+                    src={imgUrl}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    sizes="260px"
+                    priority={isPriority}
+                  />
                 ) : (
-                  <div className="flex flex-col items-center gap-1.5 text-border">
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-border">
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                       <rect x="3" y="5" width="22" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
                       <circle cx="10" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
                       <path d="M3 19l5-5 5 4 4-3 8 6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
                     </svg>
-                    <span className="text-[10px]">No image</span>
+                    <span className="text-[10px] text-muted">No image</span>
                   </div>
                 )}
               </div>

@@ -1,6 +1,6 @@
 import type { Product } from "@tara-maa/shared-types";
 import Link from "next/link";
-import { apiClient } from "../../lib/api-client";
+import { apiClient, type BackendCategory } from "../../lib/api-client";
 import { Reveal } from "../../components/motion/reveal";
 import { ProductRoulette } from "../../components/motion/product-roulette";
 import { ProductCard } from "../../components/products/product-card";
@@ -9,7 +9,9 @@ import { FloatingOrb } from "../../components/motion/floating-orb";
 import { TrustBadge } from "../../components/ui/trust-badge";
 import { TestimonialCard } from "../../components/ui/testimonial-card";
 
-const fallbackProducts: Product[] = [
+// ── Fallback data used when backend is unreachable ────────────────────────────
+
+const FALLBACK_PRODUCTS: Product[] = [
   {
     name: "Industrial Printing Equipment",
     slug: "industrial-printing-equipment",
@@ -54,34 +56,14 @@ const fallbackProducts: Product[] = [
   }
 ];
 
-const categories = [
-  {
-    number: "01",
-    name: "Industrial Machines",
-    description: "Printing, finishing, and heavy-duty production machinery for industrial-scale operations.",
-    icon: "⚙️"
-  },
-  {
-    number: "02",
-    name: "Electrical Items",
-    description: "Electrical components, panels, and systems sourced from trusted manufacturers.",
-    icon: "⚡"
-  },
-  {
-    number: "03",
-    name: "Automation Products",
-    description: "Smart automation tools and systems to modernize your production workflows.",
-    icon: "🤖"
-  },
-  {
-    number: "04",
-    name: "Custom Requirements",
-    description: "Can't find what you need? Describe your requirement and we'll source it for you.",
-    icon: "🎯"
-  }
+const FALLBACK_CATEGORIES: BackendCategory[] = [
+  { _id: "1", name: "Industrial Machines", slug: "industrial-machines", description: "Printing, finishing, and heavy-duty production machinery for industrial-scale operations." },
+  { _id: "2", name: "Electrical Items", slug: "electrical-items", description: "Electrical components, panels, and systems sourced from trusted manufacturers." },
+  { _id: "3", name: "Automation Products", slug: "automation-products", description: "Smart automation tools and systems to modernize your production workflows." },
+  { _id: "4", name: "Custom Requirements", slug: "custom-requirements", description: "Can't find what you need? Describe your requirement and we'll source it for you." },
 ];
 
-const testimonials = [
+const TESTIMONIALS = [
   {
     quote: "Tara Maa Solutions made our procurement simple. We described our requirement and had a quote the same day. Excellent service.",
     author: "Rajesh Sharma",
@@ -105,85 +87,129 @@ const testimonials = [
   }
 ];
 
-const whyUs = [
+const HOW_IT_WORKS = [
   {
+    step: "01",
+    title: "Browse the Catalog",
+    description: "Filter by category or search by keyword. Every product has specs, SKU, and a quote button — no login required.",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path d="M3 7h16M3 11h10M3 15h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="17" cy="15" r="3" stroke="currentColor" strokeWidth="1.5"/>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="3" width="22" height="22" rx="4" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M8 9h12M8 14h8M8 19h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
-    ),
-    title: "Easy Product Search",
-    description: "Browse products clearly organised by category. No confusing technical jargon — just what you need to decide fast."
+    )
   },
   {
+    step: "02",
+    title: "Send Your Requirement",
+    description: "Fill in your name, contact, and product details in under 2 minutes. No account needed, no complex forms.",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <circle cx="11" cy="11" r="9" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M11 6v5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M4 6a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2H8l-4 4V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+        <path d="M9 10h10M9 14h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
-    ),
-    title: "Fast Quote Reply",
-    description: "Send your requirement in minutes. Our team responds quickly with clear pricing and availability."
+    )
   },
   {
+    step: "03",
+    title: "Get a Quote in 24hr",
+    description: "Our team reviews your request and sends back clear pricing, availability, and delivery details — same day.",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path d="M11 2L3 6v5c0 5 3.5 9.7 8 11 4.5-1.3 8-6 8-11V6l-8-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-        <path d="M7 11l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="10" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M14 8v6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
-    ),
-    title: "Helpful Guidance",
-    description: "Not sure which product fits your need? Our team helps you select the right solution without the sales pressure."
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path d="M4 6a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M8 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: "Simple Buying Process",
-    description: "Browse, compare, and request — all in one place. We keep industrial procurement clear and measurable."
+    )
   }
 ];
 
-export default async function HomePage() {
-  let products: Product[] = fallbackProducts;
+// Map category name keywords to display icons
+function getCategoryIcon(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes("industrial") || n.includes("machine") || n.includes("printing")) return "⚙️";
+  if (n.includes("electrical") || n.includes("electric") || n.includes("panel")) return "⚡";
+  if (n.includes("automation") || n.includes("auto")) return "🤖";
+  if (n.includes("sublimation") || n.includes("custom")) return "🎯";
+  if (n.includes("office") || n.includes("stationery")) return "💼";
+  if (n.includes("accessory") || n.includes("accessories")) return "🔧";
+  return "📦";
+}
 
-  try {
-    products = await apiClient.getProducts();
-    if (products.length === 0) products = fallbackProducts;
-  } catch {
-    products = fallbackProducts;
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+export default async function HomePage() {
+  // Fetch all data in parallel — any failure falls back gracefully
+  const [productsResult, categoriesResult, homeConfig] = await Promise.allSettled([
+    apiClient.getProducts(),
+    apiClient.getCategories(),
+    apiClient.getHomeConfig(),
+  ]);
+
+  const products: Product[] =
+    productsResult.status === "fulfilled" && productsResult.value.length > 0
+      ? productsResult.value
+      : FALLBACK_PRODUCTS;
+
+  const categories: BackendCategory[] =
+    categoriesResult.status === "fulfilled" && categoriesResult.value.length > 0
+      ? categoriesResult.value
+      : FALLBACK_CATEGORIES;
+
+  const config = homeConfig.status === "fulfilled" ? homeConfig.value : {};
+
+  // Resolve featured products: prefer admin-pinned IDs, then isFeatured flag, then first 6
+  let featured: Product[];
+  if (config.featuredProductIds && config.featuredProductIds.length > 0) {
+    const pinned = config.featuredProductIds
+      .map((id) => products.find((p) => String((p as unknown as Record<string, unknown>)._id) === id || p.slug === id))
+      .filter(Boolean) as Product[];
+    featured = pinned.length > 0 ? pinned.slice(0, 6) : products.filter((p) => p.isFeatured).slice(0, 6);
+  } else {
+    const byFlag = products.filter((p) => p.isFeatured);
+    featured = (byFlag.length > 0 ? byFlag : products).slice(0, 6);
   }
 
-  const featuredProducts = products.filter((p) => p.isFeatured).slice(0, 6);
-  const displayProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 6);
+  // Per-category product counts (using tags[0] as category label)
+  const countByCategory: Record<string, number> = {};
+  for (const p of products) {
+    const cat = p.tags?.[0] ?? "";
+    if (cat) countByCategory[cat] = (countByCategory[cat] ?? 0) + 1;
+  }
+
+  // Dynamic hero copy — admin can override via Settings → Homepage
+  const heroTitle = (config.heroTitle?.trim()) || "Find the Right Industrial Product Without Wasting Time.";
+  const heroSubtitle = (config.heroSubtitle?.trim()) || "Browse our catalog, filter by category, and get a quote in minutes. We keep industrial procurement clear, fast, and simple.";
 
   return (
     <div className="relative">
-      {/* ── HERO ── */}
+
+      {/* ── HERO ────────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden px-4 pb-0 pt-14 sm:px-6 sm:pt-20">
         <FloatingOrb size={600} top="-20%" right="-15%" color="rgba(180,83,9,0.1)" delay={0} />
-        <FloatingOrb size={400} bottom="-10%" left="-10%" color="rgba(217,119,6,0.08)" delay={2} />
+        <FloatingOrb size={350} bottom="-5%" left="-8%" color="rgba(217,119,6,0.07)" delay={2} />
 
         <div className="relative mx-auto max-w-7xl">
           <Reveal className="flex flex-col items-center text-center">
             {/* Live badge */}
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-4 py-1.5 text-xs font-semibold text-accent">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-              Pan-India Industrial Supply — Trusted by 50+ Businesses
+              Pan-India Industrial Supply · {categories.length} Categories · {products.length}+ Products
             </div>
 
             <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl">
-              Find the Right{" "}
-              <span className="gradient-text">Industrial Product</span>{" "}
-              <span className="block sm:inline">Without Wasting Time.</span>
+              {heroTitle.includes("Industrial Product") ? (
+                <>
+                  Find the Right{" "}
+                  <span className="gradient-text">Industrial Product</span>{" "}
+                  <span className="block sm:inline">Without Wasting Time.</span>
+                </>
+              ) : (
+                <span dangerouslySetInnerHTML={{ __html: heroTitle }} />
+              )}
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-              Browse our catalog, filter by category, and get a quote in minutes. We keep industrial procurement clear, fast, and simple.
+              {heroSubtitle}
             </p>
 
             {/* CTA buttons */}
@@ -202,17 +228,16 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            {/* Category chips */}
+            {/* Dynamic category chips from real backend data */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              <TrustBadge icon="🏭" label="Industrial Machines" />
-              <TrustBadge icon="⚡" label="Electrical Items" />
-              <TrustBadge icon="🤖" label="Automation Products" />
-              <TrustBadge icon="🎯" label="Custom Requirements" />
+              {categories.slice(0, 5).map((cat) => (
+                <TrustBadge key={cat._id} icon={getCategoryIcon(cat.name)} label={cat.name} />
+              ))}
             </div>
           </Reveal>
 
           {/* ── PRODUCT SCROLLER ── */}
-          <div className="mt-12 pb-8">
+          <div className="mt-10 pb-8">
             <Reveal delay={0.1}>
               <div className="mb-3 flex items-center justify-between px-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
@@ -228,19 +253,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── STATS ── */}
+      {/* ── STATS (dynamic) ─────────────────────────────────────────────────── */}
       <section className="border-y border-border/60 bg-panel py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-            <StatCounter value={4} suffix="+" label="Product Categories" delay={0} />
-            <StatCounter value={100} suffix="+" label="Products Available" delay={0.1} />
+            <StatCounter value={categories.length} suffix="+" label="Product Categories" delay={0} />
+            <StatCounter value={products.length} suffix="+" label="Products Available" delay={0.1} />
             <StatCounter value={24} suffix="hr" label="Quote Reply Time" delay={0.2} />
             <StatCounter value={100} suffix="%" label="Easy Buying Process" delay={0.3} />
           </div>
         </div>
       </section>
 
-      {/* ── FEATURED PRODUCTS ── */}
+      {/* ── FEATURED PRODUCTS ───────────────────────────────────────────────── */}
       <section className="px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <Reveal className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -249,30 +274,80 @@ export default async function HomePage() {
               <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
                 Popular Products
               </h2>
-              <p className="mt-2 text-sm text-muted">Request a quote on any product in under 2 minutes.</p>
+              <p className="mt-2 text-sm text-muted">
+                Request a quote on any product in under 2 minutes.
+              </p>
             </div>
             <Link
               href="/products"
               className="shrink-0 self-start rounded-full border border-border px-5 py-2.5 text-sm font-semibold hover:border-accent/40 hover:text-accent transition-colors sm:self-auto"
             >
-              View all products →
+              View all {products.length > 6 ? `${products.length} ` : ""}products →
             </Link>
           </Reveal>
 
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {displayProducts.map((product, i) => (
-              <Reveal key={product.slug} delay={i * 0.08}>
-                <ProductCard product={product} />
+            {featured.map((product, i) => (
+              <Reveal key={product.slug} delay={i * 0.07}>
+                {/* First 3 are near the fold — load eagerly */}
+                <ProductCard product={product} priority={i < 3} />
               </Reveal>
             ))}
           </div>
 
-          <Reveal delay={0.3} className="mt-10 text-center">
+          {products.length > 6 && (
+            <Reveal delay={0.3} className="mt-10 text-center">
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-7 py-3 text-sm font-semibold text-accent hover:bg-accent/15 transition-colors"
+              >
+                See all {products.length} products
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
+            </Reveal>
+          )}
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ────────────────────────────────────────────────────── */}
+      <section className="bg-panel px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <Reveal className="mb-12 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Simple Process</p>
+            <h2 className="mt-2 text-3xl font-bold lg:text-4xl">Get a Quote in 3 Steps</h2>
+            <p className="mt-3 mx-auto max-w-lg text-sm text-muted">
+              No registration, no complex forms. Browse → Send → Receive.
+            </p>
+          </Reveal>
+
+          <div className="relative grid gap-6 sm:grid-cols-3">
+            {/* Connector line — desktop only */}
+            <div className="absolute left-[16.67%] right-[16.67%] top-[2.2rem] hidden h-px border-t border-dashed border-border/60 sm:block" />
+
+            {HOW_IT_WORKS.map((step, i) => (
+              <Reveal key={step.step} delay={i * 0.1}>
+                <div className="relative flex flex-col items-center gap-4 rounded-[1.75rem] border border-border/70 bg-surface p-7 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                    {step.icon}
+                  </div>
+                  <div className="absolute -top-3 right-5 rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-bold text-white">
+                    {step.step}
+                  </div>
+                  <h3 className="font-bold text-base">{step.title}</h3>
+                  <p className="text-sm leading-relaxed text-muted">{step.description}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal delay={0.35} className="mt-10 text-center">
             <Link
-              href="/products"
-              className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-7 py-3 text-sm font-semibold text-accent hover:bg-accent/15 transition-colors"
+              href="/quote"
+              className="inline-flex items-center gap-2 rounded-full bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-glow hover:bg-amber-700 transition-all duration-200"
             >
-              See the full catalog
+              Send a Quote Request Now
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -281,69 +356,55 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CATEGORIES ── */}
-      <section className="bg-panel px-4 py-20 sm:px-6">
+      {/* ── CATEGORIES (dynamic from backend) ──────────────────────────────── */}
+      <section className="px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <Reveal className="mb-10 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">What We Carry</p>
             <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
-              We Make Industrial Buying Simpler
+              Browse by Category
             </h2>
             <p className="mt-3 mx-auto max-w-xl text-sm text-muted">
-              You do not need to search through confusing technical pages. We show products clearly and help you reach the right team quickly.
+              Every category is stocked with real products. Click any category to filter instantly.
             </p>
           </Reveal>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((cat, i) => (
-              <Reveal key={cat.name} delay={i * 0.08}>
-                <Link
-                  href="/products"
-                  className="group flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-surface p-6 h-full transition-all duration-300 hover:shadow-card hover:border-accent/30 hover:-translate-y-0.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl">{cat.icon}</span>
-                    <span className="text-xs font-bold text-border">{cat.number}</span>
-                  </div>
-                  <h3 className="font-bold text-base">{cat.name}</h3>
-                  <p className="text-sm leading-relaxed text-muted flex-1">{cat.description}</p>
-                  <span className="text-xs font-semibold text-accent">
-                    Browse category →
-                  </span>
-                </Link>
-              </Reveal>
-            ))}
+            {categories.map((cat, i) => {
+              const count = Object.entries(countByCategory).find(
+                ([k]) => k.toLowerCase() === cat.name.toLowerCase()
+              )?.[1] ?? 0;
+
+              return (
+                <Reveal key={cat._id} delay={i * 0.07}>
+                  <Link
+                    href="/products"
+                    className="group flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-panel p-6 h-full transition-all duration-300 hover:shadow-card hover:border-accent/30 hover:-translate-y-0.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-3xl">{getCategoryIcon(cat.name)}</span>
+                      {count > 0 && (
+                        <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-bold text-accent">
+                          {count} products
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-base">{cat.name}</h3>
+                    <p className="text-sm leading-relaxed text-muted flex-1">
+                      {cat.description || `Browse ${cat.name.toLowerCase()} products.`}
+                    </p>
+                    <span className="text-xs font-semibold text-accent">
+                      Browse category →
+                    </span>
+                  </Link>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ── WHY US ── */}
-      <section className="px-4 py-20 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <Reveal className="mb-12 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Why Choose Us</p>
-            <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
-              Simple. Clear. Fast.
-            </h2>
-          </Reveal>
-
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {whyUs.map((item, i) => (
-              <Reveal key={item.title} delay={i * 0.08}>
-                <div className="flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-panel p-6 h-full transition-all duration-300 hover:shadow-card hover:border-accent/20">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                    {item.icon}
-                  </div>
-                  <h3 className="font-semibold">{item.title}</h3>
-                  <p className="text-sm leading-relaxed text-muted">{item.description}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
+      {/* ── TESTIMONIALS ────────────────────────────────────────────────────── */}
       <section className="bg-panel px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <Reveal className="mb-12 text-center">
@@ -354,7 +415,7 @@ export default async function HomePage() {
           </Reveal>
 
           <div className="grid gap-5 md:grid-cols-3">
-            {testimonials.map((t, i) => (
+            {TESTIMONIALS.map((t, i) => (
               <Reveal key={t.author} delay={i * 0.1}>
                 <TestimonialCard {...t} />
               </Reveal>
@@ -363,7 +424,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA BANNER ── */}
+      {/* ── CTA BANNER ──────────────────────────────────────────────────────── */}
       <section className="px-4 pb-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -380,15 +441,20 @@ export default async function HomePage() {
                 <p className="mx-auto mt-4 max-w-xl text-sm text-white/80 sm:text-base">
                   Share your requirement — product type, quantity, or any specification. We keep the process clear, fast, and easy to understand.
                 </p>
-                <Link
-                  href="/quote"
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-accent hover:bg-amber-50 transition-colors duration-200 shadow-soft"
-                >
-                  Send a Quote Request
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </Link>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                  <Link
+                    href="/quote"
+                    className="rounded-full bg-white px-7 py-3.5 text-sm font-bold text-accent hover:bg-amber-50 transition-colors duration-200 shadow-soft"
+                  >
+                    Send a Quote Request
+                  </Link>
+                  <Link
+                    href="/products"
+                    className="rounded-full border border-white/30 px-7 py-3.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                  >
+                    Browse Products →
+                  </Link>
+                </div>
               </div>
             </div>
           </Reveal>
