@@ -5,8 +5,15 @@ import { SiteFooter } from "../components/layout/site-footer";
 import { SiteHeader } from "../components/layout/site-header";
 
 export const metadata: Metadata = {
-  title: "Tara Maa Solutions",
-  description: "B2B product catalog and lead generation platform."
+  title: {
+    default: "TM Solutions — Industrial B2B Products & Equipment",
+    template: "%s | TM Solutions"
+  },
+  description: "Premium industrial products, smart automation solutions, and fast quote turnaround for enterprise buyers. Trusted by 200+ companies.",
+  openGraph: {
+    siteName: "TM Solutions",
+    type: "website"
+  }
 };
 
 export default function RootLayout({
@@ -16,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <SiteHeader />
-        <main>{children}</main>
+        <main className="relative z-10">{children}</main>
         <SiteFooter />
       </body>
     </html>
