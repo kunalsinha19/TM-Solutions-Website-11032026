@@ -2,10 +2,21 @@ FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY . .
+# Copy manifests first so npm install layer is cached independently of source
+COPY package.json package-lock.json* ./
+COPY packages/ ./packages/
+COPY apps/web/package.json ./apps/web/
+COPY admin/package.json ./admin/ 2>/dev/null || true
+
 RUN npm install
+
+# Copy full source after dependencies are installed
+COPY . .
+
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build:web
+
+# Run Next.js build directly via workspace — does not depend on root script name
+RUN npm run build --workspace=@tara-maa/web
 
 FROM node:20-alpine AS runner
 WORKDIR /app
