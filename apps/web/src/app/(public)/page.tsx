@@ -18,7 +18,7 @@ const fallbackProducts: Product[] = [
     description: "Professional-grade printing machinery built for industrial output and reliability.",
     images: [],
     specifications: [],
-    tags: ["industrial machines"],
+    tags: ["Industrial Machines"],
     isFeatured: true,
     status: "published",
     metaTitle: "Industrial Printing Equipment",
@@ -32,7 +32,7 @@ const fallbackProducts: Product[] = [
     description: "Durable lamination and binding machinery with precision controls.",
     images: [],
     specifications: [],
-    tags: ["office automation"],
+    tags: ["Office Automation"],
     isFeatured: true,
     status: "published",
     metaTitle: "Lamination & Binding Solutions",
@@ -46,7 +46,7 @@ const fallbackProducts: Product[] = [
     description: "Precision sublimation systems for industrial and commercial custom printing.",
     images: [],
     specifications: [],
-    tags: ["automation products"],
+    tags: ["Automation Products"],
     isFeatured: true,
     status: "published",
     metaTitle: "Sublimation Printing Equipment",
@@ -158,50 +158,52 @@ export default async function HomePage() {
     products = fallbackProducts;
   }
 
-  const featuredProducts = products.filter((p) => p.isFeatured).slice(0, 3);
-  const displayProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 3);
+  const featuredProducts = products.filter((p) => p.isFeatured).slice(0, 6);
+  const displayProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 6);
 
   return (
     <div className="relative">
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden px-6 pb-24 pt-20 lg:pb-32 lg:pt-28">
+      <section className="relative overflow-hidden px-4 pb-0 pt-14 sm:px-6 sm:pt-20">
         <FloatingOrb size={600} top="-20%" right="-15%" color="rgba(180,83,9,0.1)" delay={0} />
         <FloatingOrb size={400} bottom="-10%" left="-10%" color="rgba(217,119,6,0.08)" delay={2} />
-        <FloatingOrb size={250} top="20%" left="30%" color="rgba(124,45,18,0.06)" delay={4} />
 
         <div className="relative mx-auto max-w-7xl">
           <Reveal className="flex flex-col items-center text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-4 py-1.5 text-xs font-semibold text-accent">
+            {/* Live badge */}
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-4 py-1.5 text-xs font-semibold text-accent">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-              Leading Digital Innovations in Industrial Procurement
+              Pan-India Industrial Supply — Trusted by 50+ Businesses
             </div>
 
-            <h1 className="max-w-4xl text-5xl font-extrabold leading-[1.1] tracking-tight lg:text-7xl">
+            <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl">
               Find the Right{" "}
               <span className="gradient-text">Industrial Product</span>{" "}
-              Without Wasting Time.
+              <span className="block sm:inline">Without Wasting Time.</span>
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-              Browse products, check categories, and send us your requirement in a few simple steps. We keep the process clear, fast, and easy to understand.
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+              Browse our catalog, filter by category, and get a quote in minutes. We keep industrial procurement clear, fast, and simple.
             </p>
 
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            {/* CTA buttons */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/products"
-                className="rounded-full bg-accent px-8 py-4 text-sm font-bold text-white shadow-glow hover:bg-amber-700 hover:shadow-glow transition-all duration-200"
+                className="rounded-full bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-glow hover:bg-amber-700 hover:shadow-glow transition-all duration-200"
               >
                 Explore Products
               </Link>
               <Link
                 href="/quote"
-                className="rounded-full border border-border bg-panel px-8 py-4 text-sm font-semibold hover:border-accent/40 hover:bg-accent/5 transition-all duration-200"
+                className="rounded-full border border-border bg-panel px-7 py-3.5 text-sm font-semibold hover:border-accent/40 hover:bg-accent/5 transition-all duration-200"
               >
                 Get a Quote →
               </Link>
             </div>
 
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            {/* Category chips */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
               <TrustBadge icon="🏭" label="Industrial Machines" />
               <TrustBadge icon="⚡" label="Electrical Items" />
               <TrustBadge icon="🤖" label="Automation Products" />
@@ -209,16 +211,27 @@ export default async function HomePage() {
             </div>
           </Reveal>
 
-          <Reveal delay={0.15} className="mt-16">
+          {/* ── PRODUCT SCROLLER ── */}
+          <div className="mt-12 pb-8">
+            <Reveal delay={0.1}>
+              <div className="mb-3 flex items-center justify-between px-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                  Live catalog — {products.length}+ products
+                </p>
+                <Link href="/products" className="text-xs font-semibold text-accent hover:underline">
+                  View all →
+                </Link>
+              </div>
+            </Reveal>
             <ProductRoulette products={products} />
-          </Reveal>
+          </div>
         </div>
       </section>
 
       {/* ── STATS ── */}
-      <section className="border-y border-border/60 bg-panel py-16">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-2 gap-10 lg:grid-cols-4">
+      <section className="border-y border-border/60 bg-panel py-14">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
             <StatCounter value={4} suffix="+" label="Product Categories" delay={0} />
             <StatCounter value={100} suffix="+" label="Products Available" delay={0.1} />
             <StatCounter value={24} suffix="hr" label="Quote Reply Time" delay={0.2} />
@@ -227,33 +240,74 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CATEGORIES ── */}
-      <section className="px-6 py-24">
+      {/* ── FEATURED PRODUCTS ── */}
+      <section className="px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <Reveal className="mb-12 text-center">
+          <Reveal className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Product Catalog</p>
+              <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
+                Popular Products
+              </h2>
+              <p className="mt-2 text-sm text-muted">Request a quote on any product in under 2 minutes.</p>
+            </div>
+            <Link
+              href="/products"
+              className="shrink-0 self-start rounded-full border border-border px-5 py-2.5 text-sm font-semibold hover:border-accent/40 hover:text-accent transition-colors sm:self-auto"
+            >
+              View all products →
+            </Link>
+          </Reveal>
+
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {displayProducts.map((product, i) => (
+              <Reveal key={product.slug} delay={i * 0.08}>
+                <ProductCard product={product} />
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal delay={0.3} className="mt-10 text-center">
+            <Link
+              href="/products"
+              className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-7 py-3 text-sm font-semibold text-accent hover:bg-accent/15 transition-colors"
+            >
+              See the full catalog
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── CATEGORIES ── */}
+      <section className="bg-panel px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <Reveal className="mb-10 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">What We Carry</p>
             <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
               We Make Industrial Buying Simpler
             </h2>
-            <p className="mt-4 mx-auto max-w-xl text-muted">
+            <p className="mt-3 mx-auto max-w-xl text-sm text-muted">
               You do not need to search through confusing technical pages. We show products clearly and help you reach the right team quickly.
             </p>
           </Reveal>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((cat, i) => (
               <Reveal key={cat.name} delay={i * 0.08}>
                 <Link
                   href="/products"
-                  className="group flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-panel p-7 h-full transition-all duration-300 hover:shadow-card hover:border-accent/30 hover:-translate-y-0.5"
+                  className="group flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-surface p-6 h-full transition-all duration-300 hover:shadow-card hover:border-accent/30 hover:-translate-y-0.5"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-3xl">{cat.icon}</span>
                     <span className="text-xs font-bold text-border">{cat.number}</span>
                   </div>
-                  <h3 className="font-bold text-lg">{cat.name}</h3>
+                  <h3 className="font-bold text-base">{cat.name}</h3>
                   <p className="text-sm leading-relaxed text-muted flex-1">{cat.description}</p>
-                  <span className="text-xs font-semibold text-accent group-hover:gap-2 transition-all">
+                  <span className="text-xs font-semibold text-accent">
                     Browse category →
                   </span>
                 </Link>
@@ -263,48 +317,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── FEATURED PRODUCTS ── */}
-      <section className="bg-panel px-6 py-24">
-        <div className="mx-auto max-w-7xl">
-          <Reveal className="mb-12 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Product Catalog</p>
-              <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
-                Find the Right Machine Quickly
-              </h2>
-            </div>
-            <Link
-              href="/products"
-              className="shrink-0 rounded-full border border-border px-5 py-2.5 text-sm font-semibold hover:border-accent/40 hover:text-accent transition-colors"
-            >
-              View all products →
-            </Link>
-          </Reveal>
-
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {displayProducts.map((product, i) => (
-              <Reveal key={product.slug} delay={i * 0.1}>
-                <ProductCard product={product} />
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── WHY US ── */}
-      <section className="px-6 py-24">
+      <section className="px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <Reveal className="mb-14 text-center">
+          <Reveal className="mb-12 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Why Choose Us</p>
             <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
               Simple. Clear. Fast.
             </h2>
           </Reveal>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {whyUs.map((item, i) => (
-              <Reveal key={item.title} delay={i * 0.1}>
-                <div className="flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-panel p-7 h-full transition-all duration-300 hover:shadow-card hover:border-accent/20">
+              <Reveal key={item.title} delay={i * 0.08}>
+                <div className="flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-panel p-6 h-full transition-all duration-300 hover:shadow-card hover:border-accent/20">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
                     {item.icon}
                   </div>
@@ -318,16 +344,16 @@ export default async function HomePage() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="bg-panel px-6 py-24">
+      <section className="bg-panel px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <Reveal className="mb-14 text-center">
+          <Reveal className="mb-12 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Client Voices</p>
             <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
               What Our Buyers Say
             </h2>
           </Reveal>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-3">
             {testimonials.map((t, i) => (
               <Reveal key={t.author} delay={i * 0.1}>
                 <TestimonialCard {...t} />
@@ -338,25 +364,25 @@ export default async function HomePage() {
       </section>
 
       {/* ── CTA BANNER ── */}
-      <section className="px-6 pb-24">
+      <section className="px-4 pb-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <Reveal>
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-accent px-10 py-16 text-center text-white shadow-glow">
+            <div className="relative overflow-hidden rounded-[2rem] bg-accent px-8 py-14 text-center text-white shadow-glow sm:rounded-[2.5rem] sm:px-10 sm:py-16">
               <FloatingOrb size={400} top="-50%" right="-10%" color="rgba(255,255,255,0.08)" />
               <FloatingOrb size={300} bottom="-50%" left="-5%" color="rgba(255,255,255,0.06)" />
               <div className="relative z-10">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
                   Tell Us What You Need
                 </p>
-                <h2 className="mt-3 text-3xl font-bold lg:text-4xl">
+                <h2 className="mt-3 text-2xl font-bold sm:text-3xl lg:text-4xl">
                   We Will Get Back to You Fast
                 </h2>
-                <p className="mx-auto mt-4 max-w-xl text-white/80">
+                <p className="mx-auto mt-4 max-w-xl text-sm text-white/80 sm:text-base">
                   Share your requirement — product type, quantity, or any specification. We keep the process clear, fast, and easy to understand.
                 </p>
                 <Link
                   href="/quote"
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-accent hover:bg-amber-50 transition-colors duration-200 shadow-soft"
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-accent hover:bg-amber-50 transition-colors duration-200 shadow-soft"
                 >
                   Send a Quote Request
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
