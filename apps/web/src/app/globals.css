@@ -58,7 +58,7 @@ a {
   background-clip: text;
 }
 
-/* ---- Animated background orbs ---- */
+/* ---- Keyframes ---- */
 @keyframes float-slow {
   0%, 100% { transform: translateY(0px) scale(1); }
   50% { transform: translateY(-30px) scale(1.05); }
@@ -72,6 +72,16 @@ a {
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes skeleton-wave {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
 
 @keyframes pulse-glow {
@@ -89,25 +99,48 @@ a {
   100% { transform: translateX(-50%); }
 }
 
-@keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(30px); }
-  to { opacity: 1; transform: translateX(0); }
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-float-slow {
-  animation: float-slow 8s ease-in-out infinite;
-}
-
-.animate-float-medium {
-  animation: float-medium 6s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
-}
+/* ---- Animation utility classes ---- */
+.animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
+.animate-float-medium { animation: float-medium 6s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
 
 .animate-marquee {
   animation: marquee 30s linear infinite;
+}
+
+/* Pause marquee when hovering the container */
+.marquee-container:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* ---- Skeleton loader ---- */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 0%,
+    var(--color-surface) 40%,
+    var(--color-border) 80%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-wave 1.6s linear infinite;
+  border-radius: 0.75rem;
+}
+
+:root[data-theme="dark"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 0%,
+    #2d3a4e 40%,
+    #1e293b 80%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-wave 1.6s linear infinite;
 }
 
 /* ---- Glass card ---- */
@@ -150,4 +183,58 @@ body::before {
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* ---- Google Translate — compact pill, hide branding ---- */
+#google_translate_element { display: flex; align-items: center; }
+
+/* The outer gadget container — kill the font-size so the "Powered by" text
+   (which uses font-size: inherit) collapses to zero while the <select> keeps
+   its own explicit size. */
+.goog-te-gadget {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* The actual language <select> */
+.goog-te-gadget .goog-te-combo {
+  margin: 0 !important;
+  font-size: 11px !important;
+  font-family: var(--font-sans) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 9999px !important;
+  background: transparent !important;
+  color: var(--color-muted) !important;
+  padding: 3px 10px !important;
+  outline: none !important;
+  cursor: pointer !important;
+  max-width: 110px !important;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.goog-te-gadget .goog-te-combo:hover {
+  border-color: var(--color-accent) !important;
+  color: var(--color-text) !important;
+}
+
+/* Hide the "Powered by Google Translate" logo row */
+.goog-te-gadget a,
+.goog-te-gadget > span,
+.goog-logo-link,
+.goog-logo-link * {
+  display: none !important;
+}
+
+/* Hide the translate banner that Google Translate sometimes injects at the top */
+.goog-te-banner-frame,
+.skiptranslate > iframe {
+  display: none !important;
+}
+
+/* Prevent body offset that Google Translate injects */
+body.translated-ltr,
+body.translated-rtl {
+  top: 0 !important;
 }
