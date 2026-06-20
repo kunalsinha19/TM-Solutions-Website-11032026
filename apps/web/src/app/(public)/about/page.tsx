@@ -6,39 +6,42 @@ import { FloatingOrb } from "../../../components/motion/floating-orb";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "Learn about TM Solutions — 15+ years of delivering premium industrial products and automation solutions across India."
+  description: "Tara Maa Solutions — accelerating digital transformation in industrial procurement. Learn our mission, vision, and values."
 };
 
-const values = [
+const vision = [
   {
-    icon: "🎯",
-    title: "Customer First",
-    description: "Every decision we make starts with how it affects our buyer's plant uptime, budget, and compliance."
+    icon: "🚀",
+    text: "Accelerate digital transformation with intelligent, automation-first procurement workflows."
   },
   {
-    icon: "🔬",
-    title: "Technical Depth",
-    description: "Our team includes certified engineers who understand your application — not just salespeople pushing SKUs."
+    icon: "🔗",
+    text: "Connect manufacturers, distributors, and enterprises through a single, data-driven marketplace."
   },
   {
-    icon: "⚖️",
-    title: "Transparent Pricing",
-    description: "No hidden charges. No margin games. You get competitive pricing with full commercial clarity."
+    icon: "📊",
+    text: "Deliver smart insights that improve cost, speed, and operational performance at scale."
   },
   {
-    icon: "🌱",
-    title: "Long-term Partnerships",
-    description: "We don't chase one-time orders. We build relationships that last procurement cycles."
+    icon: "🌐",
+    text: "Build a future-ready ecosystem that evolves with emerging industrial technologies."
   }
 ];
 
-const milestones = [
-  { year: "2009", event: "Founded in Mumbai with a focus on industrial valve supply." },
-  { year: "2012", event: "Expanded into automation components and pump controllers." },
-  { year: "2015", event: "Opened regional offices in Delhi and Pune. 50+ active clients." },
-  { year: "2018", event: "Achieved ISO 9001:2015 certification. Launched technical support division." },
-  { year: "2022", event: "Digital-first transformation — online catalog and real-time quote platform." },
-  { year: "2024", event: "200+ clients. Pan-India delivery network. 500+ SKUs cataloged." }
+const offerings = [
+  { icon: "🖨️", name: "Industrial Printing & Finishing Equipment", description: "Heavy-duty printing machinery for high-volume production environments." },
+  { icon: "📋", name: "Lamination & Binding Solutions", description: "Office and industrial-grade lamination and binding for every scale." },
+  { icon: "🤖", name: "Office Automation Tools", description: "Smart tools to streamline workflows and reduce manual overhead." },
+  { icon: "🎨", name: "Sublimation & Custom Printing", description: "High-performance sublimation systems for diverse material applications." },
+  { icon: "📦", name: "Industrial Consumables", description: "Reliable supply of consumables to keep your operations running." },
+  { icon: "🔄", name: "Workflow & Procurement Support", description: "End-to-end procurement guidance for structured, scalable buying." }
+];
+
+const values = [
+  { icon: "🎯", title: "Clarity First", description: "We show products clearly and communicate without technical confusion so your team can decide fast." },
+  { icon: "⚡", title: "Speed Matters", description: "Fast replies, quick quotes, and no unnecessary back-and-forth. Your time is valuable." },
+  { icon: "🤝", title: "Honest Guidance", description: "We help you select the right product for your need — not the most expensive one on the shelf." },
+  { icon: "🌱", title: "Long-term Thinking", description: "We build relationships, not transactions. Your repeat business depends on us getting it right every time." }
 ];
 
 export default function AboutPage() {
@@ -51,14 +54,14 @@ export default function AboutPage() {
 
         <div className="relative mx-auto max-w-5xl text-center">
           <Reveal>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">About TM Solutions</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">About Tara Maa Solutions</p>
             <h1 className="mt-4 text-4xl font-extrabold leading-[1.1] tracking-tight lg:text-6xl">
-              Built on{" "}
-              <span className="gradient-text">15 Years</span>{" "}
-              of Industrial Trust
+              We Make{" "}
+              <span className="gradient-text">Industrial Buying</span>{" "}
+              Simpler for Your Business
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-              TM Solutions was founded to solve one persistent problem in industrial procurement: reliable supply at transparent pricing with technical expertise. Today we serve 200+ companies across India.
+              Automation, predictive insights, and guided procurement journeys reduce downtime, standardize vendor choices, and help teams scale with confidence. Every interaction is designed to be transparent, fast, and measurable.
             </p>
           </Reveal>
         </div>
@@ -68,10 +71,10 @@ export default function AboutPage() {
       <section className="border-y border-border/60 bg-panel py-16">
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid grid-cols-2 gap-10 lg:grid-cols-4">
-            <StatCounter value={200} suffix="+" label="Active Clients" delay={0} />
-            <StatCounter value={500} suffix="+" label="Products Supplied" delay={0.1} />
-            <StatCounter value={15} suffix="+" label="Years of Operation" delay={0.2} />
-            <StatCounter value={98} suffix="%" label="On-time Delivery Rate" delay={0.3} />
+            <StatCounter value={4} suffix="+" label="Product Categories" delay={0} />
+            <StatCounter value={100} suffix="+" label="Products in Catalog" delay={0.1} />
+            <StatCounter value={24} suffix="hr" label="Quote Response Time" delay={0.2} />
+            <StatCounter value={100} suffix="%" label="Transparent Pricing" delay={0.3} />
           </div>
         </div>
       </section>
@@ -87,7 +90,10 @@ export default function AboutPage() {
                 </div>
                 <h2 className="text-2xl font-bold">Our Mission</h2>
                 <p className="leading-relaxed text-muted">
-                  To be India's most trusted B2B industrial supplier — where procurement teams come first for accurate specs, fair pricing, and reliable delivery. We exist to eliminate sourcing friction in industrial operations.
+                  To simplify industrial procurement for businesses of all sizes — making it as easy to buy an industrial machine as it is to shop online. Clear products, fast quotes, honest guidance.
+                </p>
+                <p className="leading-relaxed text-muted">
+                  Built for global growth, we deliver secure, scalable infrastructure that modernizes production environments, connects supply chains, and keeps operations future-ready.
                 </p>
               </div>
             </Reveal>
@@ -97,17 +103,47 @@ export default function AboutPage() {
                   🔭
                 </div>
                 <h2 className="text-2xl font-bold">Our Vision</h2>
-                <p className="leading-relaxed text-muted">
-                  A future where every industrial plant in India can access world-class components through a simple digital interface — with the technical support of an on-site engineer, delivered at scale.
-                </p>
+                <div className="flex flex-col gap-4 mt-1">
+                  {vision.map((v) => (
+                    <div key={v.text} className="flex gap-3">
+                      <span className="text-lg shrink-0">{v.icon}</span>
+                      <p className="text-sm leading-relaxed text-muted">{v.text}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Reveal>
           </div>
         </div>
       </section>
 
-      {/* ── VALUES ── */}
+      {/* ── WHAT WE OFFER ── */}
       <section className="bg-panel px-6 py-24">
+        <div className="mx-auto max-w-7xl">
+          <Reveal className="mb-14 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Product Range</p>
+            <h2 className="mt-2 text-3xl font-bold lg:text-4xl">What We Offer</h2>
+            <p className="mt-4 mx-auto max-w-xl text-muted">
+              From heavy industrial machinery to office automation — we source and supply across the full spectrum of business needs.
+            </p>
+          </Reveal>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {offerings.map((item, i) => (
+              <Reveal key={item.name} delay={i * 0.08}>
+                <div className="flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-surface p-7 h-full hover:shadow-card hover:border-accent/20 transition-all duration-300">
+                  <span className="text-3xl">{item.icon}</span>
+                  <h3 className="font-semibold">{item.name}</h3>
+                  <p className="text-sm leading-relaxed text-muted">{item.description}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── VALUES ── */}
+      <section className="px-6 py-24">
         <div className="mx-auto max-w-7xl">
           <Reveal className="mb-14 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">What We Stand For</p>
@@ -117,44 +153,13 @@ export default function AboutPage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {values.map((v, i) => (
               <Reveal key={v.title} delay={i * 0.1}>
-                <div className="flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-surface p-7 h-full hover:shadow-card hover:border-accent/20 transition-all duration-300">
+                <div className="flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-panel p-7 h-full hover:shadow-card hover:border-accent/20 transition-all duration-300">
                   <span className="text-3xl">{v.icon}</span>
                   <h3 className="font-semibold">{v.title}</h3>
                   <p className="text-sm leading-relaxed text-muted">{v.description}</p>
                 </div>
               </Reveal>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TIMELINE ── */}
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-4xl">
-          <Reveal className="mb-14 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Our Journey</p>
-            <h2 className="mt-2 text-3xl font-bold lg:text-4xl">How We Got Here</h2>
-          </Reveal>
-
-          <div className="relative">
-            {/* Vertical line */}
-            <div className="absolute left-[22px] top-0 h-full w-px bg-gradient-to-b from-accent/40 via-border to-transparent" />
-
-            <div className="flex flex-col gap-8">
-              {milestones.map((m, i) => (
-                <Reveal key={m.year} delay={i * 0.08}>
-                  <div className="flex gap-6">
-                    <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-accent/40 bg-panel text-xs font-bold text-accent z-10">
-                      {m.year.slice(2)}
-                    </div>
-                    <div className="pt-2">
-                      <p className="text-xs font-semibold text-accent">{m.year}</p>
-                      <p className="mt-1 text-sm leading-relaxed text-muted">{m.event}</p>
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -166,15 +171,17 @@ export default function AboutPage() {
             <div className="relative overflow-hidden rounded-[2.5rem] bg-accent px-10 py-16 text-center text-white shadow-glow">
               <FloatingOrb size={300} top="-40%" right="-5%" color="rgba(255,255,255,0.08)" />
               <div className="relative z-10">
-                <h2 className="text-3xl font-bold lg:text-4xl">Ready to Work Together?</h2>
+                <h2 className="text-3xl font-bold lg:text-4xl">
+                  Tell Us What You Need
+                </h2>
                 <p className="mx-auto mt-4 max-w-xl text-white/80">
-                  Tell us your sourcing requirement and our team will get back to you with a tailored quote within 24 hours.
+                  Send your requirement and we will get back to you with clear pricing and availability. No confusion, no delays.
                 </p>
                 <Link
                   href="/quote"
                   className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-accent hover:bg-amber-50 transition-colors shadow-soft"
                 >
-                  Request a Quote
+                  Get a Quote
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>

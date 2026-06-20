@@ -21,11 +21,11 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white text-sm font-bold shadow-glow-sm group-hover:shadow-glow transition-shadow duration-300">
-              TM
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white text-[10px] font-bold shadow-glow-sm group-hover:shadow-glow transition-shadow duration-300">
+              TMS
             </span>
             <span className="text-base font-bold tracking-wide text-text">
-              TM <span className="text-accent">Solutions</span>
+              Tara Maa <span className="text-accent">Solutions</span>
             </span>
           </Link>
 
