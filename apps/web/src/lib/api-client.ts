@@ -6,6 +6,22 @@ import type {
   SiteSettings
 } from "@tara-maa/shared-types";
 
+export type BackendCategory = {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+};
+
+// Subset of backend WebsiteSettings.homepage that drives dynamic homepage content
+export type HomeConfig = {
+  heroTitle?: string;
+  heroSubtitle?: string;
+  featuredProductIds?: string[];
+};
+
 type NextRequestInit = RequestInit & {
   next?: { revalidate?: number };
 };
@@ -125,10 +141,59 @@ async function getProduct(slug: string): Promise<Product> {
   }
 }
 
+// Returns categories from the backend, handling both { success, categories: [] } and plain array formats.
+// Active categories only; sorted by sortOrder.
+async function getCategories(): Promise<BackendCategory[]> {
+  try {
+    const raw = await request<unknown>("/categories", { next: { revalidate: 300 } });
+    let arr: unknown[];
+    if (Array.isArray(raw)) {
+      arr = raw;
+    } else if (raw && typeof raw === "object") {
+      const w = raw as Record<string, unknown>;
+      arr = Array.isArray(w.categories) ? w.categories : Array.isArray(w.data) ? w.data : [];
+    } else {
+      arr = [];
+    }
+    return (arr as BackendCategory[])
+      .filter((c) => c && typeof c === "object" && c.name && c.isActive !== false)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  } catch {
+    return [];
+  }
+}
+
+// Returns the homepage-relevant slice of site settings (hero text, featured IDs).
+// Handles both { success, settings: {...} } and flat response shapes.
+async function getHomeConfig(): Promise<HomeConfig> {
+  try {
+    const raw = await request<unknown>("/settings", { next: { revalidate: 120 } });
+    if (!raw || typeof raw !== "object") return {};
+    const w = raw as Record<string, unknown>;
+    // Unwrap { success, settings } envelope
+    const s = (w.settings && typeof w.settings === "object" ? w.settings : w) as Record<string, unknown>;
+    const hp = s.homepage as Record<string, unknown> | undefined;
+    // Also check new API's homepageConfig shape
+    const hc = s.homepageConfig as Record<string, unknown> | undefined;
+    return {
+      heroTitle: (hp?.heroTitle ?? hc?.heroHeadline ?? "") as string | undefined,
+      heroSubtitle: (hp?.heroSubtitle ?? hc?.heroSubheadline ?? "") as string | undefined,
+      featuredProductIds: (
+        Array.isArray(hp?.featuredProductIds) ? hp.featuredProductIds :
+        Array.isArray(hc?.featuredProductIds) ? hc.featuredProductIds : []
+      ) as string[],
+    };
+  } catch {
+    return {};
+  }
+}
+
 export const apiClient = {
   getSettings: () => request<SiteSettings>("/settings", { next: { revalidate: 60 } }),
   getProducts,
   getProduct,
+  getCategories,
+  getHomeConfig,
   getSeoPage: (slug: string) => request<SeoPage>(`/seo-pages/${slug}`, { next: { revalidate: 60 } }),
   submitQuote: (payload: QuoteRequest) =>
     request<QuoteRequest>("/quotes", {

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@tara-maa/shared-types";
 
@@ -13,7 +14,13 @@ function getFirstImageAlt(images: Product["images"], fallback: string): string {
   return typeof first === "string" ? fallback : ((first as { alt?: string }).alt || fallback);
 }
 
-export function ProductCard({ product }: { product: Product & { price?: number } }) {
+export function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: Product & { price?: number };
+  priority?: boolean;
+}) {
   const imgUrl = getFirstImageUrl(product.images);
   const imgAlt = getFirstImageAlt(product.images, product.name);
   const categoryOrTag = product.tags?.[0] ?? "";
@@ -35,12 +42,18 @@ export function ProductCard({ product }: { product: Product & { price?: number }
       )}
 
       {/* Image */}
-      <div className="mb-5 flex h-44 items-center justify-center rounded-[1.25rem] bg-surface border border-border/50 overflow-hidden">
+      <div className="relative mb-5 h-44 overflow-hidden rounded-[1.25rem] bg-surface border border-border/50">
         {imgUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imgUrl} alt={imgAlt} className="h-full w-full object-cover" />
+          <Image
+            src={imgUrl}
+            alt={imgAlt}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            priority={priority}
+          />
         ) : (
-          <div className="flex flex-col items-center gap-2 text-border">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-border">
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
               <rect x="4" y="6" width="24" height="20" rx="3" stroke="currentColor" strokeWidth="1.5"/>
               <circle cx="12" cy="13" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
