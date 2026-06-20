@@ -1,14 +1,23 @@
 import type { Config } from "tailwindcss";
-import preset from "../../packages/shared-config/tailwind-preset";
 
 const config: Config = {
   content: [
     "./src/**/*.{ts,tsx}",
     "../../packages/ui/src/**/*.{ts,tsx}"
   ],
-  presets: [preset],
   theme: {
     extend: {
+      colors: {
+        surface: "var(--color-surface)",
+        panel: "var(--color-panel)",
+        border: "var(--color-border)",
+        text: "var(--color-text)",
+        muted: "var(--color-muted)",
+        accent: "var(--color-accent)",
+        "accent-light": "var(--color-accent-light)",
+        warm: "var(--color-warm)",
+        gold: "var(--color-gold)"
+      },
       fontFamily: {
         sans: ["var(--font-sans)"]
       },
