@@ -152,7 +152,12 @@ export default async function HomePage() {
   let products: Product[] = fallbackProducts;
 
   try {
-    products = await apiClient.getProducts();
+    const raw = await apiClient.getProducts() as unknown;
+    if (Array.isArray(raw)) {
+      products = raw as Product[];
+    } else if (raw && typeof raw === "object" && Array.isArray((raw as Record<string, unknown>).products)) {
+      products = (raw as { products: Product[] }).products;
+    }
     if (products.length === 0) products = fallbackProducts;
   } catch {
     products = fallbackProducts;
