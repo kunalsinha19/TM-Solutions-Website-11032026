@@ -5,4 +5,4 @@ cmds = ["npm install"]
 cmds = ["npm run build:web"]
 
 [start]
-cmd = "node apps/web/.next/standalone/server.js"
+cmd = "node apps/web/.next/standalone/apps/web/server.js"
