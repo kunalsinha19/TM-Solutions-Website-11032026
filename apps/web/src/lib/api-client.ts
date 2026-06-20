@@ -188,12 +188,27 @@ async function getHomeConfig(): Promise<HomeConfig> {
   }
 }
 
+// Extracts the logo URL from the old backend's { success, settings: { logoUrl } } shape.
+async function getSiteLogo(): Promise<string | null> {
+  try {
+    const raw = await request<unknown>("/settings", { next: { revalidate: 300 } });
+    if (!raw || typeof raw !== "object") return null;
+    const w = raw as Record<string, unknown>;
+    const s = (w.settings && typeof w.settings === "object" ? w.settings : w) as Record<string, unknown>;
+    const url = (s.logoUrl ?? s.logo ?? "") as string;
+    return url && url.startsWith("http") ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 export const apiClient = {
   getSettings: () => request<SiteSettings>("/settings", { next: { revalidate: 60 } }),
   getProducts,
   getProduct,
   getCategories,
   getHomeConfig,
+  getSiteLogo,
   getSeoPage: (slug: string) => request<SeoPage>(`/seo-pages/${slug}`, { next: { revalidate: 60 } }),
   submitQuote: (payload: QuoteRequest) =>
     request<QuoteRequest>("/quotes", {

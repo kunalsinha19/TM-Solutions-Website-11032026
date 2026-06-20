@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ThemeToggle } from "../theme/theme-toggle";
@@ -11,7 +12,7 @@ const navLinks = [
   { href: "/about", label: "About Us" },
 ];
 
-export function SiteHeader() {
+export function SiteHeader({ logoUrl }: { logoUrl?: string | null }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -21,10 +22,21 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white text-[11px] font-extrabold tracking-tight shadow-glow-sm ring-2 ring-accent/20 group-hover:shadow-glow group-hover:ring-accent/40 transition-all duration-300">
-              TMS
-            </span>
-            <span className="text-sm font-bold tracking-wide" style={{ textShadow: "0 0 1px rgba(0,0,0,0.08)" }}>
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt="Tara Maa Solutions"
+                width={36}
+                height={36}
+                className="h-9 w-9 shrink-0 rounded-xl object-contain ring-2 ring-accent/20 group-hover:ring-accent/40 transition-all duration-300"
+                priority
+              />
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white text-[11px] font-extrabold tracking-tight shadow-glow-sm ring-2 ring-accent/20 group-hover:shadow-glow group-hover:ring-accent/40 transition-all duration-300">
+                TMS
+              </span>
+            )}
+            <span className="text-sm font-bold tracking-wide">
               <span className="text-text">Tara Maa </span>
               <span className="text-accent">Solutions</span>
             </span>
