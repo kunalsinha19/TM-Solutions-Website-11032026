@@ -17,18 +17,24 @@ declare global {
 }
 
 const LANGUAGES = [
-  { code: "hi", label: "हिंदी",    name: "Hindi" },
-  { code: "bn", label: "বাংলা",    name: "Bengali" },
-  { code: "te", label: "తెలుగు",   name: "Telugu" },
-  { code: "ta", label: "தமிழ்",    name: "Tamil" },
-  { code: "gu", label: "ગુજરાતી", name: "Gujarati" },
-  { code: "mr", label: "मराठी",    name: "Marathi" },
-  { code: "ar", label: "العربية",  name: "Arabic" },
-  { code: "fr", label: "Français", name: "French" },
-  { code: "es", label: "Español",  name: "Spanish" },
-  { code: "de", label: "Deutsch",  name: "German" },
-  { code: "zh-CN", label: "中文",  name: "Chinese" },
-  { code: "ja", label: "日本語",   name: "Japanese" },
+  { code: "en",    label: "English",   name: "English" },
+  { code: "hi",    label: "हिंदी",     name: "Hindi" },
+  { code: "bn",    label: "বাংলা",     name: "Bengali" },
+  { code: "te",    label: "తెలుగు",    name: "Telugu" },
+  { code: "ta",    label: "தமிழ்",     name: "Tamil" },
+  { code: "gu",    label: "ગુજરાતી",  name: "Gujarati" },
+  { code: "mr",    label: "मराठी",     name: "Marathi" },
+  { code: "pa",    label: "ਪੰਜਾਬੀ",   name: "Punjabi" },
+  { code: "kn",    label: "ಕನ್ನಡ",    name: "Kannada" },
+  { code: "ml",    label: "മലയാളം",   name: "Malayalam" },
+  { code: "or",    label: "ଓଡ଼ିଆ",    name: "Odia" },
+  { code: "ur",    label: "اردو",      name: "Urdu" },
+  { code: "ar",    label: "العربية",   name: "Arabic" },
+  { code: "fr",    label: "Français",  name: "French" },
+  { code: "es",    label: "Español",   name: "Spanish" },
+  { code: "de",    label: "Deutsch",   name: "German" },
+  { code: "zh-CN", label: "中文",      name: "Chinese" },
+  { code: "ja",    label: "日本語",    name: "Japanese" },
 ];
 
 function triggerGTSelect(code: string) {
@@ -101,7 +107,11 @@ export function TranslateWidget() {
 
   const pickLanguage = (code: string) => {
     setOpen(false);
-    triggerGTSelect(code);
+    if (code === "en") {
+      triggerGTSelect("en");
+    } else {
+      triggerGTSelect(code);
+    }
   };
 
   const reset = () => {
@@ -109,6 +119,7 @@ export function TranslateWidget() {
     triggerGTSelect("en");
   };
 
+  const isTranslated = activeLang !== null && activeLang !== "en";
   const activeInfo = LANGUAGES.find((l) => l.code === activeLang);
 
   return (
@@ -119,14 +130,14 @@ export function TranslateWidget() {
       {/* Trigger button */}
       <button
         type="button"
-        className={`gt-trigger${activeLang ? " gt-trigger--active" : ""}`}
+        className={`gt-trigger${isTranslated ? " gt-trigger--active" : ""}`}
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        title={activeLang ? `Translated to ${activeInfo?.name ?? activeLang}` : "Translate page"}
+        title={isTranslated ? `Translated to ${activeInfo?.name ?? activeLang}` : "Translate page"}
       >
         <LanguagesIcon />
-        {activeLang && (
+        {isTranslated && (
           <span className="gt-badge">{activeInfo?.label?.slice(0, 2) ?? "A"}</span>
         )}
       </button>
@@ -138,7 +149,7 @@ export function TranslateWidget() {
             <span className="gt-popover-title">
               <LanguagesIcon /> Translate
             </span>
-            {activeLang && (
+            {isTranslated && (
               <button type="button" className="gt-reset" onClick={reset}>
                 Reset to English
               </button>
@@ -151,8 +162,8 @@ export function TranslateWidget() {
                 key={lang.code}
                 type="button"
                 role="option"
-                aria-selected={activeLang === lang.code}
-                className={`gt-lang${activeLang === lang.code ? " gt-lang--active" : ""}`}
+                aria-selected={lang.code === "en" ? !isTranslated : activeLang === lang.code}
+                className={`gt-lang${(lang.code === "en" ? !isTranslated : activeLang === lang.code) ? " gt-lang--active" : ""}`}
                 onClick={() => pickLanguage(lang.code)}
               >
                 <span className="gt-lang-native">{lang.label}</span>
