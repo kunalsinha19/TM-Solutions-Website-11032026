@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY packages/ ./packages/
 COPY apps/web/package.json ./apps/web/
-COPY admin/package.json ./admin/ 2>/dev/null || true
+COPY admin/package.json ./admin/
 
 RUN npm install
 
