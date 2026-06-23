@@ -388,6 +388,23 @@ body::before {
   margin: 0;
 }
 
+/* Mobile drawer context: flip popover to open rightward so it stays on-screen */
+.gt-mobile-ctx {
+  width: 100%;
+}
+.gt-mobile-ctx .gt-root {
+  width: 100%;
+}
+.gt-mobile-ctx .gt-trigger {
+  width: 100%;
+  justify-content: flex-start;
+}
+.gt-mobile-ctx .gt-popover {
+  right: auto;
+  left: 0;
+  width: min(280px, calc(100vw - 48px));
+}
+
 /* Suppress all Google Translate injected UI globally */
 .goog-te-banner-frame,
 .skiptranslate > iframe,

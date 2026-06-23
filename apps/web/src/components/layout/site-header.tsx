@@ -119,7 +119,7 @@ export function SiteHeader({ logoUrl }: { logoUrl?: string | null }) {
               >
                 Get a Quote
               </Link>
-              <div className="mt-3">
+              <div className="mt-3 gt-mobile-ctx">
                 <TranslateWidget />
               </div>
             </nav>
