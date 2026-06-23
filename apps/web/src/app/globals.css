@@ -212,118 +212,195 @@ body::before {
   outline-offset: 2px;
 }
 
-/* ── Google Translate — icon-button overlay ── */
+/* ── Google Translate — custom popover, no Google UI ── */
 
-/* Wrapper sized to the icon button; Google's select is absolutely overlaid inside */
-.gt-wrapper {
+/* Engine anchor: hidden off-screen so Google can inject into it without showing anything */
+.gt-engine-anchor {
+  position: fixed !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Root wrapper — position:relative so the popover drops from here */
+.gt-root {
   position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
 }
 
-/* Visible themed icon button.
-   pointer-events: none lets the transparent select above capture all clicks. */
-.gt-icon-btn {
+/* Trigger button — theme-sensitive via CSS vars */
+.gt-trigger {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
+  gap: 5px;
   height: 36px;
+  padding: 0 10px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
   background: transparent;
   color: var(--color-muted);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
-  pointer-events: none;
-  user-select: none;
+  white-space: nowrap;
   flex-shrink: 0;
 }
 
-.gt-wrapper:hover .gt-icon-btn {
+.gt-trigger:hover {
   color: var(--color-accent);
   border-color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
-.gt-icon-btn--active {
-  color: var(--color-accent) !important;
-  border-color: var(--color-accent) !important;
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent) !important;
+.gt-trigger--active {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
-/* Accent dot — shows when a translation is active */
-.gt-active-dot {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+/* Small native-script badge shown when translation is active */
+.gt-badge {
+  font-size: 10px;
+  font-weight: 700;
   background: var(--color-accent);
-  box-shadow: 0 0 5px var(--color-accent);
+  color: #fff;
+  border-radius: 4px;
+  padding: 1px 4px;
+  line-height: 1.4;
+  letter-spacing: 0;
 }
 
-/* Transparent select overlay — covers the whole wrapper so any click opens the picker */
-.gt-select-overlay {
+/* Popover panel */
+.gt-popover {
   position: absolute;
-  inset: 0;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 200;
+  width: 280px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
   overflow: hidden;
+  animation: gt-pop 0.15s ease-out;
+}
+
+@keyframes gt-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.gt-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.gt-popover-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.gt-reset {
+  font-size: 11px;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  transition: background 0.15s;
+}
+
+.gt-reset:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+/* 3-column language grid */
+.gt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 10px;
+}
+
+.gt-lang {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
   border-radius: 8px;
-  z-index: 1;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: var(--font-sans);
+  text-align: center;
 }
 
-.gt-select-overlay--hidden {
-  display: none;
+.gt-lang:hover {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 25%, transparent);
 }
 
-.gt-select-overlay .goog-te-gadget {
-  margin: 0 !important;
-  padding: 0 !important;
-  font-size: 0 !important;
-  line-height: 0 !important;
-  height: 100% !important;
-  display: block !important;
+.gt-lang--active {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent) !important;
+  border-color: var(--color-accent) !important;
 }
 
-/* The select: invisible but fully covering the button — clicking it opens the native picker */
-.gt-select-overlay .goog-te-gadget .goog-te-combo {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-width: unset !important;
-  max-width: unset !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 8px !important;
-  background: transparent !important;
-  color: transparent !important;
+.gt-lang-native {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.gt-lang-name {
+  font-size: 10px;
+  color: var(--color-muted);
+  line-height: 1;
+}
+
+.gt-loading {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-muted);
+  padding: 8px 0 12px;
+  margin: 0;
+}
+
+/* Suppress all Google Translate injected UI globally */
+.goog-te-banner-frame,
+.skiptranslate > iframe,
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+}
+
+/* Hide the gadget entirely — we only use it as a hidden engine */
+.goog-te-gadget {
   font-size: 0 !important;
   opacity: 0 !important;
-  cursor: pointer !important;
-  outline: none !important;
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  z-index: 2 !important;
-}
-
-/* Hide "Powered by Google Translate" branding */
-.goog-te-gadget a,
-.goog-te-gadget > span,
-.goog-logo-link,
-.goog-logo-link * {
-  display: none !important;
-}
-
-/* Hide the top banner iframe Google sometimes injects */
-.goog-te-banner-frame,
-.skiptranslate > iframe {
-  display: none !important;
+  pointer-events: none !important;
 }
 
 /* Prevent body top-offset that Google Translate injects */

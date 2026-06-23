@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 declare global {
   interface Window {
@@ -16,9 +16,34 @@ declare global {
   }
 }
 
+const LANGUAGES = [
+  { code: "hi", label: "हिंदी",    name: "Hindi" },
+  { code: "bn", label: "বাংলা",    name: "Bengali" },
+  { code: "te", label: "తెలుగు",   name: "Telugu" },
+  { code: "ta", label: "தமிழ்",    name: "Tamil" },
+  { code: "gu", label: "ગુજરાતી", name: "Gujarati" },
+  { code: "mr", label: "मराठी",    name: "Marathi" },
+  { code: "ar", label: "العربية",  name: "Arabic" },
+  { code: "fr", label: "Français", name: "French" },
+  { code: "es", label: "Español",  name: "Spanish" },
+  { code: "de", label: "Deutsch",  name: "German" },
+  { code: "zh-CN", label: "中文",  name: "Chinese" },
+  { code: "ja", label: "日本語",   name: "Japanese" },
+];
+
+function triggerGTSelect(code: string) {
+  const select = document.querySelector<HTMLSelectElement>(".goog-te-combo");
+  if (!select) return false;
+  select.value = code;
+  select.dispatchEvent(new Event("change"));
+  return true;
+}
+
 export function TranslateWidget() {
   const [ready, setReady] = useState(false);
-  const [active, setActive] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [activeLang, setActiveLang] = useState<string | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     window.googleTranslateElementInit = () => {
@@ -41,37 +66,106 @@ export function TranslateWidget() {
       setReady(true);
     }
 
-    const checkActive = () => {
-      setActive(
+    const syncLang = () => {
+      if (
         document.body.classList.contains("translated-ltr") ||
         document.body.classList.contains("translated-rtl")
-      );
+      ) {
+        const m = document.cookie.match(/googtrans=\/en\/([^;]+)/);
+        setActiveLang(m ? decodeURIComponent(m[1]) : "?");
+      } else {
+        setActiveLang(null);
+      }
     };
-    checkActive();
-    const observer = new MutationObserver(checkActive);
-    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
+    syncLang();
+    const obs = new MutationObserver(syncLang);
+    obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
   }, []);
 
+  // Close popover on outside click / Escape
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onDown = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [open]);
+
+  const pickLanguage = (code: string) => {
+    setOpen(false);
+    triggerGTSelect(code);
+  };
+
+  const reset = () => {
+    setOpen(false);
+    triggerGTSelect("en");
+  };
+
+  const activeInfo = LANGUAGES.find((l) => l.code === activeLang);
+
   return (
-    <div className="gt-wrapper" title="Translate page">
-      {/* Visible themed icon button — pointer-events disabled so select overlay handles clicks */}
-      <div
-        className={`gt-icon-btn${active ? " gt-icon-btn--active" : ""}`}
-        aria-hidden="true"
+    <div ref={wrapperRef} className="gt-root">
+      {/* GT engine lives off-screen — still in DOM so Google can initialize */}
+      <div id="google_translate_element" className="gt-engine-anchor" />
+
+      {/* Trigger button */}
+      <button
+        type="button"
+        className={`gt-trigger${activeLang ? " gt-trigger--active" : ""}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        title={activeLang ? `Translated to ${activeInfo?.name ?? activeLang}` : "Translate page"}
       >
         <LanguagesIcon />
-        {active && <span className="gt-active-dot" />}
-      </div>
+        {activeLang && (
+          <span className="gt-badge">{activeInfo?.label?.slice(0, 2) ?? "A"}</span>
+        )}
+      </button>
 
-      {/* Google injects a <select> here; we make it a transparent, full-cover overlay
-          so clicking anywhere on the wrapper opens the native language picker */}
-      <div
-        id="google_translate_element"
-        className={
-          ready ? "gt-select-overlay" : "gt-select-overlay gt-select-overlay--hidden"
-        }
-      />
+      {/* Language picker popover */}
+      {open && (
+        <div className="gt-popover" role="listbox" aria-label="Select language">
+          <div className="gt-popover-head">
+            <span className="gt-popover-title">
+              <LanguagesIcon /> Translate
+            </span>
+            {activeLang && (
+              <button type="button" className="gt-reset" onClick={reset}>
+                Reset to English
+              </button>
+            )}
+          </div>
+
+          <div className="gt-grid">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                type="button"
+                role="option"
+                aria-selected={activeLang === lang.code}
+                className={`gt-lang${activeLang === lang.code ? " gt-lang--active" : ""}`}
+                onClick={() => pickLanguage(lang.code)}
+              >
+                <span className="gt-lang-native">{lang.label}</span>
+                <span className="gt-lang-name">{lang.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {!ready && (
+            <p className="gt-loading">Loading translator…</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -79,8 +173,8 @@ export function TranslateWidget() {
 function LanguagesIcon() {
   return (
     <svg
-      width="16"
-      height="16"
+      width="15"
+      height="15"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
