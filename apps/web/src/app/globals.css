@@ -213,11 +213,9 @@ body::before {
 }
 
 /* ---- Google Translate — compact pill, hide branding ---- */
+.translate-wrapper { display: flex; align-items: center; gap: 4px; }
 #google_translate_element { display: flex; align-items: center; }
 
-/* The outer gadget container — kill the font-size so the "Powered by" text
-   (which uses font-size: inherit) collapses to zero while the <select> keeps
-   its own explicit size. */
 .goog-te-gadget {
   font-size: 0 !important;
   line-height: 0 !important;
@@ -225,29 +223,29 @@ body::before {
   align-items: center !important;
 }
 
-/* The actual language <select> — solid bg so it's visible on any theme */
+/* Force light color-scheme so the native <select> always renders with
+   white bg + dark text — readable on dark/green themes without guessing
+   what the browser will do with our custom background colors. */
 .goog-te-gadget .goog-te-combo {
+  color-scheme: light !important;
   margin: 0 !important;
   font-size: 11px !important;
   font-family: var(--font-sans) !important;
-  border: 1px solid var(--color-border) !important;
+  border: 1px solid rgba(128,128,128,0.4) !important;
   border-radius: 9999px !important;
-  background: var(--color-panel) !important;
-  color: var(--color-muted) !important;
-  padding: 4px 12px !important;
+  background: #ffffff !important;
+  color: #374151 !important;
+  padding: 4px 10px 4px 8px !important;
   outline: none !important;
   cursor: pointer !important;
-  max-width: 120px !important;
-  transition: border-color 0.2s, color 0.2s, background 0.2s;
-  appearance: none !important;
-  -webkit-appearance: none !important;
+  min-width: 90px !important;
+  max-width: 130px !important;
+  transition: border-color 0.2s;
 }
 
 .goog-te-gadget .goog-te-combo:hover,
 .goog-te-gadget .goog-te-combo:focus {
   border-color: var(--color-accent) !important;
-  color: var(--color-text) !important;
-  background: var(--color-panel) !important;
 }
 
 /* Hide the "Powered by Google Translate" logo row */
