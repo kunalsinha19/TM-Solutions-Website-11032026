@@ -212,43 +212,107 @@ body::before {
   outline-offset: 2px;
 }
 
-/* ---- Google Translate — compact pill, hide branding ---- */
-.translate-wrapper { display: flex; align-items: center; gap: 4px; }
-#google_translate_element { display: flex; align-items: center; }
+/* ── Google Translate — icon-button overlay ── */
 
-.goog-te-gadget {
+/* Wrapper sized to the icon button; Google's select is absolutely overlaid inside */
+.gt-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+/* Visible themed icon button.
+   pointer-events: none lets the transparent select above capture all clicks. */
+.gt-icon-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-muted);
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  pointer-events: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.gt-wrapper:hover .gt-icon-btn {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.gt-icon-btn--active {
+  color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent) !important;
+}
+
+/* Accent dot — shows when a translation is active */
+.gt-active-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 5px var(--color-accent);
+}
+
+/* Transparent select overlay — covers the whole wrapper so any click opens the picker */
+.gt-select-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.gt-select-overlay--hidden {
+  display: none;
+}
+
+.gt-select-overlay .goog-te-gadget {
+  margin: 0 !important;
+  padding: 0 !important;
   font-size: 0 !important;
   line-height: 0 !important;
-  display: flex !important;
-  align-items: center !important;
+  height: 100% !important;
+  display: block !important;
 }
 
-/* Force light color-scheme so the native <select> always renders with
-   white bg + dark text — readable on dark/green themes without guessing
-   what the browser will do with our custom background colors. */
-.goog-te-gadget .goog-te-combo {
-  color-scheme: light !important;
+/* The select: invisible but fully covering the button — clicking it opens the native picker */
+.gt-select-overlay .goog-te-gadget .goog-te-combo {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: unset !important;
+  max-width: unset !important;
   margin: 0 !important;
-  font-size: 11px !important;
-  font-family: var(--font-sans) !important;
-  border: 1px solid rgba(128,128,128,0.4) !important;
-  border-radius: 9999px !important;
-  background: #ffffff !important;
-  color: #374151 !important;
-  padding: 4px 10px 4px 8px !important;
-  outline: none !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  opacity: 0 !important;
   cursor: pointer !important;
-  min-width: 90px !important;
-  max-width: 130px !important;
-  transition: border-color 0.2s;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  z-index: 2 !important;
 }
 
-.goog-te-gadget .goog-te-combo:hover,
-.goog-te-gadget .goog-te-combo:focus {
-  border-color: var(--color-accent) !important;
-}
-
-/* Hide the "Powered by Google Translate" logo row */
+/* Hide "Powered by Google Translate" branding */
 .goog-te-gadget a,
 .goog-te-gadget > span,
 .goog-logo-link,
@@ -256,13 +320,13 @@ body::before {
   display: none !important;
 }
 
-/* Hide the translate banner that Google Translate sometimes injects at the top */
+/* Hide the top banner iframe Google sometimes injects */
 .goog-te-banner-frame,
 .skiptranslate > iframe {
   display: none !important;
 }
 
-/* Prevent body offset that Google Translate injects */
+/* Prevent body top-offset that Google Translate injects */
 body.translated-ltr,
 body.translated-rtl {
   top: 0 !important;
