@@ -127,7 +127,7 @@ a {
 .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
 
 .animate-marquee {
-  animation: marquee 30s linear infinite;
+  animation: marquee 80s linear infinite;
 }
 
 /* Pause marquee when hovering the container */
