@@ -1,6 +1,8 @@
 import type { Product } from "@tara-maa/shared-types";
 import Link from "next/link";
 import { apiClient, type BackendCategory } from "../../lib/api-client";
+
+export const dynamic = "force-dynamic";
 import { Reveal } from "../../components/motion/reveal";
 import { ProductRoulette } from "../../components/motion/product-roulette";
 import { ProductCard } from "../../components/products/product-card";
