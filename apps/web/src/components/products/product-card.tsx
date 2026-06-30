@@ -24,7 +24,6 @@ export function ProductCard({
   const imgUrl = getFirstImageUrl(product.images);
   const imgAlt = getFirstImageAlt(product.images, product.name);
   const categoryOrTag = product.tags?.[0] ?? "";
-  const price = product.price;
 
   return (
     <Link
@@ -83,13 +82,8 @@ export function ProductCard({
         {product.shortDescription || product.metaDescription}
       </p>
 
-      {/* Price + CTA row */}
-      <div className="mt-5 flex items-center justify-between">
-        <span className="text-sm font-bold text-text">
-          {price && price > 0
-            ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price)
-            : "Price on request"}
-        </span>
+      {/* CTA row */}
+      <div className="mt-5 flex items-center justify-end">
         <span className="flex items-center gap-1.5 text-sm font-semibold text-accent group-hover:gap-2.5 transition-all duration-200">
           View details
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
