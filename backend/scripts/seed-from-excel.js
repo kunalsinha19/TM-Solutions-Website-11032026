@@ -10,6 +10,12 @@
  */
 
 require("dotenv").config({ path: require("path").join(__dirname, "../.env") });
+
+// Override system DNS with Google's public DNS to fix SRV lookup failures
+// on networks/routers that refuse DNS SRV record queries
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+
 const mongoose = require("mongoose");
 const path = require("path");
 const seedData = require(path.join(__dirname, "seed-data.json"));
