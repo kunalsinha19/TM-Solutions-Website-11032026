@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import type { Product } from "@tara-maa/shared-types";
 
 function getFirstImageUrl(images: Product["images"]): string | null {
@@ -24,6 +27,7 @@ export function ProductCard({
   const imgUrl = getFirstImageUrl(product.images);
   const imgAlt = getFirstImageAlt(product.images, product.name);
   const categoryOrTag = product.tags?.[0] ?? "";
+  const [imgFailed, setImgFailed] = useState(false);
 
   return (
     <Link
@@ -42,7 +46,7 @@ export function ProductCard({
 
       {/* Image */}
       <div className="relative mb-5 h-44 overflow-hidden rounded-[1.25rem] bg-surface border border-border/50">
-        {imgUrl ? (
+        {imgUrl && !imgFailed ? (
           <Image
             src={imgUrl}
             alt={imgAlt}
@@ -50,6 +54,7 @@ export function ProductCard({
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
             priority={priority}
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-border">

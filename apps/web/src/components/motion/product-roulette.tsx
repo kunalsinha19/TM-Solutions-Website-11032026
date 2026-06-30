@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import type { Product } from "@tara-maa/shared-types";
 
 function getImageUrl(product: Product): string | null {
@@ -10,11 +11,43 @@ function getImageUrl(product: Product): string | null {
   return typeof first === "string" ? first : (first as { url: string }).url || null;
 }
 
+function NoImagePlaceholder() {
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-border">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="5" width="22" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
+        <circle cx="10" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M3 19l5-5 5 4 4-3 8 6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+      </svg>
+      <span className="text-[10px] text-muted">No image</span>
+    </div>
+  );
+}
+
+function RouletteImage({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <NoImagePlaceholder />;
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className="object-cover"
+      sizes="260px"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export function ProductRoulette({ products }: { products: Product[] }) {
   if (!products.length) return null;
 
+  // Prefer products with images; show at most 30 to keep scroll speed comfortable
+  const withImg = products.filter(p => getImageUrl(p) !== null);
+  const pool = (withImg.length >= 8 ? withImg : products).slice(0, 30);
+
   // 2 identical copies → seamless loop with translateX(-50%)
-  const reel = [...products, ...products];
+  const reel = [...pool, ...pool];
 
   return (
     <div className="marquee-container relative overflow-hidden rounded-[2rem] border border-border/70 bg-panel py-5 shadow-soft" title="Hover to pause">
@@ -26,8 +59,6 @@ export function ProductRoulette({ products }: { products: Product[] }) {
         {reel.map((product, index) => {
           const imgUrl = getImageUrl(product);
           const categoryTag = product.tags?.[0] ?? "";
-          // Prioritise the first copy so hero LCP fires immediately
-          const isPriority = index < products.length;
 
           return (
             <Link
@@ -36,25 +67,11 @@ export function ProductRoulette({ products }: { products: Product[] }) {
               className="flex w-[260px] shrink-0 flex-col gap-3 rounded-[1.5rem] border border-border/60 bg-surface p-4 hover:border-accent/30 transition-colors duration-200"
             >
               {/* Image thumbnail */}
-              <div className="relative h-32 overflow-hidden rounded-[1rem] bg-panel border border-border/40">
+              <div className="relative h-36 overflow-hidden rounded-[1rem] bg-panel border border-border/40">
                 {imgUrl ? (
-                  <Image
-                    src={imgUrl}
-                    alt={product.name}
-                    fill
-                    className="object-cover"
-                    sizes="260px"
-                    priority={isPriority}
-                  />
+                  <RouletteImage src={imgUrl} alt={product.name} />
                 ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-border">
-                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                      <rect x="3" y="5" width="22" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
-                      <circle cx="10" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M3 19l5-5 5 4 4-3 8 6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    </svg>
-                    <span className="text-[10px] text-muted">No image</span>
-                  </div>
+                  <NoImagePlaceholder />
                 )}
               </div>
 
