@@ -10,13 +10,16 @@
  */
 
 require("dotenv").config({ path: require("path").join(__dirname, "../.env") });
+
 const mongoose = require("mongoose");
 const path = require("path");
 const seedData = require(path.join(__dirname, "seed-data.json"));
 
+// Direct replica set connection — bypasses SRV DNS lookup entirely.
+// Hosts resolved from _mongodb._tcp.tara-maa-cluster.2b2mvqt.mongodb.net
 const MONGO_URI =
   process.env.MONGODB_URI ||
-  "mongodb+srv://taraadmin:taraadmin@tara-maa-cluster.2b2mvqt.mongodb.net/taramaadb?retryWrites=true&w=majority";
+  "mongodb://taraadmin:taraadmin@ac-jcplrdz-shard-00-00.2b2mvqt.mongodb.net:27017,ac-jcplrdz-shard-00-01.2b2mvqt.mongodb.net:27017,ac-jcplrdz-shard-00-02.2b2mvqt.mongodb.net:27017/taramaadb?ssl=true&replicaSet=atlas-nd3cr9-shard-0&authSource=admin&retryWrites=true&w=majority";
 
 // ── Schemas (inline to avoid import issues) ──────────────────────────────────
 
