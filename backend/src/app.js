@@ -28,7 +28,7 @@ const allowedOrigins = Array.from(new Set([
   "http://127.0.0.1:3000"
 ].filter(Boolean)));
 
-const railwayOriginPattern = /\\.up\\.railway\\.app$|\\.railway\\.app$/i;
+const railwayOriginPattern = /\.up\.railway\.app$|\.railway\.app$/i;
 
 app.use(cors({
   origin(origin, callback) {

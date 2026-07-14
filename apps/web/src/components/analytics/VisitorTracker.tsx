@@ -3,13 +3,9 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-// ─── API base resolution (mirrors api-client.ts) ────────────────────────────
-const API_BASE = (() => {
-  const raw = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
-  const base = raw.replace(/\/$/, "");
-  return base.endsWith("/api") ? base : `${base}/api`;
-})();
-const TRACK_URL = `${API_BASE}/analytics/track`;
+// Same-origin proxy routes — avoids cross-origin CORS issues entirely.
+// The Next.js server forwards these to the backend server-side.
+const TRACK_URL = "/api/track";
 
 // ─── Tiny helpers ────────────────────────────────────────────────────────────
 function uuid(): string {
