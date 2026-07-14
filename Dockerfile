@@ -2,22 +2,28 @@ FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy manifests first so npm install layer is cached independently of source
+# ── Dependency layer (cached unless manifests change) ──────────────────────────
+# Copy only package manifests first. .dockerignore excludes backend/ and
+# unnecessary admin/frontend source so this context stays small and uploads fast.
 COPY package.json package-lock.json* ./
 COPY packages/ ./packages/
 COPY apps/web/package.json ./apps/web/
-COPY admin/package.json ./admin/
+# admin/package.json is required so npm can resolve the workspace graph.
+# admin/src is excluded via .dockerignore — only the manifest is sent.
+COPY admin/package.json admin/package-lock.json* ./admin/
+# frontend workspace manifest (same pattern)
+COPY frontend/package.json frontend/package-lock.json* ./frontend/
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 
-# Copy full source after dependencies are installed
+# ── Source layer (invalidated on any source change) ────────────────────────────
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Run Next.js build directly via workspace — does not depend on root script name
 RUN npm run build --workspace=@tara-maa/web
 
+# ── Production image ───────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -29,18 +35,16 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Standalone bundle — includes trimmed node_modules for production
+# next.config output:"standalone" produces a self-contained bundle
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 
-# Static JS/CSS chunks (not included in standalone automatically)
+# Static assets (standalone does not include these automatically)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
-# Public assets (favicon, robots.txt, etc.)
+# Public folder (images, favicon, robots.txt, etc.)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 USER nextjs
 EXPOSE 3000
 
-# Use sh -c so HOSTNAME is set in the process environment even if the
-# container runtime overwrites the Docker ENV with the container hostname.
 CMD ["sh", "-c", "HOSTNAME=0.0.0.0 node apps/web/server.js"]
