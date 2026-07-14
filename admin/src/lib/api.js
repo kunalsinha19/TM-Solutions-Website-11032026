@@ -31,6 +31,16 @@ export const api = {
     request("/auth/me", {
       headers: { Authorization: `Bearer ${token}` }
     }),
+  requestOtp: (email) =>
+    request("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email })
+    }),
+  resetPassword: (email, otp, newPassword) =>
+    request("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ email, token: otp, newPassword })
+    }),
   getAdmins: (token) =>
     request("/admins", {
       headers: { Authorization: `Bearer ${token}` }

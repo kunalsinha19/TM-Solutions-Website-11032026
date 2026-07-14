@@ -67,15 +67,16 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
   );
 }
 
-async function sendPasswordResetEmail(email, resetToken) {
-  const subject = "Tara Maa admin password reset";
-  const text = `Your password reset token is ${resetToken}. It expires in 30 minutes.`;
+async function sendPasswordResetEmail(email, otp) {
+  const subject = "Your Tara Maa Solutions admin OTP";
+  const text = `Your one-time password (OTP) is: ${otp}\nIt expires in 10 minutes. Do not share it with anyone.`;
   const html = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
-      <h2>Password Reset Request</h2>
-      <p>Use the token below to reset your admin password.</p>
-      <p style="font-size: 20px; font-weight: 700; word-break: break-all;">${resetToken}</p>
-      <p>This token expires in 30 minutes.</p>
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827; max-width: 480px;">
+      <h2 style="margin-top: 0;">Admin Password Reset</h2>
+      <p>Use the OTP below to reset your Tara Maa Solutions admin password:</p>
+      <p style="font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #b45309; margin: 1.5rem 0;">${otp}</p>
+      <p>This OTP expires in <strong>10 minutes</strong>.</p>
+      <p style="color: #6b7280; font-size: 0.9rem;">If you did not request a password reset, you can ignore this email.</p>
     </div>
   `;
 
