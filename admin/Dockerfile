@@ -1,27 +1,13 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 WORKDIR /app
-
-COPY package.json package-lock.json* ./
-RUN npm install
 
 COPY . .
-
-# VITE_* variables are injected by Railway at build time — Vite bakes them
-# into the static bundle, so they must be available when vite build runs.
-RUN npm run build
-
-# ── Production image ───────────────────────────────────────────────────────────
-FROM node:20-alpine AS runner
-WORKDIR /app
-
-# vite preview needs the config, built dist/, and its own node_modules
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/package-lock.json* ./
-COPY --from=builder /app/vite.config.js ./
-COPY --from=builder /app/dist ./dist
-
 RUN npm install
+RUN npm run build
 
 EXPOSE 8080
 
-CMD ["npm", "run", "preview"]
+# Overwrite vite.config.js at startup so the correct PORT and allowedHosts
+# are always used regardless of what the cached build image contains.
+# vite preview only needs the preview block — plugins aren't used at serve time.
+CMD ["sh", "-c", "echo 'import{defineConfig}from\"vite\";export default defineConfig({preview:{host:true,port:parseInt(process.env.PORT)||8080,allowedHosts:\"all\"}});' > vite.config.js && npm run preview"]
