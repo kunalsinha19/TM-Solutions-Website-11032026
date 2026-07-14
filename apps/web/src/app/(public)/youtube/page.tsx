@@ -137,6 +137,32 @@ export default async function YouTubePage() {
             <p className="mt-4 max-w-2xl text-base text-muted sm:text-lg">
               Product demos, industrial equipment highlights, and quick tips — all in under 60 seconds.
             </p>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <a
+                href={`${SITE_CONFIG.youtubeChannelUrl}?sub_confirmation=1`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors shadow-sm"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5v-7l6.5 3.5-6.5 3.5z"/>
+                </svg>
+                Subscribe
+              </a>
+              <a
+                href={`${SITE_CONFIG.youtubeChannelUrl}?sub_confirmation=1`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Enable notifications"
+                className="inline-flex items-center justify-center h-10 w-10 rounded-full border border-border bg-panel hover:border-red-500/40 hover:bg-red-500/8 transition-colors"
+                title="Enable notifications on YouTube"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                </svg>
+              </a>
+            </div>
           </Reveal>
         </div>
       </section>
@@ -157,14 +183,19 @@ export default async function YouTubePage() {
                     Videos will appear here once the YouTube channel is connected in the admin panel.
                   </p>
                 </div>
-                <a
-                  href={SITE_CONFIG.youtubeChannelUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
-                >
-                  Visit Our Channel
-                </a>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href={`${SITE_CONFIG.youtubeChannelUrl}?sub_confirmation=1`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5v-7l6.5 3.5-6.5 3.5z"/>
+                    </svg>
+                    Subscribe to Our Channel
+                  </a>
+                </div>
               </div>
             </Reveal>
           ) : (
