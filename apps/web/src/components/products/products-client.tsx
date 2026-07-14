@@ -6,6 +6,19 @@ import { ProductCard } from "./product-card";
 
 const PAGE_SIZE = 6;
 
+function getPaginationItems(current: number, total: number): (number | "...")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+  const first = 0, last = total - 1;
+  const leftEdge = Math.max(first + 1, current - 1);
+  const rightEdge = Math.min(last - 1, current + 1);
+  const items: (number | "...")[] = [first];
+  if (leftEdge > first + 1) items.push("...");
+  for (let i = leftEdge; i <= rightEdge; i++) items.push(i);
+  if (rightEdge < last - 1) items.push("...");
+  items.push(last);
+  return items;
+}
+
 export function ProductsClient({ products }: { products: Product[] }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [query, setQuery] = useState("");
@@ -112,7 +125,7 @@ export function ProductsClient({ products }: { products: Product[] }) {
 
       {/* Pagination */}
       {pageCount > 1 && (
-        <div className="mt-10 flex items-center justify-center gap-2">
+        <div className="mt-10 flex items-center justify-center gap-1.5 flex-wrap">
           <button
             type="button"
             onClick={() => setPage((p) => Math.max(p - 1, 0))}
@@ -122,20 +135,27 @@ export function ProductsClient({ products }: { products: Product[] }) {
           >
             ←
           </button>
-          {Array.from({ length: pageCount }, (_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setPage(i)}
-              className={`h-9 w-9 rounded-full text-sm font-medium transition-all duration-200 ${
-                i === page
-                  ? "bg-accent text-white shadow-glow-sm"
-                  : "border border-border text-muted hover:border-accent/40 hover:text-text"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
+          {getPaginationItems(page, pageCount).map((item, idx) =>
+            item === "..." ? (
+              <span key={`ellipsis-${idx}`} className="flex h-9 w-9 items-center justify-center text-sm text-muted select-none">
+                …
+              </span>
+            ) : (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setPage(item)}
+                className={`h-9 w-9 rounded-full text-sm font-medium transition-all duration-200 ${
+                  item === page
+                    ? "bg-accent text-white shadow-glow-sm"
+                    : "border border-border text-muted hover:border-accent/40 hover:text-text"
+                }`}
+                aria-current={item === page ? "page" : undefined}
+              >
+                {item + 1}
+              </button>
+            )
+          )}
           <button
             type="button"
             onClick={() => setPage((p) => Math.min(p + 1, pageCount - 1))}

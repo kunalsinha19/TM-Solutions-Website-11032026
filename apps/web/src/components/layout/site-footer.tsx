@@ -85,8 +85,38 @@ export function SiteFooter() {
           ))}
         </div>
 
+        {/* Additional contact numbers */}
+        <div className="mt-10 rounded-xl border border-border/60 bg-surface/50 px-6 py-5">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-text">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className="text-accent shrink-0">
+              <path d="M2 2h3l1.5 3.5-1.8 1.1c.9 1.8 2.2 3.1 4 4l1.1-1.8L13 10v3a1 1 0 01-1 1C5.4 13.3 1 8.3 1 3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+            </svg>
+            Contact Numbers
+          </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            {[
+              { label: "+91 75950 56476", href: "tel:+917595056476" },
+              { label: "7595056477", href: "tel:+917595056477" },
+              { label: "7595056478", href: "tel:+917595056478" },
+              { label: "7595056479", href: "tel:+917595056479" },
+              { label: "7595056480", href: "tel:+917595056480" },
+            ].map(({ label, href }) => (
+              <a
+                key={href}
+                href={href}
+                className="flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors"
+              >
+                <svg width="11" height="11" viewBox="0 0 14 14" fill="none" className="shrink-0 opacity-60">
+                  <path d="M2 2h3l1.5 3.5-1.8 1.1c.9 1.8 2.2 3.1 4 4l1.1-1.8L13 10v3a1 1 0 01-1 1C5.4 13.3 1 8.3 1 3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                </svg>
+                {label}
+              </a>
+            ))}
+          </div>
+        </div>
+
         {/* Bottom bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-8 sm:flex-row">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-8 sm:flex-row">
           <p className="text-xs text-muted">
             © {year} Tara Maa Solutions. All rights reserved.
           </p>

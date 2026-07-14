@@ -202,6 +202,28 @@ async function getSiteLogo(): Promise<string | null> {
   }
 }
 
+// Fetches logo + contact info from settings in a single call.
+async function getSiteHeaderData(): Promise<{
+  logoUrl: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+}> {
+  try {
+    const raw = await request<unknown>("/settings", { next: { revalidate: 300 } });
+    if (!raw || typeof raw !== "object") return { logoUrl: null, contactEmail: null, contactPhone: null };
+    const w = raw as Record<string, unknown>;
+    const s = (w.settings && typeof w.settings === "object" ? w.settings : w) as Record<string, unknown>;
+    const url = (s.logoUrl ?? s.logo ?? "") as string;
+    const logoUrl = url && url.startsWith("http") ? url : null;
+    const ci = (s.contactInfo && typeof s.contactInfo === "object" ? s.contactInfo : {}) as Record<string, unknown>;
+    const contactEmail = (ci.email as string) || null;
+    const contactPhone = (ci.phone as string) || null;
+    return { logoUrl, contactEmail, contactPhone };
+  } catch {
+    return { logoUrl: null, contactEmail: null, contactPhone: null };
+  }
+}
+
 export const apiClient = {
   getSettings: () => request<SiteSettings>("/settings", { next: { revalidate: 60 } }),
   getProducts,
@@ -209,6 +231,7 @@ export const apiClient = {
   getCategories,
   getHomeConfig,
   getSiteLogo,
+  getSiteHeaderData,
   getSeoPage: (slug: string) => request<SeoPage>(`/seo-pages/${slug}`, { next: { revalidate: 60 } }),
   submitQuote: (payload: QuoteRequest) =>
     request<QuoteRequest>("/quotes", {
