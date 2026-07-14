@@ -17,7 +17,7 @@ RUN mkdir -p admin frontend && \
     echo '{"name":"tara-maa-admin","version":"1.0.0","private":true}' > admin/package.json && \
     echo '{"name":"tara-maa-frontend","version":"1.0.0","private":true}' > frontend/package.json
 
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 # ── Source layer (invalidated on any source change) ────────────────────────────
 COPY . .
