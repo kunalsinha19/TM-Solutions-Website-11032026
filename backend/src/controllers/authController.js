@@ -62,23 +62,24 @@ exports.login = asyncHandler(async (req, res) => {
 });
 
 exports.forgotPassword = asyncHandler(async (req, res) => {
-  const { email, backupEmail } = req.body;
-  const admin = await Admin.findOne({ email, backupEmail });
+  const { email } = req.body;
+  const admin = await Admin.findOne({ email, isActive: true });
 
+  // Same response whether found or not — prevents email enumeration
   if (!admin) {
-    throw new ApiError(404, "Admin or backup email not matched");
+    return res.json({ success: true, message: "If that email is registered, an OTP has been sent." });
   }
 
-  const token = crypto.randomBytes(24).toString("hex");
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
   await PasswordResetToken.create({
     email,
-    token,
-    expiresAt: new Date(Date.now() + 30 * 60 * 1000)
+    token: otp,
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000)
   });
 
-  await sendPasswordResetEmail(backupEmail, token);
+  await sendPasswordResetEmail(email, otp);
 
-  res.json({ success: true, message: "Recovery token sent to backup email" });
+  res.json({ success: true, message: "OTP sent to your email. It expires in 10 minutes." });
 });
 
 exports.resetPassword = asyncHandler(async (req, res) => {
