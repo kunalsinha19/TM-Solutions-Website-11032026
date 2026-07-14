@@ -93,17 +93,21 @@ export default function QuotePage() {
               <Reveal delay={0.3} className="mt-10 rounded-[1.75rem] border border-border/70 bg-panel p-6 shadow-card">
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted mb-4">Prefer to talk directly?</p>
                 <div className="flex flex-col gap-3">
-                  <a href="mailto:contact@tmsolutions.com" className="flex items-center gap-3 text-sm hover:text-accent transition-colors">
+                  <a href="mailto:taramaasolutions2025@gmail.com" className="flex items-center gap-3 text-sm hover:text-accent transition-colors">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-border/60 text-xs">✉️</span>
-                    contact@tmsolutions.com
+                    taramaasolutions2025@gmail.com
                   </a>
-                  <a href="tel:+919876543210" className="flex items-center gap-3 text-sm hover:text-accent transition-colors">
+                  <a href="tel:+917595056476" className="flex items-center gap-3 text-sm hover:text-accent transition-colors">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-border/60 text-xs">📞</span>
-                    +91 98765 43210
+                    +91 75950 56476
                   </a>
-                  <div className="flex items-center gap-3 text-sm text-muted">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-border/60 text-xs">📍</span>
-                    Mumbai, Maharashtra, India
+                  <a href="https://wa.me/917595056476" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm hover:text-accent transition-colors">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-border/60 text-xs">💬</span>
+                    WhatsApp: +91 75950 56476
+                  </a>
+                  <div className="flex items-start gap-3 text-sm text-muted">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface border border-border/60 text-xs">📍</span>
+                    <span>Unit 803, 8th Floor, Plot 11E/23, Action Area II, New Town, Kolkata 700157, West Bengal</span>
                   </div>
                 </div>
               </Reveal>
