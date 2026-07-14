@@ -145,6 +145,44 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ logoUrl })
     }),
+  // Analytics
+  getAnalyticsSummary: (token) =>
+    request("/analytics/summary", { headers: { Authorization: `Bearer ${token}` } }),
+  getVisitors: (token, { page = 1, search = "", device = "", country = "" } = {}) => {
+    const params = new URLSearchParams({ page, ...(search && { search }), ...(device && { device }), ...(country && { country }) });
+    return request(`/analytics/visitors?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+  },
+  getLiveVisitors: (token) =>
+    request("/analytics/live", { headers: { Authorization: `Bearer ${token}` } }),
+
+  // Activity logs
+  getActivityLogs: (token, { page = 1, category = "" } = {}) => {
+    const params = new URLSearchParams({ page, ...(category && { category }) });
+    return request(`/activity-logs?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+  },
+
+  // System logs
+  getSystemLogs: (token, { page = 1, level = "" } = {}) => {
+    const params = new URLSearchParams({ page, ...(level && { level }) });
+    return request(`/system-logs?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+  },
+
+  // Brochures
+  getBrochures: (token) =>
+    request("/brochures?activeOnly=false", { headers: { Authorization: `Bearer ${token}` } }),
+  createBrochure: (token, payload) =>
+    request("/brochures", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }),
+  updateBrochure: (token, id, payload) =>
+    request(`/brochures/${id}`, { method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }),
+  deleteBrochure: (token, id) =>
+    request(`/brochures/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }),
+
+  // YouTube Shorts (stub — requires YOUTUBE_API_KEY env var in backend)
+  getYouTubeShorts: (token) =>
+    request("/youtube/shorts", { headers: { Authorization: `Bearer ${token}` } }),
+  syncYouTubeShorts: (token) =>
+    request("/youtube/shorts/sync", { method: "POST", headers: { Authorization: `Bearer ${token}` } }),
+
   uploadMedia: async (token, file) => {
     const data = new FormData();
     data.append("file", file);
