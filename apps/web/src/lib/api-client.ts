@@ -231,6 +231,7 @@ export type YoutubeShort = {
   publishedAt: string;
   viewCount: number;
   likeCount: number;
+  commentCount: number;
   duration: string;
 };
 

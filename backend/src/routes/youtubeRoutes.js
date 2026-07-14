@@ -39,9 +39,10 @@ async function fetchShorts() {
       title:       v.snippet?.title || "",
       thumbnail,
       publishedAt: v.snippet?.publishedAt || "",
-      viewCount:   parseInt(v.statistics?.viewCount || 0),
-      likeCount:   parseInt(v.statistics?.likeCount || 0),
-      duration:    v.contentDetails?.duration || "",
+      viewCount:    parseInt(v.statistics?.viewCount || 0),
+      likeCount:    parseInt(v.statistics?.likeCount || 0),
+      commentCount: parseInt(v.statistics?.commentCount || 0),
+      duration:     v.contentDetails?.duration || "",
     };
   });
 
