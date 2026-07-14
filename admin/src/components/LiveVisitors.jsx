@@ -29,7 +29,7 @@ export default function LiveVisitors({ token }) {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 30_000); // auto-refresh every 30s
+    const interval = setInterval(load, 15_000); // auto-refresh every 15s
     return () => clearInterval(interval);
   }, []);
 

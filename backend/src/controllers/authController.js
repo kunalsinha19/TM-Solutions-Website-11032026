@@ -12,60 +12,41 @@ exports.registerAdmin = asyncHandler(async (req, res) => {
   const { name, email, backupEmail, password } = req.body;
 
   const existingAdmin = await Admin.findOne({ email });
-  if (existingAdmin) {
-    throw new ApiError(409, "Admin already exists with this email");
-  }
+  if (existingAdmin) throw new ApiError(409, "Admin already exists with this email");
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const admin = await Admin.create({
-    name,
-    email,
-    backupEmail,
-    passwordHash,
-    isEmailVerified: true,
-    isActive: true
-  });
+  const admin = await Admin.create({ name, email, backupEmail, passwordHash, isEmailVerified: true, isActive: true });
 
-  res.status(201).json({
-    success: true,
-    message: "Admin created successfully.",
-    adminId: admin._id
-  });
+  res.status(201).json({ success: true, message: "Admin created successfully.", adminId: admin._id });
 });
 
 exports.login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const admin = await Admin.findOne({ email });
 
-  if (!admin || !admin.isActive) {
-    throw new ApiError(401, "Invalid credentials");
-  }
+  if (!admin || !admin.isActive) throw new ApiError(401, "Invalid credentials");
 
   const isMatch = await bcrypt.compare(password, admin.passwordHash);
-  if (!isMatch) {
-    throw new ApiError(401, "Invalid credentials");
-  }
+  if (!isMatch) throw new ApiError(401, "Invalid credentials");
 
   const updatedAdmin = await Admin.findByIdAndUpdate(
-    admin._id,
-    { lastLoginAt: new Date() },
-    { new: true }
+    admin._id, { lastLoginAt: new Date() }, { new: true }
   ).select("-passwordHash");
 
   const token = generateToken({ id: updatedAdmin._id, email: updatedAdmin.email, role: updatedAdmin.role });
 
-  // Log login (non-blocking, attach fake req.admin so log() can read it)
   setImmediate(() => {
     const fakeReq = { ...req, admin: updatedAdmin };
-    log(fakeReq, { action: "login", category: "auth", details: `Admin logged in` });
+    log(fakeReq, { action: "login", category: "auth", details: "Admin logged in" });
   });
 
-  res.json({
-    success: true,
-    token,
-    admin: updatedAdmin,
-    message: "Login successful"
-  });
+  res.json({ success: true, token, admin: updatedAdmin, message: "Login successful" });
+});
+
+exports.logout = asyncHandler(async (req, res) => {
+  // JWT is stateless; client drops the token. We just log the action.
+  setImmediate(() => log(req, { action: "logout", category: "auth", details: "Admin logged out" }));
+  res.json({ success: true, message: "Logged out successfully" });
 });
 
 exports.forgotPassword = asyncHandler(async (req, res) => {
@@ -74,20 +55,14 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 
   const admin = await Admin.findOne({ email: String(email).toLowerCase().trim(), isActive: true });
 
-  // Same response whether found or not — prevents email enumeration
   if (!admin) {
     return res.json({ success: true, message: "If that email is registered, an OTP has been sent." });
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  // Store a SHA-256 hash of the OTP — never plaintext
   const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
 
-  await PasswordResetToken.create({
-    email: admin.email,
-    token: otpHash,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-  });
+  await PasswordResetToken.create({ email: admin.email, token: otpHash, expiresAt: new Date(Date.now() + 10 * 60 * 1000) });
 
   await sendPasswordResetEmail(admin.email, otp);
 
@@ -103,20 +78,31 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 
   const resetRecord = await PasswordResetToken.findOne({
     email: String(email).toLowerCase().trim(),
-    token: otpHash,
-    used: false,
-    expiresAt: { $gt: new Date() }
+    token: otpHash, used: false,
+    expiresAt: { $gt: new Date() },
   }).sort({ createdAt: -1 });
 
-  if (!resetRecord) {
-    throw new ApiError(400, "Invalid or expired OTP");
-  }
+  if (!resetRecord) throw new ApiError(400, "Invalid or expired OTP");
 
   resetRecord.used = true;
   await resetRecord.save();
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
-  await Admin.findOneAndUpdate({ email: resetRecord.email }, { passwordHash });
+  const targetAdmin = await Admin.findOneAndUpdate({ email: resetRecord.email }, { passwordHash });
+
+  // Log using a synthetic req since the user may not be authenticated yet
+  setImmediate(() => {
+    const fakeReq = {
+      headers: req.headers,
+      socket: req.socket,
+      admin: targetAdmin ? { ...targetAdmin.toObject(), role: targetAdmin.role } : null,
+    };
+    log(fakeReq, {
+      action: "password_reset", category: "auth",
+      details: `Password reset via OTP for: ${resetRecord.email}`,
+      resourceName: resetRecord.email,
+    });
+  });
 
   res.json({ success: true, message: "Password reset successfully" });
 });

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const asyncHandler = require("../utils/asyncHandler");
 const { protect } = require("../middleware/authMiddleware");
+const { log } = require("../utils/activityLogger");
 
 const YOUTUBE_API_KEY     = process.env.YOUTUBE_API_KEY || "";
 const YOUTUBE_CHANNEL_ID  = process.env.YOUTUBE_CHANNEL_ID || "";
@@ -51,10 +52,17 @@ router.get("/shorts", protect, asyncHandler(async (_req, res) => {
 }));
 
 // POST /api/youtube/shorts/sync  (protected)
-router.post("/shorts/sync", protect, asyncHandler(async (_req, res) => {
+router.post("/shorts/sync", protect, asyncHandler(async (req, res) => {
   cache = { shorts: [], fetchedAt: null }; // bust cache
   const shorts = await fetchShorts();
   cache = { shorts, fetchedAt: Date.now() };
+
+  setImmediate(() => log(req, {
+    action: "youtube_sync", category: "youtube",
+    details: `Synced ${shorts.length} YouTube videos`,
+    resourceName: "YouTube Shorts",
+  }));
+
   res.json({ success: true, shorts, message: `Synced ${shorts.length} videos.` });
 }));
 

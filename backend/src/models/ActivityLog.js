@@ -1,16 +1,21 @@
 const mongoose = require("mongoose");
 
 const activityLogSchema = new mongoose.Schema({
-  adminId:      { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
-  adminName:    { type: String },
-  adminEmail:   { type: String },
-  action:       { type: String, required: true },
-  category:     { type: String, required: true },
-  details:      { type: String },
-  resourceId:   { type: String },
-  resourceName: { type: String },
-  ip:           { type: String },
-  userAgent:    { type: String },
+  adminId:       { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
+  adminName:     { type: String },
+  adminEmail:    { type: String },
+  adminRole:     { type: String },
+  action:        { type: String, required: true },
+  category:      { type: String, required: true },
+  details:       { type: String },
+  resourceId:    { type: String },
+  resourceName:  { type: String },
+  previousValue: { type: String },
+  newValue:      { type: String },
+  success:       { type: Boolean, default: true },
+  failureReason: { type: String },
+  ip:            { type: String },
+  userAgent:     { type: String },
 }, { timestamps: true });
 
 activityLogSchema.index({ createdAt: -1 });
