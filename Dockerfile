@@ -3,16 +3,19 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # ── Dependency layer (cached unless manifests change) ──────────────────────────
-# Copy only package manifests first. .dockerignore excludes backend/ and
-# unnecessary admin/frontend source so this context stays small and uploads fast.
+# Copy only the manifests needed to resolve the workspace graph.
+# admin/ and frontend/ are workspaces declared in the root package.json but
+# are NOT imported by apps/web. Instead of COPY-ing their package.json files
+# (which can go missing from the Docker build context due to Railway's layer
+# cache snapshot behaviour), we stub them with a RUN command so npm install
+# can resolve the workspace graph without needing the actual source.
 COPY package.json package-lock.json* ./
 COPY packages/ ./packages/
 COPY apps/web/package.json ./apps/web/
-# admin/package.json is required so npm can resolve the workspace graph.
-# admin/src is excluded via .dockerignore — only the manifest is sent.
-COPY admin/package.json admin/package-lock.json* ./admin/
-# frontend workspace manifest (same pattern)
-COPY frontend/package.json frontend/package-lock.json* ./frontend/
+
+RUN mkdir -p admin frontend && \
+    echo '{"name":"tara-maa-admin","version":"1.0.0","private":true}' > admin/package.json && \
+    echo '{"name":"tara-maa-frontend","version":"1.0.0","private":true}' > frontend/package.json
 
 RUN npm install --legacy-peer-deps
 
