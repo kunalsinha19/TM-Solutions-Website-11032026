@@ -97,10 +97,10 @@ export function SiteFooter() {
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {[
               { label: "+91 75950 56476", href: "tel:+917595056476" },
-              { label: "7595056477", href: "tel:+917595056477" },
-              { label: "7595056478", href: "tel:+917595056478" },
-              { label: "7595056479", href: "tel:+917595056479" },
-              { label: "7595056480", href: "tel:+917595056480" },
+              { label: "+91 75950 56477", href: "tel:+917595056477" },
+              { label: "+91 75950 56478", href: "tel:+917595056478" },
+              { label: "+91 75950 56479", href: "tel:+917595056479" },
+              { label: "+91 75950 56480", href: "tel:+917595056480" },
             ].map(({ label, href }) => (
               <a
                 key={href}
