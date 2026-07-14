@@ -14,11 +14,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/admin",
-        destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/",
+        destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/admin",
       },
       {
         source: "/admin/:path*",
-        destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/:path*",
+        destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/admin/:path*",
       },
     ];
   },
