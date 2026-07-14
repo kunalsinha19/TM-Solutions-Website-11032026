@@ -41,8 +41,8 @@ async function fetchShorts() {
   }));
 }
 
-// GET /api/youtube/shorts  (protected)
-router.get("/shorts", protect, asyncHandler(async (_req, res) => {
+// GET /api/youtube/shorts  (public — reads cached data, no auth needed)
+router.get("/shorts", asyncHandler(async (_req, res) => {
   if (cache.fetchedAt && Date.now() - cache.fetchedAt < CACHE_TTL) {
     return res.json({ success: true, shorts: cache.shorts, cached: true });
   }
