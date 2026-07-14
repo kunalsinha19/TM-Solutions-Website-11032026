@@ -63,7 +63,9 @@ exports.login = asyncHandler(async (req, res) => {
 
 exports.forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const admin = await Admin.findOne({ email, isActive: true });
+  if (!email) throw new ApiError(400, "Email is required");
+
+  const admin = await Admin.findOne({ email: String(email).toLowerCase().trim(), isActive: true });
 
   // Same response whether found or not — prevents email enumeration
   if (!admin) {
@@ -71,35 +73,43 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // Store a SHA-256 hash of the OTP — never plaintext
+  const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
   await PasswordResetToken.create({
-    email,
-    token: otp,
+    email: admin.email,
+    token: otpHash,
     expiresAt: new Date(Date.now() + 10 * 60 * 1000)
   });
 
-  await sendPasswordResetEmail(email, otp);
+  await sendPasswordResetEmail(admin.email, otp);
 
   res.json({ success: true, message: "OTP sent to your email. It expires in 10 minutes." });
 });
 
 exports.resetPassword = asyncHandler(async (req, res) => {
-  const { email, token, newPassword } = req.body;
+  const { email, token: otp, newPassword } = req.body;
+  if (!email || !otp || !newPassword) throw new ApiError(400, "Email, OTP, and new password are required");
+  if (newPassword.length < 8) throw new ApiError(400, "Password must be at least 8 characters");
+
+  const otpHash = crypto.createHash("sha256").update(String(otp)).digest("hex");
+
   const resetRecord = await PasswordResetToken.findOne({
-    email,
-    token,
+    email: String(email).toLowerCase().trim(),
+    token: otpHash,
     used: false,
     expiresAt: { $gt: new Date() }
   }).sort({ createdAt: -1 });
 
   if (!resetRecord) {
-    throw new ApiError(400, "Invalid or expired reset token");
+    throw new ApiError(400, "Invalid or expired OTP");
   }
 
   resetRecord.used = true;
   await resetRecord.save();
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
-  await Admin.findOneAndUpdate({ email }, { passwordHash });
+  await Admin.findOneAndUpdate({ email: resetRecord.email }, { passwordHash });
 
   res.json({ success: true, message: "Password reset successfully" });
 });

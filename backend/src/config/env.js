@@ -45,6 +45,8 @@ module.exports = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:3000",
   CLIENT_URLS: parseClientUrls(),
+  ADMIN_URL: process.env.ADMIN_URL || "",
+  ADMIN_URLS: (process.env.ADMIN_URLS || "").split(",").map((s) => s.trim()).filter(Boolean),
   EMAIL_FROM: process.env.EMAIL_FROM || process.env.SMTP_USER || "noreply@taramaasolutions.com",
   ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL || "taramaasolutions2025@gmail.com",
   SMTP_HOST: process.env.SMTP_HOST || "",
