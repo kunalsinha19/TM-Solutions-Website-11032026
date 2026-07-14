@@ -46,7 +46,7 @@ module.exports = {
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:3000",
   CLIENT_URLS: parseClientUrls(),
   EMAIL_FROM: process.env.EMAIL_FROM || process.env.SMTP_USER || "noreply@taramaasolutions.com",
-  ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL || "kunal.nic10@gmail.com",
+  ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL || "taramaasolutions2025@gmail.com",
   SMTP_HOST: process.env.SMTP_HOST || "",
   SMTP_PORT: Number(process.env.SMTP_PORT || 587),
   SMTP_SECURE: process.env.SMTP_SECURE === "true",

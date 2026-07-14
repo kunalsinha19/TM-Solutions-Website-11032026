@@ -37,21 +37,30 @@ export function SiteFooter() {
             </p>
             <div className="mt-6 flex flex-col gap-2">
               <a
-                href="mailto:contact@tmsolutionsindia.com"
+                href="mailto:taramaasolutions2025@gmail.com"
                 className="flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <rect x="1" y="2.5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
                   <path d="M1 4l6 4.5L13 4" stroke="currentColor" strokeWidth="1.2"/>
                 </svg>
-                contact@tmsolutionsindia.com
+                taramaasolutions2025@gmail.com
+              </a>
+              <a
+                href="tel:+917595056476"
+                className="flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 2h3l1.5 3.5-1.8 1.1c.9 1.8 2.2 3.1 4 4l1.1-1.8L13 10v3a1 1 0 01-1 1C5.4 13.3 1 8.3 1 3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                </svg>
+                +91 75950 56476
               </a>
               <div className="flex items-center gap-2 text-sm text-muted">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M7 1C4.79 1 3 2.79 3 5c0 3.5 4 8 4 8s4-4.5 4-8c0-2.21-1.79-4-4-4z" stroke="currentColor" strokeWidth="1.2"/>
                   <circle cx="7" cy="5" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
                 </svg>
-                India
+                Kolkata · Delhi · Bengaluru · Patna
               </div>
             </div>
           </div>

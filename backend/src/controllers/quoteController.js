@@ -10,13 +10,15 @@ exports.createQuoteRequest = asyncHandler(async (req, res) => {
 
   const captcha = await validateCaptcha(captchaToken, req.ip);
 
-  if (!captcha.success) {
-    throw new ApiError(400, "Captcha validation failed", captcha);
+  // Don't hard-block on captcha failure — site has no captcha widget yet.
+  // Flag unverified submissions so admin can review them; rate limiter handles spam.
+  if (HAS_REAL_CAPTCHA && !captcha.success) {
+    console.warn("Captcha failed for quote submission:", captcha.reason ?? captcha.errors);
   }
 
   const quoteRequest = await QuoteRequest.create({
     ...payload,
-    captchaVerified: true
+    captchaVerified: captcha.success
   });
 
   const notification = { sent: false, reason: "smtp-not-configured" };

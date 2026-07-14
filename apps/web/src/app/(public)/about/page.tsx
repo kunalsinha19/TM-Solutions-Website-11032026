@@ -71,10 +71,10 @@ export default function AboutPage() {
       <section className="border-y border-border/60 bg-panel py-16">
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid grid-cols-2 gap-10 lg:grid-cols-4">
-            <StatCounter value={4} suffix="+" label="Product Categories" delay={0} />
-            <StatCounter value={100} suffix="+" label="Products in Catalog" delay={0.1} />
+            <StatCounter value={10} suffix="+" label="Product Categories" delay={0} />
+            <StatCounter value={184} suffix="+" label="Products in Catalog" delay={0.1} />
             <StatCounter value={24} suffix="hr" label="Quote Response Time" delay={0.2} />
-            <StatCounter value={100} suffix="%" label="Transparent Pricing" delay={0.3} />
+            <StatCounter value={5} suffix="" label="Offices Across India" delay={0.3} />
           </div>
         </div>
       </section>
@@ -160,6 +160,88 @@ export default function AboutPage() {
                 </div>
               </Reveal>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── BRANCH OFFICES ── */}
+      <section className="bg-panel px-6 py-24">
+        <div className="mx-auto max-w-7xl">
+          <Reveal className="mb-14 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Our Presence</p>
+            <h2 className="mt-2 text-3xl font-bold lg:text-4xl">Branch Offices Across India</h2>
+            <p className="mt-4 mx-auto max-w-xl text-muted">
+              Serving businesses across India with a growing network of offices for faster support and logistics.
+            </p>
+          </Reveal>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                city: "Kolkata",
+                label: "Head Office",
+                address: "Unit 803, 8th Floor, Plot 11E/23, Action Area II, E New Town, Kolkata 700157, West Bengal",
+                phones: ["+91 75950 56480", "+91 75950 56481"],
+                accent: true,
+              },
+              {
+                city: "New Delhi",
+                label: "Branch Office",
+                address: "Plot 81, Block P, Opp. Hindi Park, Ansari Road, Daryaganj, New Delhi",
+                phones: ["+91 98110 38586", "+91 75950 56476"],
+              },
+              {
+                city: "Bengaluru",
+                label: "Branch Office",
+                address: "Flat B1204, B Block, Ajmera Lakeside Paradise, Kempanahalli, Attur, Yelahanka 560064",
+                phones: ["+91 75950 56479"],
+              },
+              {
+                city: "Patna",
+                label: "Branch Office",
+                address: "504, Gayatri Sumitra Apartment, Ramnagri, Ashiyana Digha Road, Patna 800025",
+                phones: ["+91 75950 56478"],
+              },
+              {
+                city: "Hazaribagh",
+                label: "Branch Office",
+                address: "Goria Karma, Near ICAR, Barhi, Hazaribagh 846005, Jharkhand",
+                phones: ["+91 75950 56477"],
+              },
+            ].map((office, i) => (
+              <Reveal key={office.city} delay={i * 0.08}>
+                <div className={`flex flex-col gap-3 rounded-[1.75rem] border p-7 h-full transition-all duration-300 hover:shadow-card ${office.accent ? "border-accent/30 bg-accent/5" : "border-border/70 bg-surface hover:border-accent/20"}`}>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-base">{office.city}</h3>
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${office.accent ? "bg-accent text-white" : "bg-surface border border-border/60 text-muted"}`}>
+                      {office.label}
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted">{office.address}</p>
+                  <div className="flex flex-col gap-1 mt-auto pt-2 border-t border-border/40">
+                    {office.phones.map(ph => (
+                      <a key={ph} href={`tel:${ph.replace(/\s/g, "")}`} className="text-xs font-medium text-accent hover:underline">
+                        {ph}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+
+            {/* Contact card */}
+            <Reveal delay={0.4}>
+              <div className="flex flex-col gap-3 rounded-[1.75rem] border border-border/70 bg-surface p-7 h-full justify-center items-center text-center hover:shadow-card hover:border-accent/20 transition-all duration-300">
+                <div className="text-3xl">📧</div>
+                <p className="font-semibold text-sm">Get in Touch</p>
+                <a href="mailto:taramaasolutions2025@gmail.com" className="text-xs text-accent hover:underline break-all">
+                  taramaasolutions2025@gmail.com
+                </a>
+                <a href="https://wa.me/917595056476" target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">
+                  WhatsApp: +91 75950 56476
+                </a>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>

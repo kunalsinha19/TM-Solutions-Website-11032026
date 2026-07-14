@@ -173,7 +173,7 @@ export function QuoteForm({ productId }: { productId?: string }) {
       {status === "error" && (
         <p className="rounded-xl bg-red-50 px-4 py-3 text-center text-xs text-red-600 dark:bg-red-950/30 dark:text-red-400">
           Something went wrong. Please try again or{" "}
-          <a href="mailto:kunal.nic10@gmail.com" className="underline">email us directly</a>.
+          <a href="mailto:taramaasolutions2025@gmail.com" className="underline">email us directly</a>.
         </p>
       )}
 
