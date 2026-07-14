@@ -32,6 +32,11 @@ function getTransporter() {
       user: SMTP_USER,
       pass: SMTP_PASS
     },
+    // requireTLS enables STARTTLS upgrade on port 587 (standard for Gmail)
+    requireTLS: SMTP_PORT === 587,
+    tls: {
+      minVersion: "TLSv1.2",
+    },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: EMAIL_TIMEOUT_MS

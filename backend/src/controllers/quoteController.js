@@ -65,13 +65,16 @@ exports.replyToQuoteRequest = asyncHandler(async (req, res) => {
   const preview = buildQuoteReply({ name: quoteRequest.name, message });
 
   let delivery = "draft";
+  let smtpError = null;
 
   if (HAS_REAL_SMTP) {
     try {
       await sendQuoteResponseEmail({ to: quoteRequest.email, name: quoteRequest.name, subject, message });
       delivery = "sent";
-    } catch {
+    } catch (err) {
       delivery = "failed";
+      smtpError = err?.message || "Unknown SMTP error";
+      console.error("[SMTP] Reply delivery failed:", smtpError);
     }
   }
 
@@ -88,7 +91,7 @@ exports.replyToQuoteRequest = asyncHandler(async (req, res) => {
   }));
 
   res.json({
-    success: true, delivery, quoteRequest,
+    success: true, delivery, quoteRequest, smtpError,
     mailto: `mailto:${encodeURIComponent(quoteRequest.email)}?subject=${encodeURIComponent(subject || preview.subject)}&body=${encodeURIComponent(preview.text)}`,
   });
 });

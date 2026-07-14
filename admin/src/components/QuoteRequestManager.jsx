@@ -278,11 +278,15 @@ export default function QuoteRequestManager({ token }) {
         subject: reply.subject,
         message: reply.message,
       });
-      if (response.delivery === "draft" && response.mailto) {
+      if (response.delivery === "sent") {
+        showToast("success", `Reply sent successfully to ${quote.email}.`);
+      } else if (response.delivery === "failed") {
+        if (response.mailto) window.open(response.mailto, "_blank");
+        const detail = response.smtpError ? `: ${response.smtpError}` : "";
+        showToast("error", `SMTP delivery failed${detail}. Mailto fallback opened — send from there.`);
+      } else if (response.delivery === "draft" && response.mailto) {
         window.open(response.mailto, "_blank");
         showToast("success", "Draft opened in your email client — click Send there to deliver.");
-      } else {
-        showToast("success", `Reply sent successfully to ${quote.email}.`);
       }
       await loadQuotes();
       setReplyState(cur => ({ ...cur, [quote._id]: { ...cur[quote._id], open: false, sending: false } }));
