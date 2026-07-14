@@ -25,20 +25,28 @@ async function fetchShorts() {
   const ids = (searchData.items || []).map(i => i.id.videoId).filter(Boolean).join(",");
   if (!ids) return [];
 
-  // Fetch stats
+  // Fetch stats + high-res thumbnails
   const statsUrl = `https://www.googleapis.com/youtube/v3/videos?key=${YOUTUBE_API_KEY}&id=${ids}&part=statistics,snippet,contentDetails`;
   const statsRes = await fetch(statsUrl, { signal: AbortSignal.timeout(8000) });
   const statsData = await statsRes.json();
 
-  return (statsData.items || []).map(v => ({
-    id:          v.id,
-    title:       v.snippet?.title,
-    thumbnail:   v.snippet?.thumbnails?.medium?.url || v.snippet?.thumbnails?.default?.url,
-    publishedAt: v.snippet?.publishedAt,
-    viewCount:   parseInt(v.statistics?.viewCount || 0),
-    likeCount:   parseInt(v.statistics?.likeCount || 0),
-    duration:    v.contentDetails?.duration,
-  }));
+  const items = (statsData.items || []).map(v => {
+    const t = v.snippet?.thumbnails || {};
+    // Prefer highest-resolution portrait thumbnail available
+    const thumbnail = t.maxres?.url || t.standard?.url || t.high?.url || t.medium?.url || t.default?.url || "";
+    return {
+      id:          v.id,
+      title:       v.snippet?.title || "",
+      thumbnail,
+      publishedAt: v.snippet?.publishedAt || "",
+      viewCount:   parseInt(v.statistics?.viewCount || 0),
+      likeCount:   parseInt(v.statistics?.likeCount || 0),
+      duration:    v.contentDetails?.duration || "",
+    };
+  });
+
+  // Sort by view count descending so most-watched come first
+  return items.sort((a, b) => b.viewCount - a.viewCount);
 }
 
 // GET /api/youtube/shorts  (public — reads cached data, no auth needed)
