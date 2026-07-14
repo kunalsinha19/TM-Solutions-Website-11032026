@@ -20,7 +20,7 @@ COPY --from=builder /app/package-lock.json* ./
 COPY --from=builder /app/vite.config.js ./
 COPY --from=builder /app/dist ./dist
 
-RUN npm install --omit=dev
+RUN npm install
 
 EXPOSE 8080
 
