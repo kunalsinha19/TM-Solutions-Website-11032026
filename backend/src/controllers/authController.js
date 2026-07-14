@@ -6,6 +6,7 @@ const { generateToken } = require("../utils/jwt");
 const Admin = require("../models/Admin");
 const PasswordResetToken = require("../models/PasswordResetToken");
 const { sendPasswordResetEmail } = require("../services/emailService");
+const { log, getIp } = require("../utils/activityLogger");
 
 exports.registerAdmin = asyncHandler(async (req, res) => {
   const { name, email, backupEmail, password } = req.body;
@@ -52,6 +53,12 @@ exports.login = asyncHandler(async (req, res) => {
   ).select("-passwordHash");
 
   const token = generateToken({ id: updatedAdmin._id, email: updatedAdmin.email, role: updatedAdmin.role });
+
+  // Log login (non-blocking, attach fake req.admin so log() can read it)
+  setImmediate(() => {
+    const fakeReq = { ...req, admin: updatedAdmin };
+    log(fakeReq, { action: "login", category: "auth", details: `Admin logged in` });
+  });
 
   res.json({
     success: true,
