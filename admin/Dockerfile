@@ -1,9 +1,17 @@
 FROM node:20-alpine
 WORKDIR /app
 
-RUN echo "# force-rebuild-for-base-path"
+RUN echo "# force-rebuild-v3"
 COPY . .
 RUN npm install
+
+# Railway passes all service env-vars as Docker build args automatically.
+# Declare them here so Vite can bake VITE_* values into the JS bundle at build time.
+# Without ARG+ENV, import.meta.env.VITE_API_URL is undefined and the app
+# falls back to http://localhost:5000/api, causing "Failed to fetch" in browsers.
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN npm run build
 
 EXPOSE 8080
