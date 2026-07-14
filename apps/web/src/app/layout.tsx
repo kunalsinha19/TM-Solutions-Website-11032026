@@ -24,7 +24,7 @@ const themeScript = `(function(){try{var t=localStorage.getItem('tara-maa-theme'
 export default async function RootLayout({
   children
 }: Readonly<{ children: ReactNode }>) {
-  const logoUrl = await apiClient.getSiteLogo();
+  const { logoUrl, contactEmail, contactPhone } = await apiClient.getSiteHeaderData();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -34,7 +34,7 @@ export default async function RootLayout({
       </head>
       <body>
         <ScrollToTop />
-        <SiteHeader logoUrl={logoUrl} />
+        <SiteHeader logoUrl={logoUrl} contactEmail={contactEmail} contactPhone={contactPhone} />
         <main className="relative z-10">{children}</main>
         <SiteFooter />
       </body>
