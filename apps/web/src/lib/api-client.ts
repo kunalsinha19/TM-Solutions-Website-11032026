@@ -224,6 +224,27 @@ async function getSiteHeaderData(): Promise<{
   }
 }
 
+export type YoutubeShort = {
+  id: string;
+  title: string;
+  thumbnail: string;
+  publishedAt: string;
+  viewCount: number;
+  likeCount: number;
+  duration: string;
+};
+
+async function getYouTubeShorts(): Promise<YoutubeShort[]> {
+  try {
+    const raw = await request<unknown>("/youtube/shorts", { next: { revalidate: 1800 } }); // 30 min cache
+    if (!raw || typeof raw !== "object") return [];
+    const w = raw as Record<string, unknown>;
+    return Array.isArray(w.shorts) ? (w.shorts as YoutubeShort[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export const apiClient = {
   getSettings: () => request<SiteSettings>("/settings", { next: { revalidate: 60 } }),
   getProducts,
@@ -232,6 +253,7 @@ export const apiClient = {
   getHomeConfig,
   getSiteLogo,
   getSiteHeaderData,
+  getYouTubeShorts,
   getSeoPage: (slug: string) => request<SeoPage>(`/seo-pages/${slug}`, { next: { revalidate: 60 } }),
   submitQuote: (payload: QuoteRequest) =>
     request<QuoteRequest>("/quotes", {
