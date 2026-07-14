@@ -8,11 +8,9 @@ export default defineConfig({
   },
   preview: {
     host: true,
-    port: 8080,
-    allowedHosts: [
-      "tm-solutions-website-11032026-production-afe1.up.railway.app",
-      "localhost",
-      "127.0.0.1"
-    ]
+    port: parseInt(process.env.PORT) || 8080,
+    // Allow all hosts so Railway's healthcheck and custom domain both work.
+    // This is an internal admin panel so host-header restriction adds no value.
+    allowedHosts: "all"
   }
 });
