@@ -10,6 +10,18 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "**" },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/admin",
+        destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/",
+      },
+      {
+        source: "/admin/:path*",
+        destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

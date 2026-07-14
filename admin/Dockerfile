@@ -1,6 +1,7 @@
 FROM node:20-alpine
 WORKDIR /app
 
+RUN echo "# force-rebuild-for-base-path"
 COPY . .
 RUN npm install
 RUN npm run build
