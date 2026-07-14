@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SITE_CONFIG } from "../../lib/site-config";
 
 const footerLinks = {
   Products: [
@@ -120,9 +121,23 @@ export function SiteFooter() {
           <p className="text-xs text-muted">
             © {year} Tara Maa Solutions. All rights reserved.
           </p>
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            Industrial product support · tmsolutionsindia.com
+          <div className="flex items-center gap-4">
+            <a
+              href={SITE_CONFIG.youtubeChannelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="YouTube channel"
+              className="flex items-center gap-1.5 text-xs text-muted hover:text-red-500 transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5v-7l6.5 3.5-6.5 3.5z"/>
+              </svg>
+              YouTube
+            </a>
+            <div className="flex items-center gap-2 text-xs text-muted">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+              Industrial product support · tmsolutionsindia.com
+            </div>
           </div>
         </div>
       </div>

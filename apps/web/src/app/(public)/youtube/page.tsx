@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { apiClient, type YoutubeShort } from "../../../lib/api-client";
+import { SITE_CONFIG } from "../../../lib/site-config";
 import { Reveal } from "../../../components/motion/reveal";
 import { FloatingOrb } from "../../../components/motion/floating-orb";
 
@@ -157,7 +158,7 @@ export default async function YouTubePage() {
                   </p>
                 </div>
                 <a
-                  href="https://www.youtube.com/@taramaasolutions"
+                  href={SITE_CONFIG.youtubeChannelUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
@@ -173,7 +174,7 @@ export default async function YouTubePage() {
                   {shorts.length} video{shorts.length !== 1 ? "s" : ""}
                 </p>
                 <a
-                  href="https://www.youtube.com/@taramaasolutions"
+                  href={SITE_CONFIG.youtubeChannelUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-semibold text-accent hover:underline"
