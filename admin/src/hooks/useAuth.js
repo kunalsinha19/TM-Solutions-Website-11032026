@@ -51,6 +51,11 @@ export function useAuth() {
   }
 
   function logout() {
+    // Notify backend for activity logging (best-effort, don't await)
+    const t = localStorage.getItem(TOKEN_KEY);
+    if (t) {
+      api.logout(t).catch(() => {});
+    }
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EMAIL_KEY);
     setToken("");

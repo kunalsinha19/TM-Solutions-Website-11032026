@@ -5,20 +5,30 @@ function getIp(req) {
     req.socket?.remoteAddress || "0.0.0.0";
 }
 
-async function log(req, { action, category, details, resourceId, resourceName } = {}) {
+async function log(req, {
+  action, category, details,
+  resourceId, resourceName,
+  previousValue, newValue,
+  success = true, failureReason,
+} = {}) {
   try {
     const admin = req.admin;
     await ActivityLog.create({
-      adminId:      admin?._id,
-      adminName:    admin?.name,
-      adminEmail:   admin?.email,
+      adminId:       admin?._id,
+      adminName:     admin?.name,
+      adminEmail:    admin?.email,
+      adminRole:     admin?.role,
       action,
       category,
       details,
-      resourceId:   resourceId ? String(resourceId) : undefined,
+      resourceId:    resourceId ? String(resourceId) : undefined,
       resourceName,
-      ip:           getIp(req),
-      userAgent:    req.headers["user-agent"],
+      previousValue: previousValue !== undefined ? String(previousValue) : undefined,
+      newValue:      newValue !== undefined ? String(newValue) : undefined,
+      success,
+      failureReason,
+      ip:            getIp(req),
+      userAgent:     req.headers?.["user-agent"],
     });
   } catch (err) {
     console.error("[ActivityLog] write failed:", err.message);

@@ -3,6 +3,8 @@ const Visitor = require("../models/Visitor");
 const QuoteRequest = require("../models/QuoteRequest");
 const Product = require("../models/Product");
 const Category = require("../models/Category");
+const Brochure = require("../models/Brochure");
+const ActivityLog = require("../models/ActivityLog");
 
 function getIp(req) {
   return (String(req.headers["x-forwarded-for"] || "")).split(",")[0].trim() ||
@@ -32,14 +34,10 @@ async function fetchGeoData(ip) {
     const data = await res.json();
     if (data.status !== "success") return {};
     return {
-      country: data.country,
-      countryCode: data.countryCode,
-      state: data.regionName,
-      city: data.city,
-      lat: data.lat,
-      lon: data.lon,
-      isp: data.isp,
-      timezone: data.timezone,
+      country: data.country, countryCode: data.countryCode,
+      state: data.regionName, city: data.city,
+      lat: data.lat, lon: data.lon,
+      isp: data.isp, timezone: data.timezone,
     };
   } catch {
     return {};
@@ -49,8 +47,8 @@ async function fetchGeoData(ip) {
 // POST /api/analytics/track
 exports.trackVisitor = asyncHandler(async (req, res) => {
   const { sessionId, visitorId, page, browser, os, device,
-    screenResolution, language, referrer, utmSource, utmMedium,
-    utmCampaign, isNewVisitor } = req.body;
+    screenResolution, language, referrer,
+    utmSource, utmMedium, utmCampaign, isNewVisitor } = req.body;
 
   if (!sessionId || !visitorId) return res.json({ success: true });
 
@@ -72,14 +70,10 @@ exports.trackVisitor = asyncHandler(async (req, res) => {
   await Visitor.create({
     sessionId, visitorId,
     ipAnonymized: anonymizeIp(ip),
-    country:      geo.country,
-    countryCode:  geo.countryCode,
-    state:        geo.state,
-    city:         geo.city,
-    lat:          geo.lat,
-    lon:          geo.lon,
-    isp:          geo.isp,
-    timezone:     geo.timezone,
+    country: geo.country, countryCode: geo.countryCode,
+    state: geo.state, city: geo.city,
+    lat: geo.lat, lon: geo.lon,
+    isp: geo.isp, timezone: geo.timezone,
     browser, os,
     device: ["desktop", "tablet", "mobile"].includes(device) ? device : "desktop",
     screenResolution, language, referrer,
@@ -104,7 +98,7 @@ exports.updateSession = asyncHandler(async (req, res) => {
   if (!v) return res.json({ success: true });
 
   if (duration !== undefined) v.duration = duration;
-  if (exitPage) { v.exitPage = exitPage; }
+  if (exitPage) v.exitPage = exitPage;
   if (isActive === false) {
     v.isActive = false;
     v.sessionEnd = new Date();
@@ -116,10 +110,10 @@ exports.updateSession = asyncHandler(async (req, res) => {
 // GET /api/analytics/summary  (protected)
 exports.getSummary = asyncHandler(async (req, res) => {
   const now = new Date();
-  const todayStart  = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const weekStart   = new Date(now.getTime() - 6 * 86400_000);
-  const monthStart  = new Date(now.getFullYear(), now.getMonth(), 1);
-  const fiveMinAgo  = new Date(now.getTime() - 5 * 60_000);
+  const todayStart    = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart     = new Date(now.getTime() - 6 * 86400_000);
+  const monthStart    = new Date(now.getFullYear(), now.getMonth(), 1);
+  const fiveMinAgo    = new Date(now.getTime() - 5 * 60_000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400_000);
 
   const [
@@ -127,6 +121,7 @@ exports.getSummary = asyncHandler(async (req, res) => {
     totalQuotes, totalProducts, totalCategories,
     avgRes, returningVisitors, singlePage, totalForBounce,
     dailyVisitors, topCountries, topPages, deviceBreakdown,
+    topBrochure, latestQuote, latestActivity, recentLogins,
   ] = await Promise.all([
     Visitor.countDocuments({ isBot: false }),
     Visitor.countDocuments({ isBot: false, sessionStart: { $gte: todayStart } }),
@@ -162,6 +157,11 @@ exports.getSummary = asyncHandler(async (req, res) => {
       { $match: { isBot: false } },
       { $group: { _id: "$device", count: { $sum: 1 } } },
     ]),
+    Brochure.findOne({ isActive: true }).sort({ downloadCount: -1 }).select("title downloadCount").lean(),
+    QuoteRequest.findOne().sort({ createdAt: -1 }).select("name email company status createdAt").lean(),
+    ActivityLog.find().sort({ createdAt: -1 }).limit(5).select("adminName action category details createdAt").lean(),
+    ActivityLog.find({ action: "login" }).sort({ createdAt: -1 }).limit(5)
+      .select("adminName adminEmail ip createdAt").lean(),
   ]);
 
   res.json({
@@ -175,14 +175,15 @@ exports.getSummary = asyncHandler(async (req, res) => {
       newVisitors:       Math.max(0, totalVisitors - returningVisitors),
     },
     dailyVisitors, topCountries, topPages, deviceBreakdown,
+    topBrochure, latestQuote, latestActivity, recentLogins,
   });
 });
 
 // GET /api/analytics/visitors  (protected)
 exports.getVisitors = asyncHandler(async (req, res) => {
-  const page    = Math.max(1, parseInt(req.query.page) || 1);
-  const limit   = Math.min(100, parseInt(req.query.limit) || 25);
-  const skip    = (page - 1) * limit;
+  const page   = Math.max(1, parseInt(req.query.page) || 1);
+  const limit  = Math.min(100, parseInt(req.query.limit) || 25);
+  const skip   = (page - 1) * limit;
   const { country, device, search } = req.query;
 
   const filter = { isBot: false };

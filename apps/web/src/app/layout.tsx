@@ -5,6 +5,7 @@ import { SiteFooter } from "../components/layout/site-footer";
 import { SiteHeader } from "../components/layout/site-header";
 import { ScrollToTop } from "../components/layout/scroll-to-top";
 import { apiClient } from "../lib/api-client";
+import VisitorTracker from "../components/analytics/VisitorTracker";
 
 export const metadata: Metadata = {
   title: {
@@ -33,6 +34,7 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <VisitorTracker />
         <ScrollToTop />
         <SiteHeader logoUrl={logoUrl} contactEmail={contactEmail} contactPhone={contactPhone} />
         <main className="relative z-10">{children}</main>

@@ -31,6 +31,11 @@ export const api = {
     request("/auth/me", {
       headers: { Authorization: `Bearer ${token}` }
     }),
+  logout: (token) =>
+    request("/auth/logout", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    }),
   requestOtp: (email) =>
     request("/auth/forgot-password", {
       method: "POST",
