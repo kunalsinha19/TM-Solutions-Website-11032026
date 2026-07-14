@@ -2,28 +2,14 @@ FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# ── Dependency layer (cached unless manifests change) ──────────────────────────
-# Copy only the manifests needed to resolve the workspace graph.
-# admin/ and frontend/ are workspaces declared in the root package.json but
-# are NOT imported by apps/web. Instead of COPY-ing their package.json files
-# (which can go missing from the Docker build context due to Railway's layer
-# cache snapshot behaviour), we stub them with a RUN command so npm install
-# can resolve the workspace graph without needing the actual source.
-COPY package.json package-lock.json* ./
-COPY packages/ ./packages/
-COPY apps/web/package.json ./apps/web/
-
-RUN mkdir -p admin frontend && \
-    echo '{"name":"tara-maa-admin","version":"1.0.0","private":true}' > admin/package.json && \
-    echo '{"name":"tara-maa-frontend","version":"1.0.0","private":true}' > frontend/package.json
-
-RUN npm install
-
-# ── Source layer (invalidated on any source change) ────────────────────────────
+# Copy everything at once — avoids BuildKit cache-key computation failures
+# that occur when Railway's build daemon holds a stale context snapshot and
+# individual COPY <file> instructions reference paths the snapshot doesn't know.
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN npm install
 RUN npm run build --workspace=@tara-maa/web
 
 # ── Production image ───────────────────────────────────────────────────────────
