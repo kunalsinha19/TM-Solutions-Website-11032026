@@ -3,7 +3,8 @@ const QuoteRequest = require("../models/QuoteRequest");
 const { validateCaptcha } = require("../services/captchaService");
 const { sendQuoteRequestEmail, sendQuoteResponseEmail, buildQuoteReply } = require("../services/emailService");
 const ApiError = require("../utils/apiError");
-const { HAS_REAL_SMTP, HAS_REAL_CAPTCHA } = require("../config/env");
+const { HAS_REAL_SMTP, HAS_RESEND, HAS_REAL_CAPTCHA } = require("../config/env");
+const HAS_EMAIL = HAS_RESEND || HAS_REAL_SMTP;
 const { log } = require("../utils/activityLogger");
 
 exports.createQuoteRequest = asyncHandler(async (req, res) => {
@@ -17,10 +18,10 @@ exports.createQuoteRequest = asyncHandler(async (req, res) => {
 
   const quoteRequest = await QuoteRequest.create({ ...payload, captchaVerified: captcha.success });
 
-  if (HAS_REAL_SMTP) {
+  if (HAS_EMAIL) {
     setImmediate(async () => {
       try { await sendQuoteRequestEmail(quoteRequest); }
-      catch (error) { console.error("Quote email failed:", error.message); }
+      catch (error) { console.error("Quote notification email failed:", error.message); }
     });
   }
 
@@ -67,14 +68,14 @@ exports.replyToQuoteRequest = asyncHandler(async (req, res) => {
   let delivery = "draft";
   let smtpError = null;
 
-  if (HAS_REAL_SMTP) {
+  if (HAS_EMAIL) {
     try {
       await sendQuoteResponseEmail({ to: quoteRequest.email, name: quoteRequest.name, subject, message });
       delivery = "sent";
     } catch (err) {
       delivery = "failed";
-      smtpError = err?.message || "Unknown SMTP error";
-      console.error("[SMTP] Reply delivery failed:", smtpError);
+      smtpError = err?.message || "Unknown email error";
+      console.error("[Email] Reply delivery failed:", smtpError);
     }
   }
 

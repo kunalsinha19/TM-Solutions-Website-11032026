@@ -8,17 +8,45 @@ const {
   SMTP_SECURE,
   SMTP_USER,
   SMTP_PASS,
-  HAS_REAL_SMTP
+  HAS_REAL_SMTP,
+  RESEND_API_KEY,
+  HAS_RESEND
 } = require("../config/env");
 
 const EMAIL_TIMEOUT_MS = Number(process.env.EMAIL_TIMEOUT_MS || 15000);
 
+/* ── Resend (HTTPS, never blocked by firewalls) ─────────────────────── */
+async function sendViaResend({ to, subject, html, text, replyTo }) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from: EMAIL_FROM,
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+      text,
+      ...(replyTo ? { reply_to: replyTo } : {})
+    }),
+    signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS)
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(`Resend API error ${res.status}: ${body?.message || res.statusText}`);
+  }
+
+  return res.json();
+}
+
+/* ── Nodemailer (SMTP fallback) ─────────────────────────────────────── */
 let transporter;
 
 function getTransporter() {
-  if (transporter) {
-    return transporter;
-  }
+  if (transporter) return transporter;
 
   if (!HAS_REAL_SMTP) {
     throw new Error("SMTP configuration is incomplete. Set real SMTP_HOST, SMTP_USER, and SMTP_PASS values.");
@@ -28,15 +56,9 @@ function getTransporter() {
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_SECURE,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS
-    },
-    // requireTLS enables STARTTLS upgrade on port 587 (standard for Gmail)
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
     requireTLS: SMTP_PORT === 587,
-    tls: {
-      minVersion: "TLSv1.2",
-    },
+    tls: { minVersion: "TLSv1.2" },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: EMAIL_TIMEOUT_MS
@@ -57,21 +79,23 @@ function withTimeout(promise, label) {
   ]);
 }
 
-async function sendEmail({ to, subject, html, text, replyTo }) {
-  const mailTransporter = getTransporter();
+async function sendViaSMTP({ to, subject, html, text, replyTo }) {
+  const t = getTransporter();
   return withTimeout(
-    mailTransporter.sendMail({
-      from: EMAIL_FROM,
-      to,
-      replyTo,
-      subject,
-      text,
-      html
-    }),
+    t.sendMail({ from: EMAIL_FROM, to, replyTo, subject, text, html }),
     "Email send"
   );
 }
 
+/* ── Unified send (Resend preferred, SMTP fallback) ─────────────────── */
+async function sendEmail({ to, subject, html, text, replyTo }) {
+  if (HAS_RESEND) {
+    return sendViaResend({ to, subject, html, text, replyTo });
+  }
+  return sendViaSMTP({ to, subject, html, text, replyTo });
+}
+
+/* ── Public helpers ──────────────────────────────────────────────────── */
 async function sendPasswordResetEmail(email, otp) {
   const subject = "Your Tara Maa Solutions admin OTP";
   const text = `Your one-time password (OTP) is: ${otp}\nIt expires in 10 minutes. Do not share it with anyone.`;
@@ -84,7 +108,6 @@ async function sendPasswordResetEmail(email, otp) {
       <p style="color: #6b7280; font-size: 0.9rem;">If you did not request a password reset, you can ignore this email.</p>
     </div>
   `;
-
   return sendEmail({ to: email, subject, text, html });
 }
 
@@ -92,16 +115,12 @@ async function getNotificationEmail() {
   const settings = await WebsiteSettings.findOne({ siteKey: "primary" })
     .select("masterEmail contactInfo.email")
     .lean();
-
   return settings?.masterEmail || ADMIN_NOTIFICATION_EMAIL || settings?.contactInfo?.email || "";
 }
 
 async function sendQuoteRequestEmail(quoteRequest) {
   const notificationEmail = await getNotificationEmail();
-
-  if (!notificationEmail) {
-    throw new Error("Notification email is not configured.");
-  }
+  if (!notificationEmail) throw new Error("Notification email is not configured.");
 
   const subject = `New quote request from ${quoteRequest.name}`;
   const text = [
@@ -125,13 +144,7 @@ async function sendQuoteRequestEmail(quoteRequest) {
     </div>
   `;
 
-  return sendEmail({
-    to: notificationEmail,
-    replyTo: quoteRequest.email,
-    subject,
-    text,
-    html
-  });
+  return sendEmail({ to: notificationEmail, replyTo: quoteRequest.email, subject, text, html });
 }
 
 function buildQuoteReply({ name, message }) {
@@ -143,11 +156,7 @@ function buildQuoteReply({ name, message }) {
     return {
       subject: `Response to your enquiry from Tara Maa Solutions`,
       text: safeMessage,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111827;">
-          <p>${safeMessage.replace(/\n/g, "<br/>")}</p>
-        </div>
-      `
+      html: `<div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111827;"><p>${safeMessage.replace(/\n/g, "<br/>")}</p></div>`
     };
   }
 

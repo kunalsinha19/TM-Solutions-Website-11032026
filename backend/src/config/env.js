@@ -57,6 +57,8 @@ module.exports = {
   CAPTCHA_SECRET: process.env.CAPTCHA_SECRET || "",
   CAPTCHA_SITE_KEY: process.env.CAPTCHA_SITE_KEY || "",
   CAPTCHA_BYPASS: process.env.CAPTCHA_BYPASS === "true",
+  RESEND_API_KEY: process.env.RESEND_API_KEY || "",
+  HAS_RESEND: !isPlaceholder(process.env.RESEND_API_KEY),
   HAS_REAL_SMTP: !isPlaceholder(process.env.SMTP_HOST) && !isPlaceholder(process.env.SMTP_USER) && !isPlaceholder(process.env.SMTP_PASS),
   HAS_REAL_CAPTCHA: !isPlaceholder(process.env.CAPTCHA_SECRET) && !isPlaceholder(process.env.CAPTCHA_SITE_KEY)
 };
