@@ -1,9 +1,4 @@
 import { NextRequest } from "next/server";
-import {
-  GoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} from "@google/generative-ai";
 
 function resolveApiBase(raw: string | undefined): string {
   const base = (raw ?? "http://localhost:4000/api").replace(/\/$/, "");
@@ -11,7 +6,7 @@ function resolveApiBase(raw: string | undefined): string {
 }
 
 const BACKEND = resolveApiBase(process.env.NEXT_PUBLIC_API_URL);
-const GEMINI_KEY = process.env.GEMINI_API_KEY ?? "";
+const GROQ_KEY = process.env.GROQ_API_KEY ?? "";
 
 // In-memory rate limiter: max 25 messages / IP / minute
 const rl = new Map<string, { n: number; reset: number }>();
@@ -94,7 +89,7 @@ export async function POST(req: NextRequest) {
   const enc = new TextEncoder();
   const sse = (data: string) => enc.encode(sseText(data));
 
-  if (!GEMINI_KEY) {
+  if (!GROQ_KEY) {
     return new Response(
       sseText(JSON.stringify({ text: "Chat is currently unavailable. Please use the quote form or contact us directly." })) +
       sseText("[DONE]"),
@@ -134,39 +129,66 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(ctrl) {
       try {
-        const systemInstruction = await buildSystemPrompt();
-        const genAI = new GoogleGenerativeAI(GEMINI_KEY);
-        const model = genAI.getGenerativeModel({
-          model: "gemini-2.0-flash",
-          systemInstruction,
-          safetySettings: [
-            { category: HarmCategory.HARM_CATEGORY_HARASSMENT,   threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,  threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-          ],
-        });
+        const systemPrompt = await buildSystemPrompt();
 
-        const chat = model.startChat({
-          history: history.map(m => ({
-            role: m.role === "user" ? "user" : "model",
-            parts: [{ text: m.text }],
+        const messages = [
+          { role: "system", content: systemPrompt },
+          ...history.map(m => ({
+            role: m.role === "user" ? "user" : "assistant",
+            content: m.text,
           })),
+          { role: "user", content: message },
+        ];
+
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${GROQ_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages,
+            stream: true,
+            max_tokens: 300,
+            temperature: 0.7,
+          }),
+          signal: AbortSignal.timeout(30_000),
         });
 
-        const result = await chat.sendMessageStream(message);
-        for await (const chunk of result.stream) {
-          const text = chunk.text();
-          if (text) ctrl.enqueue(sse(JSON.stringify({ text })));
+        if (!res.ok || !res.body) {
+          const errText = await res.text().catch(() => res.statusText);
+          throw new Error(`Groq API ${res.status}: ${errText}`);
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const payload = line.slice(6).trim();
+            if (payload === "[DONE]") break;
+            try {
+              const chunk = JSON.parse(payload);
+              const text = chunk.choices?.[0]?.delta?.content ?? "";
+              if (text) ctrl.enqueue(sse(JSON.stringify({ text })));
+            } catch { /* skip malformed */ }
+          }
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error("[Gemini chat error]", msg);
-        const isKeyError = msg.includes("API_KEY") || msg.includes("401") || msg.includes("403") || msg.includes("invalid");
+        console.error("[Chat error]", msg);
         ctrl.enqueue(sse(JSON.stringify({
-          text: isKeyError
-            ? "Chat setup issue — admin needs to check the API key. Please contact us at taramaasolutions2025@gmail.com."
-            : "I'm having trouble right now. Please try again or reach us at taramaasolutions2025@gmail.com."
+          text: "I'm having trouble right now. Please try again or reach us at taramaasolutions2025@gmail.com."
         })));
       } finally {
         ctrl.enqueue(sse("[DONE]"));
