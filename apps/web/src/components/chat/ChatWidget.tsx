@@ -145,12 +145,17 @@ export default function ChatWidget() {
   }, []);
 
   // ── Quote submission ──────────────────────────────────────────────────────────
-  const submitQuote = useCallback(async (quote: Record<string, string>): Promise<boolean> => {
+  const submitQuote = useCallback(async (quote: Record<string, string>, transcript: Message[]): Promise<boolean> => {
     try {
       const res = await fetch("/api/quotes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...quote, captchaToken: "demo-captcha-token" }),
+        body: JSON.stringify({
+          ...quote,
+          captchaToken: "demo-captcha-token",
+          source: "chat",
+          chatTranscript: transcript.slice(-20).map(m => ({ role: m.role, text: m.text.slice(0, 500) })),
+        }),
       });
       return res.ok;
     } catch { return false; }
@@ -242,8 +247,8 @@ export default function ChatWidget() {
         });
         speak(clean);
 
-        // Submit the quote
-        const ok = await submitQuote(quote);
+        // Submit the quote (include transcript for admin chat history)
+        const ok = await submitQuote(quote, messages);
         const confirmMsg: Message = ok
           ? {
               role: "bot",

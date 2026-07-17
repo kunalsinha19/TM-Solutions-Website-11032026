@@ -8,8 +8,9 @@ router.post("/track",              ctrl.trackVisitor);
 router.put("/track/:sessionId",    ctrl.updateSession);
 
 // Protected — admin dashboard only
-router.get("/summary",    protect, ctrl.getSummary);
-router.get("/visitors",   protect, ctrl.getVisitors);
-router.get("/live",       protect, ctrl.getLiveVisitors);
+router.get("/summary",        protect, ctrl.getSummary);
+router.get("/quote-insights", protect, ctrl.getQuoteInsights);
+router.get("/visitors",       protect, ctrl.getVisitors);
+router.get("/live",           protect, ctrl.getLiveVisitors);
 
 module.exports = router;

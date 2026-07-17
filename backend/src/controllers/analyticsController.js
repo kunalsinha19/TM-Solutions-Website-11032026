@@ -254,6 +254,128 @@ exports.getVisitors = asyncHandler(async (req, res) => {
   });
 });
 
+// GET /api/analytics/quote-insights  (protected)
+exports.getQuoteInsights = asyncHandler(async (req, res) => {
+  const now           = new Date();
+  const todayStart    = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const sevenDaysAgo  = new Date(now.getTime() - 7 * 86400_000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400_000);
+
+  const [
+    mostQuotedProducts,
+    chatVsForm,
+    quoteTrend,
+    topCompanies,
+    statusBreakdown,
+    categoryDemand,
+    todayCount,
+    weekCount,
+    totalCount,
+    avgResponseTime,
+    recentQuotes,
+    categorySupply,
+  ] = await Promise.all([
+    // Most quoted products (linked via product ObjectId)
+    QuoteRequest.aggregate([
+      { $match: { product: { $ne: null } } },
+      { $group: { _id: "$product", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 8 },
+      { $lookup: { from: "products", localField: "_id", foreignField: "_id", as: "prod" } },
+      { $unwind: { path: "$prod", preserveNullAndEmptyArrays: true } },
+      { $lookup: { from: "categories", localField: "prod.category", foreignField: "_id", as: "cat" } },
+      { $unwind: { path: "$cat", preserveNullAndEmptyArrays: true } },
+      { $project: { name: { $ifNull: ["$prod.name", "Unknown"] }, slug: "$prod.slug", category: { $ifNull: ["$cat.name", "—"] }, count: 1 } },
+    ]),
+
+    // Chat vs form source breakdown
+    QuoteRequest.aggregate([
+      { $group: { _id: { $ifNull: ["$source", "form"] }, count: { $sum: 1 } } },
+    ]),
+
+    // 30-day daily trend
+    QuoteRequest.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]),
+
+    // Top companies (by quote volume)
+    QuoteRequest.aggregate([
+      { $match: { company: { $nin: ["", null] } } },
+      { $group: { _id: "$company", count: { $sum: 1 }, latestEmail: { $last: "$email" } } },
+      { $sort: { count: -1 } },
+      { $limit: 8 },
+    ]),
+
+    // Status breakdown
+    QuoteRequest.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
+
+    // Category demand — quotes per category (via product lookup)
+    QuoteRequest.aggregate([
+      { $match: { product: { $ne: null } } },
+      { $lookup: { from: "products", localField: "product", foreignField: "_id", as: "prod" } },
+      { $unwind: { path: "$prod", preserveNullAndEmptyArrays: true } },
+      { $lookup: { from: "categories", localField: "prod.category", foreignField: "_id", as: "cat" } },
+      { $unwind: { path: "$cat", preserveNullAndEmptyArrays: true } },
+      { $group: { _id: { $ifNull: ["$cat.name", "Uncategorized"] }, demand: { $sum: 1 } } },
+      { $sort: { demand: -1 } },
+    ]),
+
+    QuoteRequest.countDocuments({ createdAt: { $gte: todayStart } }),
+    QuoteRequest.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
+    QuoteRequest.countDocuments(),
+
+    // Avg response time
+    QuoteRequest.aggregate([
+      { $match: { repliedAt: { $ne: null } } },
+      { $project: { ms: { $subtract: ["$repliedAt", "$createdAt"] } } },
+      { $group: { _id: null, avg: { $avg: "$ms" } } },
+    ]),
+
+    // Recent 10 quotes with transcript
+    QuoteRequest.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("product", "name slug")
+      .select("name email company phone message source status product createdAt repliedAt chatTranscript")
+      .lean(),
+
+    // Supply: products per category
+    Product.aggregate([
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+      { $lookup: { from: "categories", localField: "_id", foreignField: "_id", as: "cat" } },
+      { $unwind: { path: "$cat", preserveNullAndEmptyArrays: true } },
+      { $project: { name: { $ifNull: ["$cat.name", "Uncategorized"] }, supply: "$count" } },
+    ]),
+  ]);
+
+  // Merge demand + supply into one D/S analysis table
+  const demandMap = {};
+  for (const d of categoryDemand) demandMap[d._id] = d.demand;
+  const supplyMap = {};
+  for (const s of categorySupply) supplyMap[s.name] = s.supply;
+  const allCats = [...new Set([...Object.keys(demandMap), ...Object.keys(supplyMap)])];
+  const demandSupply = allCats
+    .map(cat => ({ category: cat, demand: demandMap[cat] || 0, supply: supplyMap[cat] || 0 }))
+    .sort((a, b) => b.demand - a.demand || b.supply - a.supply);
+
+  const avgResponseHours = avgResponseTime[0]?.avg
+    ? Math.round((avgResponseTime[0].avg / (1000 * 60 * 60)) * 10) / 10
+    : null;
+
+  res.json({
+    success: true,
+    insights: {
+      totalCount, todayCount, weekCount, avgResponseHours,
+      mostQuotedProducts, chatVsForm, quoteTrend,
+      topCompanies, statusBreakdown, demandSupply, recentQuotes,
+    },
+  });
+});
+
 // GET /api/analytics/live  (protected)
 exports.getLiveVisitors = asyncHandler(async (req, res) => {
   const fiveMinAgo = new Date(Date.now() - 5 * 60_000);

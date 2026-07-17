@@ -76,6 +76,23 @@ const quoteRequestSchema = new mongoose.Schema(
       type: Date,
       default: null,
       index: true
+    },
+    source: {
+      type: String,
+      enum: ["form", "chat"],
+      default: "form",
+      index: true
+    },
+    chatTranscript: {
+      type: [{
+        role: { type: String, enum: ["user", "bot"] },
+        text: { type: String, maxlength: 600 },
+      }],
+      default: [],
+      validate: {
+        validator: (v) => v.length <= 30,
+        message: "Chat transcript too long",
+      },
     }
   },
   { timestamps: true }
