@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
         const systemInstruction = await buildSystemPrompt();
         const genAI = new GoogleGenerativeAI(GEMINI_KEY);
         const model = genAI.getGenerativeModel({
-          model: "gemini-1.5-flash",
+          model: "gemini-2.0-flash",
           systemInstruction,
           safetySettings: [
             { category: HarmCategory.HARM_CATEGORY_HARASSMENT,   threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
@@ -160,10 +160,13 @@ export async function POST(req: NextRequest) {
           if (text) ctrl.enqueue(sse(JSON.stringify({ text })));
         }
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Unknown error";
+        const msg = err instanceof Error ? err.message : String(err);
         console.error("[Gemini chat error]", msg);
+        const isKeyError = msg.includes("API_KEY") || msg.includes("401") || msg.includes("403") || msg.includes("invalid");
         ctrl.enqueue(sse(JSON.stringify({
-          text: "I'm having trouble right now. Please try again or reach us at taramaasolutions2025@gmail.com."
+          text: isKeyError
+            ? "Chat setup issue — admin needs to check the API key. Please contact us at taramaasolutions2025@gmail.com."
+            : "I'm having trouble right now. Please try again or reach us at taramaasolutions2025@gmail.com."
         })));
       } finally {
         ctrl.enqueue(sse("[DONE]"));
