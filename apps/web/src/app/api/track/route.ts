@@ -12,13 +12,21 @@ const BACKEND = resolveApiBase(process.env.NEXT_PUBLIC_API_URL);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    // Forward real visitor IP from the browser via the frontend server
-    const forwarded = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "";
+    // CF-Connecting-IP is set by Cloudflare with the TRUE end-user IP and cannot
+    // be spoofed by the client. Fall back to x-real-ip, then the first entry in
+    // x-forwarded-for (leftmost = original client before any proxy appends).
+    const realIp =
+      req.headers.get("cf-connecting-ip") ??
+      req.headers.get("x-real-ip") ??
+      (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() ??
+      "";
     await fetch(`${BACKEND}/analytics/track`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(forwarded ? { "x-forwarded-for": forwarded } : {}),
+        // x-visitor-ip is a dedicated header the backend reads first so that
+        // Railway's internal LB cannot overwrite the real IP in x-forwarded-for.
+        ...(realIp ? { "x-visitor-ip": realIp } : {}),
       },
       body: JSON.stringify(body),
     });

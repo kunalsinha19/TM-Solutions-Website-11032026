@@ -47,11 +47,11 @@ export default function VisitorsManager({ token }) {
   useEffect(() => { load(page); }, [page]);
 
   function exportCsv() {
-    const headers = ["Date", "Visitor ID", "Country", "City", "Browser", "OS", "Device", "Entry Page", "Exit Page", "Duration", "Pages"];
+    const headers = ["Date", "Visitor ID", "Country", "State", "City", "Lat", "Lon", "Browser", "OS", "Device", "Screen", "Entry Page", "Exit Page", "Duration", "Pages"];
     const rows = visitors.map(v => [
-      fmtDate(v.sessionStart), v.visitorId?.slice(0, 8), v.country, v.city,
-      v.browser, v.os, v.device, v.entryPage, v.exitPage,
-      fmtDuration(v.duration), v.pageCount,
+      fmtDate(v.sessionStart), v.visitorId?.slice(0, 8), v.country, v.state, v.city,
+      v.lat, v.lon, v.browser, v.os, v.device, v.screenResolution,
+      v.entryPage, v.exitPage, fmtDuration(v.duration), v.pageCount,
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${c || ""}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -100,6 +100,7 @@ export default function VisitorsManager({ token }) {
               <th>Location</th>
               <th>Browser / OS</th>
               <th>Device</th>
+              <th>Screen</th>
               <th>Entry Page</th>
               <th>Pages</th>
               <th>Duration</th>
@@ -108,9 +109,9 @@ export default function VisitorsManager({ token }) {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="visitors-loading">Loading…</td></tr>
+              <tr><td colSpan={9} className="visitors-loading">Loading…</td></tr>
             ) : visitors.length === 0 ? (
-              <tr><td colSpan={8} className="visitors-loading">No visitors found.</td></tr>
+              <tr><td colSpan={9} className="visitors-loading">No visitors found.</td></tr>
             ) : visitors.map((v, i) => (
               <tr key={i} className="visitors-row">
                 <td className="visitors-td">
@@ -119,14 +120,33 @@ export default function VisitorsManager({ token }) {
                 <td className="visitors-td">
                   <div className="visitors-location">
                     <Flag code={v.countryCode} />
-                    <span>{[v.city, v.country].filter(Boolean).join(", ") || "—"}</span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                      <span>{[v.city, v.state].filter(Boolean).join(", ") || v.country || "—"}</span>
+                      {v.country && (v.city || v.state) && (
+                        <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{v.country}</span>
+                      )}
+                      {(v.lat && v.lon) && (
+                        <span style={{ fontSize: "0.65rem", opacity: 0.45, fontVariantNumeric: "tabular-nums" }}>
+                          {Number(v.lat).toFixed(2)}, {Number(v.lon).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td className="visitors-td">
                   <span className="visitors-browser">{v.browser || "—"}</span>
                   {v.os && <span className="visitors-os"> / {v.os}</span>}
                 </td>
-                <td className="visitors-td"><DeviceIcon d={v.device} /></td>
+                <td className="visitors-td">
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                    <DeviceIcon d={v.device} />
+                  </div>
+                </td>
+                <td className="visitors-td">
+                  <span style={{ fontSize: "0.75rem", fontVariantNumeric: "tabular-nums", opacity: 0.8 }}>
+                    {v.screenResolution || "—"}
+                  </span>
+                </td>
                 <td className="visitors-td">
                   <span className="visitors-page" title={v.entryPage}>{v.entryPage || "/"}</span>
                 </td>

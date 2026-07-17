@@ -6,9 +6,17 @@ const Category = require("../models/Category");
 const Brochure = require("../models/Brochure");
 const ActivityLog = require("../models/ActivityLog");
 
+// Priority: x-visitor-ip (set by Next.js proxy with real client IP) →
+//           cf-connecting-ip (Cloudflare) → x-real-ip → x-forwarded-for[0]
 function getIp(req) {
-  return (String(req.headers["x-forwarded-for"] || "")).split(",")[0].trim() ||
-    req.socket?.remoteAddress || "0.0.0.0";
+  return (
+    req.headers["x-visitor-ip"] ||
+    req.headers["cf-connecting-ip"] ||
+    req.headers["x-real-ip"] ||
+    (String(req.headers["x-forwarded-for"] || "")).split(",")[0].trim() ||
+    req.socket?.remoteAddress ||
+    "0.0.0.0"
+  );
 }
 
 function anonymizeIp(ip) {
@@ -23,22 +31,41 @@ function isLocalIp(ip) {
     ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.");
 }
 
+// Simple in-memory geo cache — avoids duplicate API calls for the same /24 block
+const geoCache = new Map();
+
 async function fetchGeoData(ip) {
   if (isLocalIp(ip)) return { country: "Local", countryCode: "LO", city: "Localhost" };
+
+  const cacheKey = ip;
+  if (geoCache.has(cacheKey)) return geoCache.get(cacheKey);
+
   try {
+    // ipwho.is: free, HTTPS (no rate-limit issues with HTTP), no API key required
     const res = await fetch(
-      `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,lat,lon,isp,timezone`,
-      { signal: AbortSignal.timeout(3000) }
+      `https://ipwho.is/${ip}`,
+      { signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) return {};
     const data = await res.json();
-    if (data.status !== "success") return {};
-    return {
-      country: data.country, countryCode: data.countryCode,
-      state: data.regionName, city: data.city,
-      lat: data.lat, lon: data.lon,
-      isp: data.isp, timezone: data.timezone,
+    if (!data.success) return {};
+
+    const geo = {
+      country:     data.country,
+      countryCode: data.country_code,
+      state:       data.region,
+      city:        data.city,
+      lat:         data.latitude,
+      lon:         data.longitude,
+      isp:         data.connection?.isp || data.connection?.org || "",
+      timezone:    data.timezone?.id || "",
     };
+
+    // Cache for 24 h — geo data for an IP doesn't change frequently
+    geoCache.set(cacheKey, geo);
+    setTimeout(() => geoCache.delete(cacheKey), 24 * 60 * 60 * 1000);
+
+    return geo;
   } catch {
     return {};
   }
