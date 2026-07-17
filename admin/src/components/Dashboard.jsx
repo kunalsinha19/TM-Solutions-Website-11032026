@@ -4,120 +4,277 @@ import { api } from "../lib/api.js";
 /* ─── Animated counter ──────────────────────────────────────────────── */
 function useCountUp(target, duration = 1200) {
   const [count, setCount] = useState(0);
-  const rafRef = useRef(null);
+  const raf = useRef(null);
   useEffect(() => {
     if (!target) { setCount(0); return; }
     const start = Date.now();
     function step() {
-      const elapsed = Date.now() - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * target));
-      if (progress < 1) rafRef.current = requestAnimationFrame(step);
+      const p = Math.min((Date.now() - start) / duration, 1);
+      setCount(Math.round((1 - Math.pow(1 - p, 3)) * target));
+      if (p < 1) raf.current = requestAnimationFrame(step);
     }
-    rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
+    raf.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf.current);
   }, [target, duration]);
   return count;
 }
 
-/* ─── Mini sparkline ────────────────────────────────────────────────── */
-function Sparkline({ data = [], color = "#f59e0b", h = 36 }) {
-  if (!data.length) return null;
+/* ─── Sparkline SVG ─────────────────────────────────────────────────── */
+function Sparkline({ data = [], color = "#6366f1", h = 40 }) {
+  if (data.length < 2) return null;
   const vals = data.map(d => (typeof d === "object" ? d.count : d));
   const max = Math.max(...vals, 1);
-  const w = 100;
+  const w = 120;
   const pts = vals.map((v, i) => [
-    (i / Math.max(vals.length - 1, 1)) * w,
-    h - (v / max) * h * 0.9,
+    (i / (vals.length - 1)) * w,
+    h - (v / max) * h * 0.85 + 2,
   ]);
   const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
   const fill = `${line} L${w},${h} L0,${h} Z`;
+  const gid = `sg${color.replace(/[^a-z0-9]/gi, "")}`;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: "100%", height: h }}>
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="dash-sparkline">
       <defs>
-        <linearGradient id={`sg-${color.replace("#","")}`} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+        <linearGradient id={gid} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={fill} fill={`url(#sg-${color.replace("#","")})`} />
+      <path d={fill} fill={`url(#${gid})`} />
       <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-/* ─── Stat card ─────────────────────────────────────────────────────── */
-function StatCard({ label, value, icon, color = "#f59e0b", chartData, suffix = "", description }) {
-  const count = useCountUp(typeof value === "number" ? value : 0);
+/* ─── Country flag emoji ─────────────────────────────────────────────── */
+function Flag({ code }) {
+  if (!code || code === "LO") return <span>🌐</span>;
+  try {
+    const pts = [...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65);
+    return <span>{String.fromCodePoint(...pts)}</span>;
+  } catch { return <span>🌐</span>; }
+}
+
+/* ─── Hero KPI card ─────────────────────────────────────────────────── */
+function HeroKpi({ label, value, suffix = "", sub, color, sparkline, isFloat, pulse }) {
+  const num = isFloat ? value : Math.round(value || 0);
+  const animated = useCountUp(isFloat ? Math.round(num * 10) : num);
+  const display = isFloat ? (animated / 10).toFixed(1) : animated.toLocaleString();
   return (
-    <div className="dash-card">
-      <div className="dash-card-header">
-        <div className="dash-card-icon" style={{ background: `${color}18`, color }}>
-          {icon}
-        </div>
-        <div className="dash-card-info">
-          <p className="dash-card-label">{label}</p>
-          <p className="dash-card-value">{count.toLocaleString()}{suffix}</p>
-          {description && <p className="dash-card-desc">{description}</p>}
-        </div>
-      </div>
-      {chartData?.length > 1 && (
-        <div className="dash-card-chart">
-          <Sparkline data={chartData} color={color} />
+    <div className="dash-hero-card">
+      <div className="dash-hero-accent" style={{ background: color }} />
+      <p className="dash-hero-label">{label}</p>
+      <p className="dash-hero-value" style={{ color }}>
+        {display}{suffix}
+        {pulse && <span className="dash-pulse" style={{ background: color }} />}
+      </p>
+      {sub && <p className="dash-hero-sub">{sub}</p>}
+      {sparkline?.length > 1 && (
+        <div className="dash-hero-spark">
+          <Sparkline data={sparkline} color={color} h={38} />
         </div>
       )}
     </div>
   );
 }
 
-/* ─── Country flag by code ───────────────────────────────────────────── */
-function Flag({ code }) {
-  if (!code || code === "LO") return <span className="dash-flag">🌐</span>;
-  try {
-    const codePoints = [...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65);
-    return <span className="dash-flag">{String.fromCodePoint(...codePoints)}</span>;
-  } catch { return <span className="dash-flag">🌐</span>; }
+/* ─── Compact metric tile ────────────────────────────────────────────── */
+function MetricTile({ label, value, rawValue, suffix = "", color = "#64748b", icon }) {
+  const num = Math.round(value || 0);
+  const animated = useCountUp(num);
+  return (
+    <div className="dash-metric-tile">
+      <span className="dash-metric-icon">{icon}</span>
+      <div>
+        <p className="dash-metric-value">{rawValue ?? `${animated.toLocaleString()}${suffix}`}</p>
+        <p className="dash-metric-label">{label}</p>
+      </div>
+    </div>
+  );
 }
 
-/* ─── Bar chart ─────────────────────────────────────────────────────── */
-function BarChart({ data = [], labelKey = "_id", valueKey = "count", color = "#f59e0b" }) {
-  if (!data.length) return <p className="muted small">No data yet.</p>;
+/* ─── Horizontal bar chart ───────────────────────────────────────────── */
+function BarChart({ data = [], labelKey = "_id", valueKey = "count", color = "#b45309", truncate = 24 }) {
+  if (!data.length) return <p className="dash-empty">No data yet.</p>;
   const max = Math.max(...data.map(d => d[valueKey]), 1);
   return (
     <div className="dash-bar-chart">
-      {data.map((row, i) => (
-        <div key={i} className="dash-bar-row">
-          <span className="dash-bar-label">{row[labelKey] || "—"}</span>
-          <div className="dash-bar-track">
-            <div className="dash-bar-fill" style={{ width: `${(row[valueKey] / max) * 100}%`, background: color }} />
+      {data.map((row, i) => {
+        const lbl = (row[labelKey] || "—").toString();
+        const short = lbl.length > truncate ? lbl.slice(0, truncate) + "…" : lbl;
+        return (
+          <div key={i} className="dash-bar-row">
+            <span className="dash-bar-label" title={lbl}>{short}</span>
+            <div className="dash-bar-track">
+              <div className="dash-bar-fill" style={{ width: `${(row[valueKey] / max) * 100}%`, background: color }} />
+            </div>
+            <span className="dash-bar-count">{row[valueKey]}</span>
           </div>
-          <span className="dash-bar-count">{row[valueKey]}</span>
-        </div>
-      ))}
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Device + Browser / OS panels ──────────────────────────────────── */
+const DEVICE_CFG = { mobile: { icon: "📱", color: "#6366f1" }, tablet: { icon: "💻", color: "#f59e0b" }, desktop: { icon: "🖥️", color: "#10b981" } };
+const BROWSER_ICONS = { Chrome: "🌐", Firefox: "🦊", Safari: "🧭", Edge: "🔵", Opera: "🔴", Samsung: "📲" };
+const OS_ICONS = { Windows: "🪟", macOS: "🍎", iOS: "📱", Android: "🤖", Linux: "🐧" };
+
+function DevicePanel({ devices = [] }) {
+  const total = devices.reduce((s, d) => s + d.count, 0) || 1;
+  if (!devices.length) return <p className="dash-empty">No device data yet.</p>;
+  return (
+    <div className="dash-device-panel">
+      {devices.map((d, i) => {
+        const cfg = DEVICE_CFG[d._id] || { icon: "💻", color: "#94a3b8" };
+        const pct = Math.round((d.count / total) * 100);
+        return (
+          <div key={i} className="dash-device-row">
+            <span className="dash-device-icon">{cfg.icon}</span>
+            <div className="dash-device-info">
+              <div className="dash-device-meta">
+                <span className="dash-device-name">{d._id || "Unknown"}</span>
+                <span className="dash-device-pct">{pct}%</span>
+              </div>
+              <div className="dash-device-track">
+                <div className="dash-device-fill" style={{ width: `${pct}%`, background: cfg.color }} />
+              </div>
+              <span className="dash-device-count">{d.count.toLocaleString()} sessions</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function PillList({ items, iconMap, color }) {
+  if (!items.length) return <p className="dash-empty">No data yet.</p>;
+  const max = items[0]?.count || 1;
+  return (
+    <div className="dash-pill-list">
+      {items.map((item, i) => {
+        const icon = iconMap[item._id] || "•";
+        const pct = Math.round((item.count / max) * 100);
+        return (
+          <div key={i} className="dash-pill-row">
+            <span className="dash-pill-icon">{icon}</span>
+            <span className="dash-pill-label">{item._id || "Other"}</span>
+            <div className="dash-pill-bar">
+              <div style={{ width: `${pct}%`, background: color, height: "100%", borderRadius: "2px", transition: "width 0.6s ease" }} />
+            </div>
+            <span className="dash-pill-count">{item.count}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Quote pipeline ─────────────────────────────────────────────────── */
+const STATUS_META = {
+  pending:  { label: "New Leads",   color: "#f59e0b", bg: "#fef3c7", icon: "🔔" },
+  reviewed: { label: "In Review",   color: "#6366f1", bg: "#ede9fe", icon: "🔍" },
+  closed:   { label: "Closed",      color: "#10b981", bg: "#d1fae5", icon: "✅" },
+};
+
+function QuotePipeline({ statuses = [], total }) {
+  if (!total) return <p className="dash-empty">No quote data yet.</p>;
+  const byStatus = {};
+  statuses.forEach(s => { byStatus[s._id] = s.count; });
+  const stages = ["pending", "reviewed", "closed"];
+  return (
+    <div className="dash-pipeline">
+      {stages.map(key => {
+        const meta = STATUS_META[key] || { label: key, color: "#94a3b8", bg: "#f1f5f9", icon: "•" };
+        const count = byStatus[key] || 0;
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        return (
+          <div key={key} className="dash-pipeline-stage">
+            <div className="dash-pipeline-icon" style={{ background: meta.bg, color: meta.color }}>{meta.icon}</div>
+            <div className="dash-pipeline-info">
+              <p className="dash-pipeline-label">{meta.label}</p>
+              <p className="dash-pipeline-count" style={{ color: meta.color }}>{count}</p>
+            </div>
+            <div className="dash-pipeline-bar-wrap">
+              <div className="dash-pipeline-bar" style={{ width: `${pct}%`, background: meta.color }} />
+              <span className="dash-pipeline-pct">{pct}%</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── New vs Returning visual ────────────────────────────────────────── */
+function AudienceSplit({ newV, returning }) {
+  const total = (newV + returning) || 1;
+  const newPct = Math.round((newV / total) * 100);
+  const retPct = 100 - newPct;
+  return (
+    <div className="dash-audience-split">
+      <div className="dash-split-bar">
+        <div style={{ width: `${newPct}%`, background: "#6366f1", height: "100%", borderRadius: "4px 0 0 4px", transition: "width 0.8s ease" }} />
+        <div style={{ width: `${retPct}%`, background: "#f59e0b", height: "100%", borderRadius: "0 4px 4px 0", transition: "width 0.8s ease" }} />
+      </div>
+      <div className="dash-split-legend">
+        <span><span className="dash-split-dot" style={{ background: "#6366f1" }} />New <strong>{newPct}%</strong></span>
+        <span><span className="dash-split-dot" style={{ background: "#f59e0b" }} />Returning <strong>{retPct}%</strong></span>
+      </div>
     </div>
   );
 }
 
 /* ─── Recent activity list ───────────────────────────────────────────── */
 function ActivityList({ items = [] }) {
-  if (!items.length) return <p className="muted small">No recent activity.</p>;
+  if (!items.length) return <p className="dash-empty">No recent activity.</p>;
   const ICONS = { auth: "🔐", product: "📦", category: "🗂️", seo: "🔍", settings: "⚙️", quote: "📧", brochure: "📄", admin: "👤", youtube: "▶️" };
   return (
-    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+    <ul className="dash-activity-list">
       {items.map((a, i) => (
-        <li key={i} style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start", padding: "0.5rem 0", borderBottom: "1px solid var(--border-subtle, #2a2a2a)" }}>
-          <span style={{ fontSize: "1rem", flexShrink: 0, marginTop: "0.1rem" }}>{ICONS[a.category] || "📝"}</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 600, color: "var(--text)" }}>{a.action.replace(/_/g, " ")}</p>
-            <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)" }}>{a.adminName || "System"} · {a.details || ""}</p>
+        <li key={i} className="dash-activity-item">
+          <span className="dash-activity-icon">{ICONS[a.category] || "📝"}</span>
+          <div className="dash-activity-body">
+            <p className="dash-activity-action">{a.action.replace(/_/g, " ")}</p>
+            <p className="dash-activity-detail">{a.adminName || "System"} · {a.details || ""}</p>
           </div>
-          <span style={{ fontSize: "0.7rem", color: "var(--muted)", whiteSpace: "nowrap", flexShrink: 0 }}>
+          <span className="dash-activity-time">
             {new Date(a.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
         </li>
       ))}
     </ul>
+  );
+}
+
+/* ─── Helpers ────────────────────────────────────────────────────────── */
+function fmtDuration(secs) {
+  if (!secs) return "0s";
+  if (secs < 60) return `${secs}s`;
+  return `${Math.floor(secs / 60)}m ${secs % 60}s`;
+}
+function timeAgo(date) {
+  if (!date) return "";
+  const s = Math.floor((Date.now() - new Date(date)) / 1000);
+  if (s < 60)    return `${s}s ago`;
+  if (s < 3600)  return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+}
+function Panel({ eyebrow, title, children, action }) {
+  return (
+    <div className="panel dash-panel">
+      <div className="dash-panel-header">
+        <div>
+          {eyebrow && <p className="dash-eyebrow">{eyebrow}</p>}
+          <h3 className="dash-panel-title">{title}</h3>
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -135,192 +292,208 @@ export default function Dashboard({ token }) {
       .finally(() => setLoading(false));
   }, [token]);
 
-  if (loading) {
-    return (
-      <div className="dash-loading">
-        <div className="dash-spinner" />
-        <p>Loading dashboard…</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="dash-loading"><div className="dash-spinner" /><p>Loading dashboard…</p></div>
+  );
+  if (error) return (
+    <div className="feedback error">Failed to load dashboard data: {error}</div>
+  );
 
-  if (error) {
-    return <div className="feedback error">Failed to load dashboard data: {error}</div>;
-  }
+  const s        = data?.summary || {};
+  const daily    = data?.dailyVisitors || [];
+  const countries= data?.topCountries || [];
+  const pages    = data?.topPages || [];
+  const devices  = data?.deviceBreakdown || [];
+  const browsers = data?.browserBreakdown || [];
+  const osData   = data?.osBreakdown || [];
+  const qStatus  = data?.quoteStatusBreakdown || [];
+  const activity = data?.latestActivity || [];
+  const logins   = data?.recentLogins || [];
+  const topBrochure  = data?.topBrochure;
+  const latestQuote  = data?.latestQuote;
 
-  const s         = data?.summary || {};
-  const daily     = data?.dailyVisitors || [];
-  const countries = data?.topCountries || [];
-  const pages     = data?.topPages || [];
-  const devices   = data?.deviceBreakdown || [];
-  const activity  = data?.latestActivity || [];
-  const logins    = data?.recentLogins || [];
-  const topBrochure = data?.topBrochure;
-  const latestQuote = data?.latestQuote;
-
-  const formatDuration = (secs) => {
-    if (!secs) return "0s";
-    if (secs < 60) return `${secs}s`;
-    return `${Math.floor(secs / 60)}m ${secs % 60}s`;
-  };
-
-  const timeAgo = (date) => {
-    if (!date) return "";
-    const secs = Math.floor((Date.now() - new Date(date)) / 1000);
-    if (secs < 60) return `${secs}s ago`;
-    if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
-    if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
-    return `${Math.floor(secs / 86400)}d ago`;
-  };
-
-  const statCards = [
-    { label: "Total Visitors",   value: s.totalVisitors,    icon: "👥", color: "#6366f1", chartData: daily },
-    { label: "Today's Visitors", value: s.todayVisitors,    icon: "📅", color: "#f59e0b" },
-    { label: "Weekly Visitors",  value: s.weekVisitors,     icon: "📈", color: "#10b981" },
-    { label: "Monthly Visitors", value: s.monthVisitors,    icon: "🗓️", color: "#3b82f6" },
-    { label: "Live Visitors",    value: s.liveVisitors,     icon: "🟢", color: "#22c55e", description: "Active in last 5 min" },
-    { label: "Total Quotes",     value: s.totalQuotes,      icon: "📧", color: "#f43f5e" },
-    { label: "Products",         value: s.totalProducts,    icon: "📦", color: "#8b5cf6" },
-    { label: "Categories",       value: s.totalCategories,  icon: "🗂️", color: "#0ea5e9" },
-    { label: "Avg Session",      value: 0,                  icon: "⏱️", color: "#f97316", description: formatDuration(s.avgDuration) },
-    { label: "Bounce Rate",      value: s.bounceRate,       icon: "↩️", color: "#64748b", suffix: "%" },
-    { label: "Returning",        value: s.returningVisitors,icon: "🔁", color: "#a855f7" },
-    { label: "New Visitors",     value: s.newVisitors,      icon: "✨", color: "#06b6d4" },
-  ];
+  const convRate  = s.totalVisitors > 0 ? ((s.totalQuotes / s.totalVisitors) * 100) : 0;
+  const returnRate= s.totalVisitors > 0 ? ((s.returningVisitors / s.totalVisitors) * 100) : 0;
 
   return (
     <div className="dash-root">
-      {/* Stats grid */}
-      <div className="dash-stats-grid">
-        {statCards.map((card, i) => <StatCard key={i} {...card} />)}
+
+      {/* ── Hero KPIs ── */}
+      <div className="dash-hero-grid">
+        <HeroKpi
+          label="Total Visitors"
+          value={s.totalVisitors}
+          color="#6366f1"
+          sub={`${(s.newVisitors || 0).toLocaleString()} new visitors`}
+          sparkline={daily}
+        />
+        <HeroKpi
+          label="Quote Leads"
+          value={s.totalQuotes}
+          color="#f43f5e"
+          sub="Total enquiries received"
+        />
+        <HeroKpi
+          label="Conversion Rate"
+          value={convRate}
+          suffix="%"
+          color="#10b981"
+          sub="Visitors who enquired"
+          isFloat
+        />
+        <HeroKpi
+          label="Live Now"
+          value={s.liveVisitors}
+          color="#22c55e"
+          sub="Active in last 5 min"
+          pulse
+        />
       </div>
 
-      {/* Charts row */}
-      <div className="dash-charts-row">
-        <div className="panel dash-chart-panel">
-          <div className="panel-header">
-            <div><p className="eyebrow">Visitors</p><h3>Daily Traffic — Last 30 Days</h3></div>
-          </div>
+      {/* ── Secondary metrics ── */}
+      <div className="dash-metric-row">
+        <MetricTile label="Today"        value={s.todayVisitors}    icon="📅" />
+        <MetricTile label="This Week"    value={s.weekVisitors}     icon="📈" />
+        <MetricTile label="This Month"   value={s.monthVisitors}    icon="🗓️" />
+        <MetricTile label="Avg Session"  value={0} rawValue={fmtDuration(s.avgDuration)} icon="⏱️" />
+        <MetricTile label="Bounce Rate"  value={s.bounceRate}  suffix="%" icon="↩️" />
+        <MetricTile label="Return Rate"  value={returnRate}    suffix="%" icon="🔁" isFloat />
+      </div>
+
+      {/* ── Traffic + Pages ── */}
+      <div className="dash-row-2">
+        <Panel eyebrow="Analytics" title="Daily Traffic — Last 30 Days">
           {daily.length ? (
-            <div className="dash-line-chart">
-              <Sparkline data={daily} color="#6366f1" h={80} />
-              <div className="dash-line-labels">
-                {daily.length > 0 && <span>{daily[0]?._id?.slice(5)}</span>}
-                {daily.length > 1 && <span>{daily[daily.length - 1]?._id?.slice(5)}</span>}
+            <div className="dash-traffic-chart">
+              <Sparkline data={daily} color="#6366f1" h={90} />
+              <div className="dash-traffic-labels">
+                <span>{daily[0]?._id?.slice(5)}</span>
+                <span>{daily[daily.length - 1]?._id?.slice(5)}</span>
               </div>
             </div>
-          ) : (
-            <p className="muted small">No visitor data yet. Tracking starts once visitors arrive.</p>
-          )}
-        </div>
+          ) : <p className="dash-empty">No traffic data yet. Tracking starts once visitors arrive.</p>}
+        </Panel>
 
-        <div className="panel dash-chart-panel">
-          <div className="panel-header">
-            <div><p className="eyebrow">Pages</p><h3>Most Visited Pages</h3></div>
-          </div>
-          <BarChart data={pages} labelKey="_id" valueKey="count" color="#f59e0b" />
-        </div>
+        <Panel eyebrow="Content" title="Most Visited Pages">
+          <BarChart data={pages} labelKey="_id" valueKey="count" color="#b45309" />
+        </Panel>
       </div>
 
-      {/* Countries + Devices row */}
-      <div className="dash-charts-row">
-        <div className="panel dash-chart-panel">
-          <div className="panel-header">
-            <div><p className="eyebrow">Geo</p><h3>Top Countries</h3></div>
-          </div>
+      {/* ── Geo + Devices + Browser/OS ── */}
+      <div className="dash-row-3">
+        <Panel eyebrow="Geo" title="Top Countries">
           {countries.length ? (
             <div className="dash-country-list">
               {countries.map((c, i) => (
                 <div key={i} className="dash-country-row">
                   <Flag code={c.countryCode} />
                   <span className="dash-country-name">{c._id || "Unknown"}</span>
-                  <span className="dash-country-bar-wrap">
-                    <span className="dash-country-bar" style={{ width: `${(c.count / Math.max(...countries.map(x => x.count), 1)) * 100}%` }} />
-                  </span>
+                  <div className="dash-country-bar-wrap">
+                    <div className="dash-country-bar" style={{ width: `${(c.count / Math.max(...countries.map(x => x.count), 1)) * 100}%` }} />
+                  </div>
                   <span className="dash-country-count">{c.count}</span>
                 </div>
               ))}
             </div>
-          ) : <p className="muted small">No location data yet.</p>}
-        </div>
+          ) : <p className="dash-empty">No location data yet.</p>}
+        </Panel>
 
-        <div className="panel dash-chart-panel">
-          <div className="panel-header">
-            <div><p className="eyebrow">Devices</p><h3>Device Breakdown</h3></div>
-          </div>
-          {devices.length ? (
-            <div className="dash-device-list">
-              {devices.map((d, i) => {
-                const emoji = d._id === "mobile" ? "📱" : d._id === "tablet" ? "💻" : "🖥️";
-                return (
-                  <div key={i} className="dash-device-row">
-                    <span className="dash-device-icon">{emoji}</span>
-                    <span className="dash-device-name">{d._id || "Unknown"}</span>
-                    <span className="dash-device-count">{d.count}</span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : <p className="muted small">No device data yet.</p>}
-        </div>
+        <Panel eyebrow="Devices" title="Device Breakdown">
+          <DevicePanel devices={devices} />
+        </Panel>
+
+        <Panel eyebrow="Technology" title="Browser / OS">
+          <p className="dash-sub-section-label">Browsers</p>
+          <PillList items={browsers} iconMap={BROWSER_ICONS} color="#6366f1" />
+          <p className="dash-sub-section-label" style={{ marginTop: "0.9rem" }}>Operating Systems</p>
+          <PillList items={osData} iconMap={OS_ICONS} color="#f59e0b" />
+        </Panel>
       </div>
 
-      {/* Recent activity + Quick stats row */}
-      <div className="dash-charts-row">
-        <div className="panel dash-chart-panel">
-          <div className="panel-header">
-            <div><p className="eyebrow">Logs</p><h3>Recent Activity</h3></div>
+      {/* ── Quote Pipeline + Audience Split ── */}
+      <div className="dash-row-2">
+        <Panel eyebrow="Sales" title="Lead Pipeline">
+          <QuotePipeline statuses={qStatus} total={s.totalQuotes} />
+
+          {latestQuote && (
+            <div className="dash-latest-lead">
+              <p className="dash-sub-section-label">Latest Enquiry</p>
+              <div className="dash-lead-row">
+                <div className="dash-lead-avatar">{latestQuote.name?.[0]?.toUpperCase() || "?"}</div>
+                <div>
+                  <p className="dash-lead-name">{latestQuote.name}</p>
+                  <p className="dash-lead-meta">{latestQuote.company || latestQuote.email} · {timeAgo(latestQuote.createdAt)}</p>
+                </div>
+                <span className="dash-lead-status" style={{
+                  background: latestQuote.status === "pending" ? "#fef3c7" : latestQuote.status === "closed" ? "#d1fae5" : "#ede9fe",
+                  color: latestQuote.status === "pending" ? "#b45309" : latestQuote.status === "closed" ? "#059669" : "#6366f1",
+                }}>
+                  {latestQuote.status}
+                </span>
+              </div>
+            </div>
+          )}
+        </Panel>
+
+        <Panel eyebrow="Audience" title="Visitor Insights">
+          <p className="dash-sub-section-label">New vs Returning</p>
+          <AudienceSplit newV={s.newVisitors || 0} returning={s.returningVisitors || 0} />
+
+          <div className="dash-insight-tiles">
+            <div className="dash-insight-tile">
+              <p className="dash-insight-val">{(s.newVisitors || 0).toLocaleString()}</p>
+              <p className="dash-insight-key">New Visitors</p>
+            </div>
+            <div className="dash-insight-tile">
+              <p className="dash-insight-val">{(s.returningVisitors || 0).toLocaleString()}</p>
+              <p className="dash-insight-key">Returning</p>
+            </div>
+            <div className="dash-insight-tile">
+              <p className="dash-insight-val">{s.totalProducts || 0}</p>
+              <p className="dash-insight-key">Products</p>
+            </div>
+            <div className="dash-insight-tile">
+              <p className="dash-insight-val">{s.totalCategories || 0}</p>
+              <p className="dash-insight-key">Categories</p>
+            </div>
           </div>
+
+          {topBrochure && (
+            <div className="dash-brochure-tile">
+              <span className="dash-brochure-icon">📄</span>
+              <div>
+                <p className="dash-brochure-title">{topBrochure.title}</p>
+                <p className="dash-brochure-count">{topBrochure.downloadCount} downloads · Top brochure</p>
+              </div>
+            </div>
+          )}
+        </Panel>
+      </div>
+
+      {/* ── Activity + Logins ── */}
+      <div className="dash-row-2">
+        <Panel eyebrow="Logs" title="Recent Activity">
           <ActivityList items={activity} />
-        </div>
+        </Panel>
 
-        <div className="panel dash-chart-panel">
-          <div className="panel-header">
-            <div><p className="eyebrow">Overview</p><h3>Quick Stats</h3></div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-
-            {/* Top brochure */}
-            <div style={{ padding: "0.75rem", background: "var(--surface-2, #16181c)", borderRadius: "0.5rem" }}>
-              <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Top Downloaded Brochure</p>
-              {topBrochure ? (
-                <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", fontWeight: 600, color: "var(--text)" }}>
-                  📄 {topBrochure.title}
-                  <span style={{ fontSize: "0.75rem", color: "#f59e0b", marginLeft: "0.5rem" }}>{topBrochure.downloadCount} downloads</span>
-                </p>
-              ) : <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "var(--muted)" }}>No brochure data yet</p>}
-            </div>
-
-            {/* Latest quote */}
-            <div style={{ padding: "0.75rem", background: "var(--surface-2, #16181c)", borderRadius: "0.5rem" }}>
-              <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Latest Quote Request</p>
-              {latestQuote ? (
-                <div style={{ marginTop: "0.25rem" }}>
-                  <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "var(--text)" }}>📧 {latestQuote.name}</p>
-                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)" }}>
-                    {latestQuote.company || latestQuote.email} · {timeAgo(latestQuote.createdAt)}
-                    <span style={{ marginLeft: "0.5rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: latestQuote.status === "pending" ? "#f59e0b22" : "#10b98122", color: latestQuote.status === "pending" ? "#f59e0b" : "#10b981", fontSize: "0.65rem", textTransform: "uppercase" }}>
-                      {latestQuote.status}
-                    </span>
-                  </p>
-                </div>
-              ) : <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "var(--muted)" }}>No quotes yet</p>}
-            </div>
-
-            {/* Recent logins */}
-            <div style={{ padding: "0.75rem", background: "var(--surface-2, #16181c)", borderRadius: "0.5rem" }}>
-              <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.4rem" }}>Recent Logins</p>
-              {logins.length ? logins.slice(0, 3).map((l, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
-                  <span style={{ fontSize: "0.8rem", color: "var(--text)" }}>🔐 {l.adminName || l.adminEmail || "Admin"}</span>
-                  <span style={{ fontSize: "0.7rem", color: "var(--muted)" }}>{timeAgo(l.createdAt)}</span>
-                </div>
-              )) : <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)" }}>No login history</p>}
-            </div>
-
-          </div>
-        </div>
+        <Panel eyebrow="Security" title="Recent Admin Logins">
+          {logins.length ? (
+            <ul className="dash-login-list">
+              {logins.map((l, i) => (
+                <li key={i} className="dash-login-item">
+                  <div className="dash-login-avatar">{(l.adminName || l.adminEmail || "A")[0].toUpperCase()}</div>
+                  <div className="dash-login-info">
+                    <p className="dash-login-name">{l.adminName || l.adminEmail || "Admin"}</p>
+                    {l.ip && <p className="dash-login-ip">IP: {l.ip}</p>}
+                  </div>
+                  <span className="dash-login-time">{timeAgo(l.createdAt)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="dash-empty">No login history.</p>}
+        </Panel>
       </div>
+
     </div>
   );
 }

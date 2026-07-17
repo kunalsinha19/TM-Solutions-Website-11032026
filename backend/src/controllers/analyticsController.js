@@ -148,6 +148,7 @@ exports.getSummary = asyncHandler(async (req, res) => {
     totalQuotes, totalProducts, totalCategories,
     avgRes, returningVisitors, singlePage, totalForBounce,
     dailyVisitors, topCountries, topPages, deviceBreakdown,
+    browserBreakdown, osBreakdown, quoteStatusBreakdown,
     topBrochure, latestQuote, latestActivity, recentLogins,
   ] = await Promise.all([
     Visitor.countDocuments({ isBot: false }),
@@ -183,6 +184,22 @@ exports.getSummary = asyncHandler(async (req, res) => {
     Visitor.aggregate([
       { $match: { isBot: false } },
       { $group: { _id: "$device", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    Visitor.aggregate([
+      { $match: { isBot: false, browser: { $ne: null, $ne: "" } } },
+      { $group: { _id: "$browser", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+    ]),
+    Visitor.aggregate([
+      { $match: { isBot: false, os: { $ne: null, $ne: "" } } },
+      { $group: { _id: "$os", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+    ]),
+    QuoteRequest.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
     ]),
     Brochure.findOne({ isActive: true }).sort({ downloadCount: -1 }).select("title downloadCount").lean(),
     QuoteRequest.findOne().sort({ createdAt: -1 }).select("name email company status createdAt").lean(),
@@ -202,6 +219,7 @@ exports.getSummary = asyncHandler(async (req, res) => {
       newVisitors:       Math.max(0, totalVisitors - returningVisitors),
     },
     dailyVisitors, topCountries, topPages, deviceBreakdown,
+    browserBreakdown, osBreakdown, quoteStatusBreakdown,
     topBrochure, latestQuote, latestActivity, recentLogins,
   });
 });
