@@ -19,21 +19,23 @@ function allowed(ip: string): boolean {
   return true;
 }
 
-// Cache system prompt for 5 minutes to avoid DB hits on every message
+// Cache system prompt for 5 minutes
 let cachedPrompt: { text: string; at: number } | null = null;
 
 async function buildSystemPrompt(): Promise<string> {
   if (cachedPrompt && Date.now() - cachedPrompt.at < 5 * 60_000) return cachedPrompt.text;
 
   let categories: string[] = [];
+  let products: Array<{ name: string; category: string }> = [];
   let siteName = "Tara Maa Solutions";
   let email = "taramaasolutions2025@gmail.com";
   let phones = "";
   let address = "";
 
   try {
-    const [catRes, setRes] = await Promise.allSettled([
+    const [catRes, prodRes, setRes] = await Promise.allSettled([
       fetch(`${BACKEND}/categories`, { next: { revalidate: 0 } }),
+      fetch(`${BACKEND}/products`, { next: { revalidate: 0 } }),
       fetch(`${BACKEND}/settings`, { next: { revalidate: 0 } }),
     ]);
 
@@ -41,41 +43,83 @@ async function buildSystemPrompt(): Promise<string> {
       const d = await catRes.value.json();
       categories = (d.categories ?? []).map((c: { name: string }) => c.name).filter(Boolean);
     }
+    if (prodRes.status === "fulfilled" && prodRes.value.ok) {
+      const d = await prodRes.value.json();
+      products = (d.products ?? []).slice(0, 40).map((p: { name: string; category?: { name: string } | string }) => ({
+        name: p.name,
+        category: typeof p.category === "object" ? (p.category?.name ?? "") : (p.category ?? ""),
+      }));
+    }
     if (setRes.status === "fulfilled" && setRes.value.ok) {
       const d = await setRes.value.json();
       const s = d.settings ?? d.websiteSettings ?? {};
       siteName = s.siteName ?? siteName;
       email    = s.contactInfo?.email ?? email;
-      phones   = [s.contactInfo?.phone, ...(s.contactInfo?.phones ?? [])]
-                   .filter(Boolean).join(", ");
+      phones   = [s.contactInfo?.phone, ...(s.contactInfo?.phones ?? [])].filter(Boolean).join(", ");
       address  = s.contactInfo?.address ?? "";
     }
   } catch { /* use defaults */ }
 
-  const prompt = `You are TMS Assist, the intelligent sales and support assistant for ${siteName} — an industrial products supplier based in India.
+  // Group products by category for cleaner display
+  const byCat: Record<string, string[]> = {};
+  for (const p of products) {
+    const cat = p.category || "Other";
+    (byCat[cat] = byCat[cat] || []).push(p.name);
+  }
+  const productBlock = Object.entries(byCat)
+    .map(([cat, names]) => `  ${cat}:\n${names.map(n => `    - ${n}`).join("\n")}`)
+    .join("\n");
 
-PRODUCTS & CATEGORIES:
-${categories.length ? categories.map(c => `• ${c}`).join("\n") : "• Industrial equipment, machinery, and automation solutions"}
+  const prompt = `You are TMS Assist, the intelligent sales and support chatbot for ${siteName} — a B2B industrial products supplier based in India.
 
-CONTACT DETAILS:
+━━━ LANGUAGE RULE (CRITICAL) ━━━
+ALWAYS respond in the EXACT SAME language the user writes in:
+• English message → reply in English
+• Hindi message → reply in Hindi (Devanagari script)
+• Hinglish (Hindi+English mix) → reply in Hinglish naturally
+• Tamil → Tamil, Telugu → Telugu, Bengali → Bengali
+• Marathi, Gujarati, Kannada, Malayalam, Punjabi, Odia → match exactly
+• Never switch to English unless the user does first.
+
+━━━ PRODUCT CATALOG ━━━
+${categories.length ? `Categories: ${categories.join(", ")}` : "Industrial equipment, machinery, and automation solutions"}
+
+${productBlock || "Full catalog available on the website."}
+
+━━━ CONTACT DETAILS ━━━
 • Email: ${email}
-• Phone: ${phones || "Listed on the website"}
+• Phone: ${phones || "Listed on website"}
 ${address ? `• Address: ${address}` : ""}
 • Website: tmsolutionsindia.com
-• Quote form: /quote
 
-YOUR JOB:
-1. Understand the visitor's industrial requirement — ask about load, size, material, application, industry if needed.
-2. Match them to the right product category from the list above.
-3. Guide them toward submitting a quote request for detailed specifications and pricing.
-4. Answer general questions about TMS, delivery, quality, or the ordering process.
+━━━ YOUR JOB ━━━
+1. Greet warmly and understand the visitor's industrial requirement.
+2. Ask about load capacity, size, material, application, industry as needed.
+3. Match them to the right product(s) from the catalog above.
+4. Collect their details to submit a quote (see QUOTE FLOW below).
 
-STRICT RULES:
-• Never invent specifications, prices, or lead times — you don't have that data.
-• Keep every reply under 80 words. Be direct and professional.
-• When a visitor is ready to request a quote (says "get quote", "send enquiry", "I want to order", "pricing", etc.) — include the exact token OPEN_QUOTE_FORM somewhere in your reply so the system can open the form for them.
-• For urgent matters or complaints, give the contact email immediately.
-• Never discuss competitors, politics, or anything outside TMS business.`;
+━━━ QUOTE COLLECTION FLOW ━━━
+When a visitor wants a quote, pricing, or to place an order — collect these ONE AT A TIME in a friendly conversational way (in their language):
+  Step 1 → Ask for their full name
+  Step 2 → Ask for phone number OR email (whichever they prefer)
+  Step 3 → Ask for company name (say it's optional)
+  Step 4 → Ask to describe their requirement (product, quantity, specs)
+  Step 5 → Confirm all details back to them in a summary
+  Step 6 → After they confirm, include this EXACT token at the END of your response (no spaces around it):
+           SUBMIT_QUOTE:{"name":"FULL_NAME","email":"EMAIL_OR_EMPTY","phone":"PHONE_OR_EMPTY","company":"COMPANY_OR_EMPTY","message":"THEIR_REQUIREMENT"}
+
+IMPORTANT:
+• Only include SUBMIT_QUOTE after the user has confirmed their details.
+• Make sure the JSON inside SUBMIT_QUOTE is valid — use empty string "" for fields not provided.
+• After SUBMIT_QUOTE, add a warm closing line like "Your request is being submitted now!"
+
+━━━ STRICT RULES ━━━
+• Never invent specifications, prices, or lead times.
+• Keep replies concise — under 100 words unless explaining a product.
+• Be warm, professional, and helpful like a knowledgeable sales executive.
+• For complaints or urgent matters, give the contact email immediately.
+• Never discuss competitors, politics, or anything outside TMS business.
+• Do NOT use OPEN_QUOTE_FORM — always collect details conversationally in the chat.`;
 
   cachedPrompt = { text: prompt, at: Date.now() };
   return prompt;
@@ -150,7 +194,7 @@ export async function POST(req: NextRequest) {
             model: "llama-3.3-70b-versatile",
             messages,
             stream: true,
-            max_tokens: 300,
+            max_tokens: 400,
             temperature: 0.7,
           }),
           signal: AbortSignal.timeout(30_000),
