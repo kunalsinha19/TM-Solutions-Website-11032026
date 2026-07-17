@@ -7,9 +7,9 @@ import { useState } from "react";
 import { ThemeToggle } from "../theme/theme-toggle";
 import { TranslateWidget } from "../translate/translate-widget";
 
-const navLinks = [
+const navLinks: Array<{ href: string; label: string; youtube?: boolean }> = [
   { href: "/products", label: "Products" },
-  { href: "/youtube", label: "Shorts" },
+  { href: "/youtube", label: "YouTube", youtube: true },
   { href: "/about", label: "About Us" },
 ];
 
@@ -81,12 +81,17 @@ export function SiteHeader({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                   pathname === link.href
                     ? "bg-accent-light text-accent"
                     : "text-muted hover:bg-border/60 hover:text-text"
                 }`}
               >
+                {link.youtube && (
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor" aria-hidden="true">
+                    <path d="M13.7 1.56A1.75 1.75 0 0 0 12.46.32C11.36 0 7 0 7 0S2.64 0 1.54.32A1.75 1.75 0 0 0 .3 1.56C0 2.65 0 5 0 5s0 2.35.3 3.44A1.75 1.75 0 0 0 1.54 9.7C2.64 10 7 10 7 10s4.36 0 5.46-.31a1.75 1.75 0 0 0 1.24-1.25C14 7.35 14 5 14 5s0-2.35-.3-3.44zM5.57 7.14V2.86L9.24 5 5.57 7.14z"/>
+                  </svg>
+                )}
                 {link.label}
               </Link>
             ))}
@@ -136,12 +141,17 @@ export function SiteHeader({
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                  className={`rounded-xl px-4 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
                     pathname === link.href
                       ? "bg-accent-light text-accent"
                       : "text-muted hover:bg-border/60 hover:text-text"
                   }`}
                 >
+                  {link.youtube && (
+                    <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor" aria-hidden="true">
+                      <path d="M13.7 1.56A1.75 1.75 0 0 0 12.46.32C11.36 0 7 0 7 0S2.64 0 1.54.32A1.75 1.75 0 0 0 .3 1.56C0 2.65 0 5 0 5s0 2.35.3 3.44A1.75 1.75 0 0 0 1.54 9.7C2.64 10 7 10 7 10s4.36 0 5.46-.31a1.75 1.75 0 0 0 1.24-1.25C14 7.35 14 5 14 5s0-2.35-.3-3.44zM5.57 7.14V2.86L9.24 5 5.57 7.14z"/>
+                    </svg>
+                  )}
                   {link.label}
                 </Link>
               ))}

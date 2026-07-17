@@ -80,13 +80,19 @@ export default function ChatWidget() {
   const [unread, setUnread]       = useState(0);
   const [voiceOn, setVoiceOn]     = useState(false);
   const [listening, setListening] = useState(false);
+  const [hasSR, setHasSR]         = useState(false);
+  const [hasTTS, setHasTTS]       = useState(false);
 
   const bottomRef    = useRef<HTMLDivElement>(null);
   const inputRef     = useRef<HTMLInputElement>(null);
   const abortRef     = useRef<AbortController | null>(null);
   const recognRef    = useRef<ISpeechRecognition | null>(null);
 
-  useEffect(() => { setMessages(loadHistory()); }, []);
+  useEffect(() => {
+    setMessages(loadHistory());
+    setHasSR(!!(window.SpeechRecognition ?? window.webkitSpeechRecognition));
+    setHasTTS("speechSynthesis" in window);
+  }, []);
 
   useEffect(() => {
     if (open) { setUnread(0); setTimeout(() => inputRef.current?.focus(), 120); }
@@ -112,7 +118,7 @@ export default function ChatWidget() {
   const startListening = useCallback(() => {
     if (typeof window === "undefined") return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert("Voice input not supported in this browser. Try Chrome."); return; }
+    if (!SR) return;
 
     const r = new SR();
     r.lang = "hi-IN"; // Works for Hinglish too; browser's ML handles mixed
@@ -296,9 +302,6 @@ export default function ChatWidget() {
   };
 
   // ── Render ────────────────────────────────────────────────────────────────────
-  const hasSR = typeof window !== "undefined" && !!(window.SpeechRecognition ?? window.webkitSpeechRecognition);
-  const hasTTS = typeof window !== "undefined" && "speechSynthesis" in window;
-
   return (
     <>
       {/* Floating bubble */}
@@ -308,9 +311,9 @@ export default function ChatWidget() {
         style={{
           position: "fixed", bottom: "24px", right: "24px", zIndex: 9999,
           width: "56px", height: "56px", borderRadius: "50%",
-          background: "linear-gradient(135deg,#b45309 0%,#92400e 100%)",
+          background: "linear-gradient(135deg,var(--color-accent) 0%,var(--color-warm) 100%)",
           border: "none", cursor: "pointer",
-          boxShadow: "0 4px 20px rgba(180,83,9,.45)",
+          boxShadow: "0 4px 20px color-mix(in srgb,var(--color-accent) 45%,transparent)",
           display: "flex", alignItems: "center", justifyContent: "center",
           transition: "transform .2s",
         }}
@@ -329,7 +332,7 @@ export default function ChatWidget() {
         {unread > 0 && !open && (
           <span style={{
             position: "absolute", top: "-4px", right: "-4px",
-            background: "#dc2626", color: "white", fontSize: "11px", fontWeight: 700,
+            background: "var(--color-warm)", color: "white", fontSize: "11px", fontWeight: 700,
             borderRadius: "10px", minWidth: "18px", height: "18px",
             display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
           }}>{unread}</span>
@@ -342,15 +345,15 @@ export default function ChatWidget() {
           position: "fixed", bottom: "92px", right: "24px", zIndex: 9998,
           width: "min(390px,calc(100vw - 32px))",
           height: "min(560px,calc(100dvh - 120px))",
-          background: "var(--chat-bg,#fff)",
-          border: "1px solid rgba(0,0,0,.1)", borderRadius: "16px",
+          background: "var(--color-panel)",
+          border: "1px solid var(--color-border)", borderRadius: "16px",
           boxShadow: "0 8px 40px rgba(0,0,0,.18)",
           display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "inherit",
         }}>
 
           {/* Header */}
           <div style={{
-            background: "linear-gradient(135deg,#b45309 0%,#92400e 100%)",
+            background: "linear-gradient(135deg,var(--color-accent) 0%,var(--color-warm) 100%)",
             padding: "12px 14px",
             display: "flex", alignItems: "center", gap: "10px", flexShrink: 0,
           }}>
@@ -401,9 +404,9 @@ export default function ChatWidget() {
             display: "flex", flexDirection: "column", gap: "10px",
           }}>
             {messages.length === 0 && (
-              <div style={{ textAlign: "center", padding: "20px 12px", color: "#6b7280" }}>
+              <div style={{ textAlign: "center", padding: "20px 12px", color: "var(--color-muted)" }}>
                 <div style={{ fontSize: "30px", marginBottom: "8px" }}>🏭</div>
-                <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "4px", color: "#374151" }}>
+                <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "4px", color: "var(--color-text)" }}>
                   Welcome to TM Solutions
                 </div>
                 <div style={{ fontSize: "12px", lineHeight: 1.6 }}>
@@ -418,9 +421,9 @@ export default function ChatWidget() {
                     "How to contact sales?",
                   ].map(q => (
                     <button key={q} onClick={() => sendText(q)} style={{
-                      background: "#fef3c7", border: "1px solid #fbbf24",
+                      background: "var(--color-accent-light)", border: "1px solid var(--color-gold)",
                       borderRadius: "20px", padding: "5px 10px",
-                      fontSize: "11px", cursor: "pointer", color: "#92400e",
+                      fontSize: "11px", cursor: "pointer", color: "var(--color-warm)",
                     }}>{q}</button>
                   ))}
                 </div>
@@ -444,9 +447,9 @@ export default function ChatWidget() {
                     maxWidth: "84%", padding: "9px 12px",
                     borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
                     background: m.role === "user"
-                      ? "linear-gradient(135deg,#b45309,#92400e)"
-                      : "var(--chat-bot-bg,#f3f4f6)",
-                    color: m.role === "user" ? "white" : "var(--chat-bot-color,#111827)",
+                      ? "linear-gradient(135deg,var(--color-accent),var(--color-warm))"
+                      : "var(--color-surface)",
+                    color: m.role === "user" ? "white" : "var(--color-text)",
                     fontSize: "13px", lineHeight: 1.6, wordBreak: "break-word",
                     boxShadow: "0 1px 3px rgba(0,0,0,.08)",
                   }}>
@@ -472,9 +475,9 @@ export default function ChatWidget() {
 
           {/* Input bar */}
           <div style={{
-            padding: "10px 12px", borderTop: "1px solid rgba(0,0,0,.07)",
+            padding: "10px 12px", borderTop: "1px solid var(--color-border)",
             display: "flex", gap: "6px", alignItems: "center", flexShrink: 0,
-            background: "var(--chat-input-bg,#fafafa)",
+            background: "var(--color-surface)",
           }}>
             {/* Mic button */}
             {hasSR && (
@@ -484,8 +487,8 @@ export default function ChatWidget() {
                 title={listening ? "Stop recording" : "Speak your message (Hindi/English/Regional)"}
                 style={{
                   width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0,
-                  background: listening ? "#dc2626" : "rgba(180,83,9,.1)",
-                  border: listening ? "2px solid #dc2626" : "2px solid transparent",
+                  background: listening ? "var(--color-warm)" : "color-mix(in srgb,var(--color-accent) 10%,transparent)",
+                  border: listening ? "2px solid var(--color-warm)" : "2px solid transparent",
                   cursor: streaming ? "default" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   animation: listening ? "tms-pulse-red .8s infinite" : "none",
@@ -493,7 +496,7 @@ export default function ChatWidget() {
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke={listening ? "white" : "#b45309"} strokeWidth="2" strokeLinecap="round">
+                  stroke={listening ? "white" : "var(--color-accent)"} strokeWidth="2" strokeLinecap="round">
                   <rect x="9" y="2" width="6" height="11" rx="3"/>
                   <path d="M5 10a7 7 0 0 0 14 0M12 19v3M8 22h8"/>
                 </svg>
@@ -509,9 +512,9 @@ export default function ChatWidget() {
               placeholder={listening ? "Listening… speak now" : "Type in English, Hindi, Hinglish…"}
               disabled={streaming}
               style={{
-                flex: 1, border: "1px solid rgba(0,0,0,.12)", borderRadius: "20px",
+                flex: 1, border: "1px solid var(--color-border)", borderRadius: "20px",
                 padding: "8px 14px", fontSize: "13px", outline: "none",
-                background: "white", color: "#111827", opacity: streaming ? .6 : 1,
+                background: "var(--color-panel)", color: "var(--color-text)", opacity: streaming ? .6 : 1,
               }}
             />
 
@@ -523,14 +526,14 @@ export default function ChatWidget() {
               style={{
                 width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0,
                 background: input.trim() && !streaming
-                  ? "linear-gradient(135deg,#b45309,#92400e)" : "#e5e7eb",
+                  ? "linear-gradient(135deg,var(--color-accent),var(--color-warm))" : "var(--color-border)",
                 border: "none", cursor: input.trim() && !streaming ? "pointer" : "default",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "background .2s",
               }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                stroke={input.trim() && !streaming ? "white" : "#9ca3af"}
+                stroke={input.trim() && !streaming ? "white" : "var(--color-muted)"}
                 strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"/>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -541,10 +544,10 @@ export default function ChatWidget() {
           {/* Footer */}
           <div style={{
             textAlign: "center", padding: "3px 12px 7px",
-            fontSize: "10px", color: "#9ca3af", flexShrink: 0,
-            background: "var(--chat-input-bg,#fafafa)",
+            fontSize: "10px", color: "var(--color-muted)", flexShrink: 0,
+            background: "var(--color-surface)",
           }}>
-            {listening && <span style={{ color: "#dc2626", fontWeight: 600 }}>🔴 Recording… </span>}
+            {listening && <span style={{ color: "var(--color-warm)", fontWeight: 600 }}>🔴 Recording… </span>}
             Powered by Groq · Speaks Hindi, English & 8 regional languages
           </div>
         </div>
@@ -552,12 +555,7 @@ export default function ChatWidget() {
 
       <style>{`
         @keyframes tms-dot { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-5px);opacity:1} }
-        @keyframes tms-pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4)} 50%{box-shadow:0 0 0 6px rgba(220,38,38,0)} }
-        :root[data-theme="dark"] { --chat-bg:#1e1f23; --chat-bot-bg:#2a2b30; --chat-bot-color:#e5e7eb; --chat-input-bg:#17181c; }
-        :root[data-theme="green"] { --chat-bg:#0f1a0f; --chat-bot-bg:#1a2a1a; --chat-bot-color:#d1fae5; --chat-input-bg:#0a130a; }
-        @media (prefers-color-scheme:dark) {
-          :root:not([data-theme="light"]) { --chat-bg:#1e1f23; --chat-bot-bg:#2a2b30; --chat-bot-color:#e5e7eb; --chat-input-bg:#17181c; }
-        }
+        @keyframes tms-pulse-red { 0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--color-warm) 40%,transparent)} 50%{box-shadow:0 0 0 6px transparent} }
       `}</style>
     </>
   );

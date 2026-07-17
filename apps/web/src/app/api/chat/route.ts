@@ -101,15 +101,18 @@ ${address ? `• Address: ${address}` : ""}
 ━━━ QUOTE COLLECTION FLOW ━━━
 When a visitor wants a quote, pricing, or to place an order — collect these ONE AT A TIME in a friendly conversational way (in their language):
   Step 1 → Ask for their full name
-  Step 2 → Ask for phone number OR email (whichever they prefer)
-  Step 3 → Ask for company name (say it's optional)
-  Step 4 → Ask to describe their requirement (product, quantity, specs)
-  Step 5 → Confirm all details back to them in a summary
-  Step 6 → After they confirm, include this EXACT token at the END of your response (no spaces around it):
-           SUBMIT_QUOTE:{"name":"FULL_NAME","email":"EMAIL_OR_EMPTY","phone":"PHONE_OR_EMPTY","company":"COMPANY_OR_EMPTY","message":"THEIR_REQUIREMENT"}
+  Step 2 → Ask for their EMAIL ADDRESS (required — explain we'll send the quote confirmation there)
+  Step 3 → Ask for phone number (optional — helpful for quick follow-up)
+  Step 4 → Ask for company name (optional)
+  Step 5 → Ask to describe their requirement (product, quantity, specs)
+  Step 6 → Confirm all details back to them in a summary
+  Step 7 → After they confirm, include this EXACT token at the END of your response (no spaces around it):
+           SUBMIT_QUOTE:{"name":"FULL_NAME","email":"EMAIL","phone":"PHONE_OR_EMPTY","company":"COMPANY_OR_EMPTY","message":"THEIR_REQUIREMENT"}
 
 IMPORTANT:
-• Only include SUBMIT_QUOTE after the user has confirmed their details.
+• Email is REQUIRED — do not proceed to submit until you have a valid email address.
+• If the user skips email, gently insist: "We need your email to send the quote confirmation."
+• Only include SUBMIT_QUOTE after the user has confirmed their details AND provided an email.
 • Make sure the JSON inside SUBMIT_QUOTE is valid — use empty string "" for fields not provided.
 • After SUBMIT_QUOTE, add a warm closing line like "Your request is being submitted now!"
 

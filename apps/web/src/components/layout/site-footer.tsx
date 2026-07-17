@@ -118,9 +118,22 @@ export function SiteFooter() {
 
         {/* Bottom bar */}
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-8 sm:flex-row">
-          <p className="text-xs text-muted">
-            © {year} Tara Maa Solutions. All rights reserved.
-          </p>
+          <div className="flex flex-col gap-1 text-center sm:text-left">
+            <p className="text-xs text-muted">
+              © {year} Tara Maa Solutions. All rights reserved.
+            </p>
+            <p className="text-[10px] text-muted/70 italic">
+              &ldquo;Your vision, crafted into pixels — one line of code at a time.&rdquo;{" "}
+              <span className="not-italic">·</span>{" "}
+              Website by{" "}
+              <a
+                href="mailto:vamikaverse3@gmail.com"
+                className="text-accent hover:underline not-italic font-medium"
+              >
+                vamikaverse3@gmail.com
+              </a>
+            </p>
+          </div>
           <div className="flex items-center gap-4">
             <a
               href={SITE_CONFIG.youtubeChannelUrl}
