@@ -19,8 +19,8 @@ function getPaginationItems(current: number, total: number): (number | "...")[] 
   return items;
 }
 
-export function ProductsClient({ products }: { products: Product[] }) {
-  const [selectedCategory, setSelectedCategory] = useState("All");
+export function ProductsClient({ products, initialCategory = "All" }: { products: Product[]; initialCategory?: string }) {
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
 

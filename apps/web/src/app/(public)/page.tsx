@@ -125,16 +125,54 @@ const HOW_IT_WORKS = [
   }
 ];
 
-// Map category name keywords to display icons
+// Map category name keywords to emoji icons
 function getCategoryIcon(name: string): string {
   const n = name.toLowerCase();
-  if (n.includes("industrial") || n.includes("machine") || n.includes("printing")) return "⚙️";
-  if (n.includes("electrical") || n.includes("electric") || n.includes("panel")) return "⚡";
-  if (n.includes("automation") || n.includes("auto")) return "🤖";
-  if (n.includes("sublimation") || n.includes("custom")) return "🎯";
-  if (n.includes("office") || n.includes("stationery")) return "💼";
-  if (n.includes("accessory") || n.includes("accessories")) return "🔧";
-  return "📦";
+  if (n.includes("industrial") || n.includes("machine") || n.includes("manufactur")) return "⚙️";
+  if (n.includes("print") && !n.includes("sublim")) return "🖨️";
+  if (n.includes("electrical") || n.includes("electric") || n.includes("panel") || n.includes("wire") || n.includes("switch")) return "⚡";
+  if (n.includes("automation") || n.includes("control") || n.includes("sensor") || n.includes("plc")) return "🤖";
+  if (n.includes("sublimation") || n.includes("heat") || n.includes("transfer")) return "🎨";
+  if (n.includes("lamination") || n.includes("laminate") || n.includes("binding") || n.includes("bind") || n.includes("finish")) return "📋";
+  if (n.includes("office") || n.includes("stationery") || n.includes("paper") || n.includes("document")) return "💼";
+  if (n.includes("accessory") || n.includes("accessories") || n.includes("spare") || n.includes("part") || n.includes("ink") || n.includes("ribbon") || n.includes("consumable")) return "🔧";
+  if (n.includes("custom") || n.includes("requirement") || n.includes("special") || n.includes("bespoke")) return "🎯";
+  if (n.includes("safety") || n.includes("protect") || n.includes("ppe") || n.includes("glove")) return "🦺";
+  if (n.includes("packag") || n.includes("box") || n.includes("tape") || n.includes("wrap") || n.includes("film")) return "📦";
+  if (n.includes("network") || n.includes("cable") || n.includes("connector") || n.includes("router")) return "🔌";
+  if (n.includes("scanner") || n.includes("scan") || n.includes("camera") || n.includes("optical")) return "📷";
+  if (n.includes("clean") || n.includes("hygiene") || n.includes("sanit")) return "🧹";
+  return "🏭";
+}
+
+// Plain-language descriptions for layman buyers
+function getCategoryDescription(cat: BackendCategory, count: number): string {
+  if (cat.description?.trim()) return cat.description.trim();
+  const n = cat.name.toLowerCase();
+  const c = count > 0 ? ` (${count} items)` : "";
+  if (n.includes("industrial") || n.includes("machine"))
+    return `Heavy-duty printers, cutters, and production machines for factories and print shops${c}.`;
+  if (n.includes("print") && !n.includes("sublim"))
+    return `Commercial and industrial printing equipment for high-volume output${c}.`;
+  if (n.includes("electrical") || n.includes("electric"))
+    return `Switches, wiring, panels, and electrical parts for industrial and commercial buildings${c}.`;
+  if (n.includes("automation") || n.includes("control"))
+    return `Smart systems that automate repetitive tasks and improve production efficiency${c}.`;
+  if (n.includes("sublimation") || n.includes("heat transfer"))
+    return `Machines and supplies for printing custom designs on mugs, T-shirts, and more${c}.`;
+  if (n.includes("lamination") || n.includes("binding"))
+    return `Laminators and binding machines to protect and finish documents and printed materials${c}.`;
+  if (n.includes("office") || n.includes("stationery"))
+    return `Everyday office tools — laminators, paper products, organisers, and essentials${c}.`;
+  if (n.includes("accessory") || n.includes("spare") || n.includes("consumable"))
+    return `Inks, ribbons, spare parts, and add-ons to keep your machines running at full speed${c}.`;
+  if (n.includes("custom") || n.includes("requirement"))
+    return `Can't find it? Tell us what you need and our team will source it for you.`;
+  if (n.includes("safety"))
+    return `Protective gear, helmets, gloves, and workplace safety equipment${c}.`;
+  if (n.includes("packag"))
+    return `Boxes, tapes, stretch films, and packaging materials for safe shipping and storage${c}.`;
+  return `Browse ${cat.name} products and request a quote instantly${c}.`;
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -230,9 +268,9 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            {/* Dynamic category chips from real backend data */}
+            {/* All category chips */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              {categories.slice(0, 5).map((cat) => (
+              {categories.map((cat) => (
                 <TrustBadge key={cat._id} icon={getCategoryIcon(cat.name)} label={cat.name} />
               ))}
             </div>
@@ -260,9 +298,9 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
             <StatCounter value={categories.length} suffix="+" label="Product Categories" delay={0} />
-            <StatCounter value={products.length} suffix="+" label="Products Available" delay={0.1} />
-            <StatCounter value={24} suffix="hr" label="Quote Reply Time" delay={0.2} />
-            <StatCounter value={100} suffix="%" label="Easy Buying Process" delay={0.3} />
+            <StatCounter value={products.length} suffix="+" label="Products in Catalog" delay={0.1} />
+            <StatCounter value={24} suffix="hr" label="Reply Within 24 Hours" delay={0.2} />
+            <StatCounter value={100} suffix="%" label="No Sign-Up Needed" delay={0.3} />
           </div>
         </div>
       </section>
@@ -361,42 +399,53 @@ export default async function HomePage() {
       {/* ── CATEGORIES (dynamic from backend) ──────────────────────────────── */}
       <section className="px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <Reveal className="mb-10 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">What We Carry</p>
-            <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
-              Browse by Category
-            </h2>
-            <p className="mt-3 mx-auto max-w-xl text-sm text-muted">
-              Every category is stocked with real products. Click any category to filter instantly.
-            </p>
+          <Reveal className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">What We Carry</p>
+              <h2 className="mt-2 text-3xl font-bold lg:text-4xl">
+                {categories.length} Categories,{" "}
+                <span className="gradient-text">{products.length}+ Products</span>
+              </h2>
+              <p className="mt-3 max-w-xl text-sm text-muted">
+                From industrial machines to office essentials — click any category to see all
+                available products and get a quote in under 2 minutes. No sign-up required.
+              </p>
+            </div>
+            <Link
+              href="/products"
+              className="shrink-0 self-start rounded-full border border-border px-5 py-2.5 text-sm font-semibold hover:border-accent/40 hover:text-accent transition-colors sm:self-auto"
+            >
+              View all {products.length} products →
+            </Link>
           </Reveal>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* 5 columns on desktop → exactly 2 rows for 10 categories */}
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
             {categories.map((cat, i) => {
               const count = Object.entries(countByCategory).find(
                 ([k]) => k.toLowerCase() === cat.name.toLowerCase()
               )?.[1] ?? 0;
 
               return (
-                <Reveal key={cat._id} delay={i * 0.07}>
+                <Reveal key={cat._id} delay={i * 0.05}>
                   <Link
-                    href="/products"
-                    className="group flex flex-col gap-4 rounded-[1.75rem] border border-border/70 bg-panel p-6 h-full transition-all duration-300 hover:shadow-card hover:border-accent/30 hover:-translate-y-0.5"
+                    href={`/products?category=${encodeURIComponent(cat.name)}`}
+                    className="group flex flex-col gap-3 rounded-[1.5rem] border border-border/70 bg-panel p-5 h-full transition-all duration-300 hover:shadow-card hover:border-accent/30 hover:-translate-y-0.5"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-3xl">{getCategoryIcon(cat.name)}</span>
-                      {count > 0 && (
-                        <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-bold text-accent">
-                          {count} products
-                        </span>
-                      )}
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-2xl">{getCategoryIcon(cat.name)}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${count > 0 ? "bg-accent/10 text-accent" : "bg-border/60 text-muted"}`}>
+                        {count > 0 ? `${count}` : "0"} items
+                      </span>
                     </div>
-                    <h3 className="font-bold text-base">{cat.name}</h3>
-                    <p className="text-sm leading-relaxed text-muted flex-1">
-                      {cat.description || `Browse ${cat.name.toLowerCase()} products.`}
-                    </p>
-                    <span className="text-xs font-semibold text-accent">
-                      Browse category →
+                    <div className="flex-1">
+                      <h3 className="font-bold text-sm leading-snug">{cat.name}</h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-muted line-clamp-2">
+                        {getCategoryDescription(cat, count)}
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold text-accent group-hover:underline">
+                      Browse →
                     </span>
                   </Link>
                 </Reveal>

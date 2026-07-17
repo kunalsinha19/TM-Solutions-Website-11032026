@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 // Async inner component — streamed in behind a Suspense boundary so the
 // page shell (hero, CTA) renders instantly while data is fetched.
-async function ProductsContent() {
+async function ProductsContent({ initialCategory }: { initialCategory?: string }) {
   const products = await apiClient.getProducts().catch(() => []);
 
   if (products.length === 0) {
@@ -41,11 +41,17 @@ async function ProductsContent() {
     );
   }
 
-  return <ProductsClient products={products} />;
+  return <ProductsClient products={products} initialCategory={initialCategory} />;
 }
 
 // The shell renders synchronously — no loading delay for the page itself.
-export default function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const params = await searchParams;
+  const initialCategory = params.category;
   return (
     <div className="relative">
       {/* ── HERO ── */}
@@ -78,7 +84,7 @@ export default function ProductsPage() {
               </div>
             }
           >
-            <ProductsContent />
+            <ProductsContent initialCategory={initialCategory} />
           </Suspense>
         </div>
       </section>
