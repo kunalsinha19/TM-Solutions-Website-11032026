@@ -67,8 +67,7 @@ export default function ChatWidget() {
     });
   }, []);
 
-  const send = useCallback(async () => {
-    const msg = input.trim();
+  const sendText = useCallback(async (msg: string) => {
     if (!msg || streaming) return;
 
     setInput("");
@@ -84,7 +83,7 @@ export default function ChatWidget() {
     abortRef.current = new AbortController();
 
     try {
-      const history = messages.slice(-MAX_HISTORY).map(m => ({
+      const historySnapshot = messages.slice(-MAX_HISTORY).map(m => ({
         role: m.role === "user" ? "user" : "bot",
         text: m.text,
       }));
@@ -92,7 +91,7 @@ export default function ChatWidget() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg, history }),
+        body: JSON.stringify({ message: msg, history: historySnapshot }),
         signal: abortRef.current.signal,
       });
 
@@ -120,7 +119,6 @@ export default function ChatWidget() {
             const { text } = JSON.parse(payload);
             if (!text) continue;
             if (firstChunk) {
-              // Replace the "…" placeholder with first real text
               setMessages(prev => {
                 const next = [...prev];
                 const last = next[next.length - 1];
@@ -163,7 +161,12 @@ export default function ChatWidget() {
     } finally {
       setStreaming(false);
     }
-  }, [input, streaming, messages, open, appendBot, router]);
+  }, [streaming, messages, open, appendBot, router]);
+
+  const send = useCallback(() => {
+    sendText(input.trim());
+    setInput("");
+  }, [input, sendText]);
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -320,7 +323,7 @@ export default function ChatWidget() {
                   {["What products do you offer?", "I need a quote", "How to contact sales?"].map(q => (
                     <button
                       key={q}
-                      onClick={() => { setInput(q); setTimeout(() => send, 0); }}
+                      onClick={() => sendText(q)}
                       onMouseDown={() => setInput(q)}
                       style={{
                         background: "#fef3c7",

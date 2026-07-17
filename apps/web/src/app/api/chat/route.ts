@@ -86,14 +86,18 @@ STRICT RULES:
   return prompt;
 }
 
+function sseText(data: string): string {
+  return `data: ${data}\n\n`;
+}
+
 export async function POST(req: NextRequest) {
   const enc = new TextEncoder();
-  const sse = (data: string) => enc.encode(`data: ${data}\n\n`);
+  const sse = (data: string) => enc.encode(sseText(data));
 
   if (!GEMINI_KEY) {
     return new Response(
-      sse(JSON.stringify({ text: "Chat is currently unavailable. Please use the quote form or contact us directly." })) +
-      sse("[DONE]"),
+      sseText(JSON.stringify({ text: "Chat is currently unavailable. Please use the quote form or contact us directly." })) +
+      sseText("[DONE]"),
       { headers: { "Content-Type": "text/event-stream" } }
     );
   }
@@ -106,7 +110,8 @@ export async function POST(req: NextRequest) {
 
   if (!allowed(ip)) {
     return new Response(
-      sse(JSON.stringify({ text: "You're sending messages too quickly — please wait a moment." })) + sse("[DONE]"),
+      sseText(JSON.stringify({ text: "You're sending messages too quickly — please wait a moment." })) +
+      sseText("[DONE]"),
       { headers: { "Content-Type": "text/event-stream" } }
     );
   }
