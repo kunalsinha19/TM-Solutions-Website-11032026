@@ -237,7 +237,7 @@ export type YoutubeShort = {
 
 async function getYouTubeShorts(): Promise<YoutubeShort[]> {
   try {
-    const raw = await request<unknown>("/youtube/shorts", { next: { revalidate: 1800 } }); // 30 min cache
+    const raw = await request<unknown>("/youtube/shorts", { next: { revalidate: 60 } }); // 1 min SSR revalidate — client polls every 60s
     if (!raw || typeof raw !== "object") return [];
     const w = raw as Record<string, unknown>;
     return Array.isArray(w.shorts) ? (w.shorts as YoutubeShort[]) : [];

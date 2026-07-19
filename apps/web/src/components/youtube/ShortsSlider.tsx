@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import type { YoutubeShort } from "../../lib/api-client";
 import { SITE_CONFIG } from "../../lib/site-config";
 
+// How often to refresh stats from the backend (backend itself caches 30 min from YouTube API)
+const POLL_INTERVAL_MS = 60_000; // 60 seconds
+
+// ── Formatters ──────────────────────────────────────────────────────────────
 function formatCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
@@ -33,7 +37,38 @@ function formatDate(iso: string): string {
   } catch { return ""; }
 }
 
-// ── Share button — Web Share API or clipboard fallback ──────────────────────
+function elapsedLabel(since: Date): string {
+  const s = Math.floor((Date.now() - since.getTime()) / 1000);
+  if (s < 10) return "just now";
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  return `${Math.floor(s / 3600)}h ago`;
+}
+
+// ── Animated stat number — briefly highlights when the value changes ─────────
+function LiveCount({ value, label }: { value: number; label?: string }) {
+  const prev = useRef(value);
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    if (prev.current !== value && prev.current !== 0) {
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 800);
+      prev.current = value;
+      return () => clearTimeout(t);
+    }
+    prev.current = value;
+  }, [value]);
+
+  const formatted = label ? `${formatCount(value)} ${label}` : formatCount(value);
+  return (
+    <span className={`transition-all duration-300 ${flash ? "text-green-400 scale-105" : ""}`}>
+      {formatted}
+    </span>
+  );
+}
+
+// ── Share button ─────────────────────────────────────────────────────────────
 function ShareButton({ id, title }: { id: string; title: string }) {
   const [copied, setCopied] = useState(false);
   const url = `https://www.youtube.com/watch?v=${id}`;
@@ -48,7 +83,7 @@ function ShareButton({ id, title }: { id: string; title: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }
-    } catch { /* user cancelled or blocked */ }
+    } catch { /* user cancelled */ }
   }
 
   return (
@@ -74,7 +109,7 @@ function ShareButton({ id, title }: { id: string; title: string }) {
   );
 }
 
-// ── Single Short card ───────────────────────────────────────────────────────
+// ── Single Short card ────────────────────────────────────────────────────────
 function ShortCard({
   short,
   isPlaying,
@@ -90,10 +125,49 @@ function ShortCard({
   const watchUrl = `https://www.youtube.com/watch?v=${short.id}`;
   const commentUrl = `${watchUrl}&lc=`;
 
+  // Action bar shared between playing and idle states
+  const ActionBar = (
+    <div className="flex items-stretch divide-x divide-border/40 border-t border-border/40 bg-surface">
+      <a
+        href={watchUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="group/btn flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors hover:bg-red-500/8"
+        aria-label={`Like on YouTube`}
+        title="Like on YouTube"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted group-hover/btn:text-red-500 transition-colors" aria-hidden="true">
+          <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
+          <path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
+        </svg>
+        <span className="text-[10px] font-semibold text-muted group-hover/btn:text-red-500 transition-colors">
+          <LiveCount value={short.likeCount} />
+        </span>
+      </a>
+      <a
+        href={commentUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="group/btn flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors hover:bg-red-500/8"
+        aria-label="View comments on YouTube"
+        title="View comments on YouTube"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted group-hover/btn:text-red-500 transition-colors" aria-hidden="true">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        <span className="text-[10px] font-semibold text-muted group-hover/btn:text-red-500 transition-colors">
+          <LiveCount value={short.commentCount} />
+        </span>
+      </a>
+      <ShareButton id={short.id} title={short.title} />
+    </div>
+  );
+
   if (isPlaying) {
     return (
       <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-red-500/60 bg-[#0f0f0f] shadow-2xl shadow-red-500/20 ring-1 ring-red-500/20">
-        {/* Inline player */}
         <div className="relative w-full" style={{ paddingBottom: "177.78%" }}>
           <iframe
             className="absolute inset-0 h-full w-full rounded-t-2xl"
@@ -103,8 +177,6 @@ function ShortCard({
             title={short.title}
           />
         </div>
-
-        {/* Title row */}
         <div className="flex items-center justify-between gap-2 bg-[#0a0a0a] px-3 py-2.5">
           <p className="line-clamp-1 flex-1 text-[11px] font-medium text-white/80">{short.title}</p>
           <button
@@ -115,42 +187,7 @@ function ShortCard({
             ✕
           </button>
         </div>
-
-        {/* Action bar — also visible when playing */}
-        <div className="flex items-stretch divide-x divide-border/40 border-t border-border/40 bg-surface">
-          <a
-            href={watchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="group/btn flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors hover:bg-red-500/8"
-            aria-label={`Like on YouTube (${formatCount(short.likeCount)} likes)`}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted group-hover/btn:text-red-500 transition-colors" aria-hidden="true">
-              <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
-              <path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
-            </svg>
-            <span className="text-[10px] font-semibold text-muted group-hover/btn:text-red-500 transition-colors">
-              {formatCount(short.likeCount)}
-            </span>
-          </a>
-          <a
-            href={commentUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="group/btn flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors hover:bg-red-500/8"
-            aria-label={`Comments (${formatCount(short.commentCount)})`}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted group-hover/btn:text-red-500 transition-colors" aria-hidden="true">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-            </svg>
-            <span className="text-[10px] font-semibold text-muted group-hover/btn:text-red-500 transition-colors">
-              {formatCount(short.commentCount)}
-            </span>
-          </a>
-          <ShareButton id={short.id} title={short.title} />
-        </div>
+        {ActionBar}
       </div>
     );
   }
@@ -171,19 +208,15 @@ function ShortCard({
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
-
-        {/* Vignette */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
 
-        {/* Rank badge */}
         {rank <= 3 && (
           <div className="absolute left-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-black shadow-lg">
             #{rank}
           </div>
         )}
 
-        {/* Shorts badge */}
         <div className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
           <svg width="8" height="8" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
             <path d="M8.5 4.13L2.5 1.07A1 1 0 001 1.94v6.12A1 1 0 002.5 8.93l6-3.06a1 1 0 000-1.74z"/>
@@ -191,7 +224,6 @@ function ShortCard({
           Shorts
         </div>
 
-        {/* Duration */}
         {dur && (
           <div className="absolute bottom-14 right-2.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[10px] font-mono font-bold text-white backdrop-blur-sm">
             {dur}
@@ -218,7 +250,9 @@ function ShortCard({
       {/* View count row */}
       <div className="flex items-center justify-between px-3 py-2 bg-[#0a0a0a]">
         <span className="text-[11px] font-semibold text-red-400">
-          {short.viewCount > 0 ? formatViews(short.viewCount) : formatDate(short.publishedAt)}
+          {short.viewCount > 0
+            ? <LiveCount value={short.viewCount} label="views" />
+            : formatDate(short.publishedAt)}
         </span>
         <a
           href={watchUrl}
@@ -232,65 +266,71 @@ function ShortCard({
         </a>
       </div>
 
-      {/* ── Action bar: Like | Comment | Share ── */}
-      <div className="flex items-stretch divide-x divide-border/40 border-t border-border/40 bg-surface">
-        {/* Like */}
-        <a
-          href={watchUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="group/btn flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors hover:bg-red-500/8"
-          aria-label={`Like on YouTube (${formatCount(short.likeCount)} likes)`}
-          title="Like on YouTube"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted group-hover/btn:text-red-500 transition-colors" aria-hidden="true">
-            <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
-            <path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
-          </svg>
-          <span className="text-[10px] font-semibold text-muted group-hover/btn:text-red-500 transition-colors">
-            {formatCount(short.likeCount)}
-          </span>
-        </a>
-
-        {/* Comment */}
-        <a
-          href={commentUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="group/btn flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors hover:bg-red-500/8"
-          aria-label={`View comments (${formatCount(short.commentCount)})`}
-          title="View comments on YouTube"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted group-hover/btn:text-red-500 transition-colors" aria-hidden="true">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-          </svg>
-          <span className="text-[10px] font-semibold text-muted group-hover/btn:text-red-500 transition-colors">
-            {formatCount(short.commentCount)}
-          </span>
-        </a>
-
-        {/* Share */}
-        <ShareButton id={short.id} title={short.title} />
-      </div>
+      {ActionBar}
     </div>
   );
 }
 
 const CARDS_PER_PAGE = 5;
 
-// ── Main slider ─────────────────────────────────────────────────────────────
-export function ShortsSlider({ shorts }: { shorts: YoutubeShort[] }) {
-  const sorted = [...shorts].sort((a, b) => b.viewCount - a.viewCount);
+// ── Main slider ──────────────────────────────────────────────────────────────
+export function ShortsSlider({ shorts: initialShorts }: { shorts: YoutubeShort[] }) {
+  const [liveShorts, setLiveShorts] = useState<YoutubeShort[]>(initialShorts);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [updatedLabel, setUpdatedLabel] = useState("just now");
+  const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  const pages: YoutubeShort[][] = [];
-  for (let i = 0; i < sorted.length; i += CARDS_PER_PAGE) {
-    pages.push(sorted.slice(i, i + CARDS_PER_PAGE));
-  }
+  // Sort by view count — recomputed whenever liveShorts changes
+  const sorted = useMemo(
+    () => [...liveShorts].sort((a, b) => b.viewCount - a.viewCount),
+    [liveShorts]
+  );
+
+  const pages: YoutubeShort[][] = useMemo(() => {
+    const ps: YoutubeShort[][] = [];
+    for (let i = 0; i < sorted.length; i += CARDS_PER_PAGE) {
+      ps.push(sorted.slice(i, i + CARDS_PER_PAGE));
+    }
+    return ps;
+  }, [sorted]);
+
   const totalPages = pages.length;
+
+  // Fetch fresh stats from our proxy (which calls the backend, which caches YouTube API for 30 min)
+  const refresh = useCallback(async (silent = true) => {
+    if (!silent) setRefreshing(true);
+    try {
+      const res = await fetch("/api/youtube", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.shorts) && data.shorts.length > 0) {
+          setLiveShorts(data.shorts);
+          setLastUpdated(new Date());
+          setUpdatedLabel("just now");
+        }
+      }
+    } catch {
+      // Silently keep showing stale data — network hiccup shouldn't break the UI
+    } finally {
+      if (!silent) setRefreshing(false);
+    }
+  }, []);
+
+  // Auto-poll every 60 seconds
+  useEffect(() => {
+    const timer = setInterval(() => refresh(true), POLL_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [refresh]);
+
+  // Tick the "updated X ago" label every 15 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setUpdatedLabel(elapsedLabel(lastUpdated));
+    }, 15_000);
+    return () => clearInterval(timer);
+  }, [lastUpdated]);
 
   const goTo = useCallback((p: number) => { setPage(p); setPlayingId(null); }, []);
   const prev = useCallback(() => goTo(Math.max(0, page - 1)), [page, goTo]);
@@ -300,18 +340,50 @@ export function ShortsSlider({ shorts }: { shorts: YoutubeShort[] }) {
 
   return (
     <div className="select-none">
-      {/* Top label row */}
+      {/* ── Top bar: video count + live indicator + refresh ── */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
           {sorted.length} Video{sorted.length !== 1 ? "s" : ""}
         </span>
+
         <span className="h-3.5 w-px bg-border" />
+
         <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-500">
           <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
           </svg>
           Most viewed first
         </span>
+
+        {/* Live stats indicator */}
+        <span className="h-3.5 w-px bg-border" />
+        <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+          </span>
+          Live stats · {updatedLabel}
+        </span>
+
+        {/* Manual refresh button */}
+        <button
+          onClick={() => refresh(false)}
+          disabled={refreshing}
+          aria-label="Refresh stats"
+          title="Refresh view counts and comments"
+          className="ml-auto flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-muted transition-all hover:border-green-500/40 hover:text-green-600 disabled:opacity-50"
+        >
+          <svg
+            width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className={refreshing ? "animate-spin" : ""}
+            aria-hidden="true"
+          >
+            <path d="M13.65 2.35A8 8 0 1 0 15 8h-2"/>
+            <path d="M13 2h2v2"/>
+          </svg>
+          {refreshing ? "Refreshing…" : "Refresh"}
+        </button>
       </div>
 
       {/* Slider track */}
@@ -342,10 +414,9 @@ export function ShortsSlider({ shorts }: { shorts: YoutubeShort[] }) {
         </div>
       </div>
 
-      {/* ── Navigation — bottom, fully theme-aware ── */}
+      {/* Navigation */}
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-4">
-          {/* Prev arrow */}
           <button
             onClick={prev}
             disabled={page === 0}
@@ -357,7 +428,6 @@ export function ShortsSlider({ shorts }: { shorts: YoutubeShort[] }) {
             </svg>
           </button>
 
-          {/* Dot indicators */}
           <div className="flex items-center gap-2">
             {pages.map((_, i) => (
               <button
@@ -373,7 +443,6 @@ export function ShortsSlider({ shorts }: { shorts: YoutubeShort[] }) {
             ))}
           </div>
 
-          {/* Next arrow */}
           <button
             onClick={next}
             disabled={page === totalPages - 1}
