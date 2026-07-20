@@ -13,6 +13,7 @@ const activityLogRoutes = require("./activityLogRoutes");
 const systemLogRoutes   = require("./systemLogRoutes");
 const brochureRoutes    = require("./brochureRoutes");
 const youtubeRoutes     = require("./youtubeRoutes");
+const chatSessionRoutes = require("./chatSessionRoutes");
 
 const router = express.Router();
 
@@ -30,5 +31,6 @@ router.use("/activity-logs", activityLogRoutes);
 router.use("/system-logs",   systemLogRoutes);
 router.use("/brochures",     brochureRoutes);
 router.use("/youtube",       youtubeRoutes);
+router.use("/chat-sessions", chatSessionRoutes);
 
 module.exports = router;

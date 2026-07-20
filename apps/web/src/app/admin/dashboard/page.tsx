@@ -496,12 +496,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── Quick Nav ── */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {[
-          { href: "/admin/quotes",    icon: "📥", label: "Quote Requests", sub: `${statusMap["new"] ?? "—"} pending` },
-          { href: "/admin/products",  icon: "📦", label: "Products",       sub: `${summary?.totalProducts ?? "—"} in catalog` },
-          { href: "/admin/settings",  icon: "⚙️", label: "Settings",       sub: "Branding & content" },
-          { href: "/admin/seo-pages", icon: "🔍", label: "SEO Pages",      sub: "Landing pages" },
+          { href: "/admin/quotes",         icon: "📥", label: "Quote Requests",    sub: `${statusMap["new"] ?? "—"} pending` },
+          { href: "/admin/communications", icon: "💬", label: "AI Chat Leads",      sub: "Tara conversations" },
+          { href: "/admin/products",       icon: "📦", label: "Products",           sub: `${summary?.totalProducts ?? "—"} in catalog` },
+          { href: "/admin/settings",       icon: "⚙️", label: "Settings",           sub: "Branding & content" },
+          { href: "/admin/seo-pages",      icon: "🔍", label: "SEO Pages",           sub: "Landing pages" },
         ].map(card => (
           <Link key={card.href} href={card.href}
             className="rounded-2xl border border-border bg-panel p-5 hover:border-accent/30 hover:bg-surface/50 transition-all group">
