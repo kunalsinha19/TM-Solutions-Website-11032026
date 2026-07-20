@@ -10,6 +10,17 @@ const { log } = require("../utils/activityLogger");
 exports.createQuoteRequest = asyncHandler(async (req, res) => {
   const { captchaToken, ...payload } = req.body;
 
+  // Dedup: same email + message submitted within 60 seconds → return existing record
+  const DEDUP_WINDOW_MS = 60_000;
+  const existing = await QuoteRequest.findOne({
+    email: (payload.email ?? "").toLowerCase().trim(),
+    message: (payload.message ?? "").trim(),
+    createdAt: { $gte: new Date(Date.now() - DEDUP_WINDOW_MS) },
+  });
+  if (existing) {
+    return res.status(200).json({ success: true, quoteRequest: existing, duplicate: true });
+  }
+
   const captcha = await validateCaptcha(captchaToken, req.ip);
 
   if (HAS_REAL_CAPTCHA && !captcha.success) {

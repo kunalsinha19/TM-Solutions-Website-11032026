@@ -31,6 +31,12 @@ const quoteRequestSchema = new mongoose.Schema(
       trim: true,
       maxlength: 160
     },
+    address: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 400
+    },
     message: {
       type: String,
       required: true,

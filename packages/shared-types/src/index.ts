@@ -66,6 +66,7 @@ export interface QuoteRequest {
   email: string;
   phone?: string;
   company?: string;
+  address?: string;
   message: string;
   productId?: string;
   sourcePage?: string;
