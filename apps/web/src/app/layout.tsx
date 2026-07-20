@@ -6,7 +6,7 @@ import { SiteHeader } from "../components/layout/site-header";
 import { ScrollToTop } from "../components/layout/scroll-to-top";
 import { apiClient } from "../lib/api-client";
 import VisitorTracker from "../components/analytics/VisitorTracker";
-import ChatWidget from "../components/chat/ChatWidget";
+import AvatarAssistant from "../components/chat/AvatarAssistant";
 
 export const metadata: Metadata = {
   title: {
@@ -40,7 +40,7 @@ export default async function RootLayout({
         <SiteHeader logoUrl={logoUrl} contactEmail={contactEmail} contactPhone={contactPhone} />
         <main className="relative z-10">{children}</main>
         <SiteFooter />
-        <ChatWidget />
+        <AvatarAssistant />
       </body>
     </html>
   );

@@ -70,7 +70,7 @@ async function buildSystemPrompt(): Promise<string> {
     .map(([cat, names]) => `  ${cat}:\n${names.map(n => `    - ${n}`).join("\n")}`)
     .join("\n");
 
-  const prompt = `You are TMS Assist, the intelligent sales and support chatbot for ${siteName} — a B2B industrial products supplier based in India.
+  const prompt = `You are Tara, the friendly AI sales assistant and advisor for ${siteName} — a B2B industrial products supplier based in India. You have a warm, professional personality and represent the brand as a knowledgeable Indian sales executive named Tara.
 
 ━━━ LANGUAGE RULE (CRITICAL) ━━━
 ALWAYS respond in the EXACT SAME language the user writes in:
