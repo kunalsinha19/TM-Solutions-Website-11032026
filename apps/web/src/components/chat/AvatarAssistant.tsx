@@ -21,6 +21,43 @@ type Message = { role: "user" | "bot"; text: string; ts?: number };
 const SUBMIT_QUOTE_RE = /SUBMIT_QUOTE:\{[^}]+\}/s;
 const GREETING = "Namaste! I'm Tara, your assistant at Tara Maa Solutions. I can help you find the right industrial product, get pricing, or request a quote. How can I help you today?";
 
+// ── Language detection using Unicode script ranges ────────────────────────────
+function detectLang(text: string): string {
+  if (/[一-鿿㐀-䶿＀-￯　-〿]/.test(text)) return "zh-CN"; // Chinese / Mandarin
+  if (/[ऀ-ॿ]/.test(text)) return "hi-IN";  // Devanagari → Hindi / Marathi
+  if (/[஀-௿]/.test(text)) return "ta-IN";  // Tamil
+  if (/[ఀ-౿]/.test(text)) return "te-IN";  // Telugu
+  if (/[ঀ-৿]/.test(text)) return "bn-IN";  // Bengali
+  if (/[઀-૿]/.test(text)) return "gu-IN";  // Gujarati
+  if (/[ಀ-೿]/.test(text)) return "kn-IN";  // Kannada
+  if (/[ഀ-ൿ]/.test(text)) return "ml-IN";  // Malayalam
+  if (/[਀-੿]/.test(text)) return "pa-IN";  // Punjabi (Gurmukhi)
+  if (/[؀-ۿ]/.test(text)) return "ar-SA";  // Arabic
+  // Hinglish — common Hindi words in Latin script
+  if (/\b(kya|hai|nahi|haan|bahut|accha|theek|kitna|kyun|kaise|yeh|woh|mera|aapka|bhai|namaste|dhanyawad|chahiye|jaldi|abhi)\b/i.test(text)) return "hi-IN";
+  return "en-IN";
+}
+
+// ── TTS tuning per language (tonal languages need flat pitch) ─────────────────
+const LANG_TTS: Record<string, { rate: number; pitch: number }> = {
+  "zh-CN": { rate: 0.85, pitch: 1.0 },
+  "zh-TW": { rate: 0.85, pitch: 1.0 },
+  "hi-IN": { rate: 0.88, pitch: 1.1 },
+  "mr-IN": { rate: 0.88, pitch: 1.1 },
+  "ta-IN": { rate: 0.9,  pitch: 1.0 },
+  "te-IN": { rate: 0.9,  pitch: 1.0 },
+  "bn-IN": { rate: 0.9,  pitch: 1.05 },
+  "gu-IN": { rate: 0.9,  pitch: 1.0 },
+  "kn-IN": { rate: 0.9,  pitch: 1.0 },
+  "ml-IN": { rate: 0.88, pitch: 1.0 },
+  "pa-IN": { rate: 0.9,  pitch: 1.05 },
+  "ar-SA": { rate: 0.88, pitch: 1.0 },
+  "en-IN": { rate: 0.9,  pitch: 1.15 },
+};
+
+// TTS queue item (carries language so voice stays correct per sentence)
+type SpeechItem = { text: string; lang: string };
+
 // ── Lead analysis (runs client-side, zero extra API cost) ─────────────────────
 function analyzeSession(msgs: Message[]) {
   const userText = msgs.filter(m => m.role === "user").map(m => m.text).join(" ").toLowerCase();
@@ -254,9 +291,10 @@ export default function AvatarAssistant() {
   const synthRef    = useRef<SpeechSynthesis | null>(null);
   const voicesRef   = useRef<SpeechSynthesisVoice[]>([]);
   const recogRef    = useRef<SRInstance | null>(null);
-  const speechQueue = useRef<string[]>([]);
+  const speechQueue = useRef<SpeechItem[]>([]);
   const isSpeaking  = useRef(false);
   const streamBuffer = useRef("");
+  const currentLang  = useRef("en-IN");   // tracks detected language of active conversation
   const scrollRef   = useRef<HTMLDivElement>(null);
   const mouthTimer  = useRef<NodeJS.Timeout | null>(null);
   const sessionSaveTimer = useRef<NodeJS.Timeout | null>(null);
@@ -306,16 +344,28 @@ export default function AvatarAssistant() {
     return () => { if (mouthTimer.current) clearInterval(mouthTimer.current); };
   }, [avatarState]);
 
-  // ── Get best Indian female voice ──────────────────────────────────────────
-  const getVoice = useCallback((): SpeechSynthesisVoice | null => {
+  // ── Get best voice for a given language ──────────────────────────────────
+  const getVoiceForLang = useCallback((lang: string): SpeechSynthesisVoice | null => {
     const voices = voicesRef.current.length ? voicesRef.current : (synthRef.current?.getVoices() ?? []);
+    const primary = lang.split("-")[0]; // "zh", "hi", "ta", "en", …
     return (
-      voices.find(v => v.lang === "en-IN" && /female|woman|aditi|heera/i.test(v.name))  ||
-      voices.find(v => v.lang === "en-IN")                                                ||
-      voices.find(v => /aditi|heera|riya|priya/i.test(v.name))                           ||
-      voices.find(v => v.lang.startsWith("en") && /female|woman/i.test(v.name))          ||
-      voices.find(v => /google/i.test(v.name) && v.lang.startsWith("en"))                ||
-      voices.find(v => v.lang.startsWith("en"))                                           ||
+      // 1. Exact match + female preferred
+      voices.find(v => v.lang === lang && /female|woman|aditi|heera|lekha/i.test(v.name)) ||
+      // 2. Exact language code
+      voices.find(v => v.lang === lang) ||
+      // 3. Same language family (e.g. zh-CN → zh-TW)
+      voices.find(v => v.lang.startsWith(primary + "-") && /female|woman/i.test(v.name)) ||
+      voices.find(v => v.lang.startsWith(primary + "-")) ||
+      // 4. Named Indian voices as fallback for Indic scripts
+      (["hi","mr","gu","ta","te","bn","kn","ml","pa"].includes(primary)
+        ? voices.find(v => /aditi|lekha|riya|veena|heera|priya/i.test(v.name)) ?? null
+        : null) ||
+      // 5. Google Mandarin for Chinese
+      (primary === "zh" ? voices.find(v => /google/i.test(v.name) && v.lang.startsWith("zh")) ?? null : null) ||
+      // 6. Fallback to Indian English female
+      voices.find(v => v.lang === "en-IN" && /female|woman|aditi|heera/i.test(v.name)) ||
+      voices.find(v => v.lang === "en-IN") ||
+      voices.find(v => v.lang.startsWith("en")) ||
       null
     );
   }, []);
@@ -329,24 +379,27 @@ export default function AvatarAssistant() {
       if (hasSR && voiceOn && isOpen) setTimeout(() => startListening(), 700);
       return;
     }
-    const sentence = speechQueue.current.shift()!;
-    const utt = new SpeechSynthesisUtterance(sentence);
-    utt.lang  = "en-IN";
-    utt.rate  = 0.9;
-    utt.pitch = 1.15;
-    const v = getVoice();
+    const item = speechQueue.current.shift()!;
+    const { rate, pitch } = LANG_TTS[item.lang] ?? LANG_TTS["en-IN"];
+    const utt = new SpeechSynthesisUtterance(item.text);
+    utt.lang  = item.lang;
+    utt.rate  = rate;
+    utt.pitch = pitch;
+    const v = getVoiceForLang(item.lang);
     if (v) utt.voice = v;
     utt.onstart = () => setAvatarState("speaking");
     utt.onend   = () => speakNext();
     utt.onerror = () => speakNext();
     synthRef.current?.speak(utt);
-  }, [hasTTS, hasSR, voiceOn, isOpen, getVoice]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasTTS, hasSR, voiceOn, isOpen, getVoiceForLang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Voice recognition ──────────────────────────────────────────────────────
   const startListening = useCallback(() => {
     const r = recogRef.current;
     if (!r || !hasSR) return;
     try {
+      // Switch recognition language to match the active conversation language
+      r.lang = currentLang.current;
       r.onresult = (e) => {
         const text = e.results[0][0].transcript.trim();
         if (text) sendMessage(text);
@@ -387,12 +440,17 @@ export default function AvatarAssistant() {
   // ── Extract sentences from stream for real-time TTS ───────────────────────
   const extractSentences = useCallback((chunk: string) => {
     streamBuffer.current += chunk;
-    const re = /[^.!?]*[.!?](?:\s|$)/g;
+    const lang = currentLang.current;
+    // Chinese uses 。！？ as terminators; other scripts use .!?
+    const isChinese = lang.startsWith("zh");
+    const re = isChinese
+      ? /[^。！？\n]+[。！？\n]/g
+      : /[^.!?]*[.!?](?:\s|$)/g;
     let m: RegExpExecArray | null;
     let last = 0;
     while ((m = re.exec(streamBuffer.current)) !== null) {
       const s = m[0].trim();
-      if (s.length > 3) speechQueue.current.push(s);
+      if (s.length > 1) speechQueue.current.push({ text: s, lang });
       last = re.lastIndex;
     }
     streamBuffer.current = streamBuffer.current.slice(last);
@@ -412,6 +470,8 @@ export default function AvatarAssistant() {
     recogRef.current?.stop();
 
     setInputText("");
+    // Detect language from what the user typed/said — TTS + recognition follow suit
+    currentLang.current = detectLang(text);
     const now = Date.now();
     const userMsg: Message = { role: "user", text, ts: now };
     setMessages(prev => [...prev, userMsg]);
@@ -457,7 +517,7 @@ export default function AvatarAssistant() {
       }
 
       if (streamBuffer.current.trim()) {
-        speechQueue.current.push(streamBuffer.current.trim());
+        speechQueue.current.push({ text: streamBuffer.current.trim(), lang: currentLang.current });
         streamBuffer.current = "";
       }
       if (!isSpeaking.current && speechQueue.current.length > 0 && hasTTS && voiceOn) {
@@ -516,7 +576,7 @@ export default function AvatarAssistant() {
       const greetMsg: Message = { role: "bot", text: GREETING, ts: Date.now() };
       setMessages([greetMsg]);
       if (hasTTS && voiceOn) {
-        speechQueue.current = [GREETING];
+        speechQueue.current = [{ text: GREETING, lang: "en-IN" }];
         isSpeaking.current = true;
         setTimeout(() => speakNext(), 500);
       }
