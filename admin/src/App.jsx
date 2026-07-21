@@ -16,6 +16,7 @@ import ProfileManager from "./components/ProfileManager";
 import YouTubeManager from "./components/YouTubeManager";
 import LiveVisitors from "./components/LiveVisitors";
 import SystemLogs from "./components/SystemLogs";
+import PageAnalytics from "./components/PageAnalytics";
 
 const PAGE_TITLES = {
   dashboard:    "Dashboard",
@@ -55,7 +56,7 @@ export default function App() {
       case "dashboard":     return <Dashboard token={t} />;
       case "visitors":      return <VisitorsManager token={t} />;
       case "liveVisitors":  return <LiveVisitors token={t} />;
-      case "pageAnalytics": return <ComingSoon title="Page Analytics" />;
+      case "pageAnalytics": return <PageAnalytics token={t} />;
       case "products":      return <ProductManager token={t} />;
       case "categories":    return <CategoryManager token={t} />;
       case "seo":           return <SeoPageManager token={t} />;

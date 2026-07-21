@@ -3,18 +3,13 @@ const mongoose = require("mongoose");
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const urlValidator = {
   validator(value) {
-    if (!value) {
-      return true;
-    }
-
-    try {
-      new URL(value);
-      return true;
-    } catch {
-      return false;
-    }
+    if (!value) return true;
+    // Accept base64 data URIs (used for logo storage so images survive redeploys)
+    if (value.startsWith("data:image/")) return true;
+    try { new URL(value); return true; }
+    catch { return false; }
   },
-  message: "Must be a valid absolute URL"
+  message: "Must be a valid absolute URL or base64 data URI",
 };
 
 const contactInfoSchema = new mongoose.Schema(
@@ -96,13 +91,13 @@ const websiteSettingsSchema = new mongoose.Schema(
     logoUrl: {
       type: String,
       default: "",
-      maxlength: 500,
+      maxlength: 3_000_000, // base64 data URI of a 2 MB image ≈ 2.7 MB text
       validate: urlValidator
     },
     faviconUrl: {
       type: String,
       default: "",
-      maxlength: 500,
+      maxlength: 3_000_000,
       validate: urlValidator
     },
     contactInfo: {

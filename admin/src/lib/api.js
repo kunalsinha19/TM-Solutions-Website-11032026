@@ -153,12 +153,18 @@ export const api = {
   // Analytics
   getAnalyticsSummary: (token) =>
     request("/analytics/summary", { headers: { Authorization: `Bearer ${token}` } }),
+  getAnalyticsQuoteInsights: (token) =>
+    request("/analytics/quote-insights", { headers: { Authorization: `Bearer ${token}` } }),
   getVisitors: (token, { page = 1, search = "", device = "", country = "" } = {}) => {
     const params = new URLSearchParams({ page, ...(search && { search }), ...(device && { device }), ...(country && { country }) });
     return request(`/analytics/visitors?${params}`, { headers: { Authorization: `Bearer ${token}` } });
   },
   getLiveVisitors: (token) =>
     request("/analytics/live", { headers: { Authorization: `Bearer ${token}` } }),
+  getChatSessions: (token, { page = 1, filter = "" } = {}) => {
+    const params = new URLSearchParams({ page, limit: 20, sortBy: "leadScore", ...(filter && { filter }) });
+    return request(`/chat-sessions?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+  },
 
   // Activity logs
   getActivityLogs: (token, { page = 1, category = "" } = {}) => {

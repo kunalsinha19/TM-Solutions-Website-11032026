@@ -38,22 +38,66 @@ function detectLang(text: string): string {
   return "en-IN";
 }
 
-// ── TTS tuning per language (tonal languages need flat pitch) ─────────────────
-const LANG_TTS: Record<string, { rate: number; pitch: number }> = {
-  "zh-CN": { rate: 0.85, pitch: 1.0 },
-  "zh-TW": { rate: 0.85, pitch: 1.0 },
-  "hi-IN": { rate: 0.88, pitch: 1.1 },
-  "mr-IN": { rate: 0.88, pitch: 1.1 },
-  "ta-IN": { rate: 0.9,  pitch: 1.0 },
-  "te-IN": { rate: 0.9,  pitch: 1.0 },
-  "bn-IN": { rate: 0.9,  pitch: 1.05 },
-  "gu-IN": { rate: 0.9,  pitch: 1.0 },
-  "kn-IN": { rate: 0.9,  pitch: 1.0 },
-  "ml-IN": { rate: 0.88, pitch: 1.0 },
-  "pa-IN": { rate: 0.9,  pitch: 1.05 },
-  "ar-SA": { rate: 0.88, pitch: 1.0 },
-  "en-IN": { rate: 0.9,  pitch: 1.15 },
+// ── TTS tuning per language ────────────────────────────────────────────────────
+// Lower rate + slight pitch variation = more natural, less robotic.
+// Pitch 1.0 is neutral; 1.05–1.1 adds warmth without sounding odd on most voices.
+const LANG_TTS: Record<string, { rate: number; pitch: number; volume: number }> = {
+  "zh-CN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "zh-TW": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "hi-IN": { rate: 0.82, pitch: 1.05, volume: 1 },
+  "mr-IN": { rate: 0.82, pitch: 1.05, volume: 1 },
+  "ta-IN": { rate: 0.83, pitch: 1.0,  volume: 1 },
+  "te-IN": { rate: 0.83, pitch: 1.0,  volume: 1 },
+  "bn-IN": { rate: 0.83, pitch: 1.02, volume: 1 },
+  "gu-IN": { rate: 0.83, pitch: 1.0,  volume: 1 },
+  "kn-IN": { rate: 0.83, pitch: 1.0,  volume: 1 },
+  "ml-IN": { rate: 0.82, pitch: 1.0,  volume: 1 },
+  "pa-IN": { rate: 0.83, pitch: 1.02, volume: 1 },
+  "ar-SA": { rate: 0.82, pitch: 1.0,  volume: 1 },
+  "en-IN": { rate: 0.83, pitch: 1.05, volume: 1 },
 };
+
+// ── Text pre-processing for natural speech ────────────────────────────────────
+// Removes markdown syntax, bullet formatting, and patterns that cause robotic
+// pauses when read literally by the speech engine.
+function cleanForSpeech(text: string, lang: string): string {
+  let t = text;
+
+  // Strip markdown bold/italic/code
+  t = t.replace(/\*\*([^*]+)\*\*/g, "$1");
+  t = t.replace(/\*([^*]+)\*/g, "$1");
+  t = t.replace(/_([^_]+)_/g, "$1");
+  t = t.replace(/`([^`]+)`/g, "$1");
+
+  // Strip headers (# ## ###)
+  t = t.replace(/^#{1,3}\s+/gm, "");
+
+  // Numbered lists: "1. Item" → natural reading
+  t = t.replace(/^\d+\.\s+/gm, "");
+
+  // Bullet/dash lists → add comma spacing so engine pauses naturally
+  t = t.replace(/^[-•*]\s+/gm, "");
+
+  // Common abbreviations that engines stumble on
+  t = t.replace(/\be\.g\./gi, "for example");
+  t = t.replace(/\bi\.e\./gi, "that is");
+  t = t.replace(/\betc\./gi, "and so on");
+  t = t.replace(/\bvs\./gi, "versus");
+  t = t.replace(/\bapprox\./gi, "approximately");
+
+  // ₹ → Rupees for Indian English
+  if (lang.endsWith("-IN") || lang === "hi-IN") {
+    t = t.replace(/₹\s?(\d[\d,]*)/g, "$1 Rupees");
+  }
+
+  // Collapse multiple blank lines
+  t = t.replace(/\n{3,}/g, "\n\n");
+
+  // Trim trailing whitespace per line
+  t = t.split("\n").map(l => l.trim()).join(" ").replace(/\s{2,}/g, " ").trim();
+
+  return t;
+}
 
 // TTS queue item (carries language so voice stays correct per sentence)
 type SpeechItem = { text: string; lang: string };
@@ -348,23 +392,36 @@ export default function AvatarAssistant() {
   const getVoiceForLang = useCallback((lang: string): SpeechSynthesisVoice | null => {
     const voices = voicesRef.current.length ? voicesRef.current : (synthRef.current?.getVoices() ?? []);
     const primary = lang.split("-")[0]; // "zh", "hi", "ta", "en", …
+    // Neural / Wavenet voices sound far more human — prioritise them
+    const isNeural  = (v: SpeechSynthesisVoice) => /neural|natural|wavenet|premium/i.test(v.name);
+    const isFemale  = (v: SpeechSynthesisVoice) => /female|woman|aditi|heera|lekha|aria|zira|neerja|priya|riya|veena/i.test(v.name);
+    const exactLang = (v: SpeechSynthesisVoice) => v.lang === lang;
+    const familyLang= (v: SpeechSynthesisVoice) => v.lang.startsWith(primary + "-");
+
     return (
-      // 1. Exact match + female preferred
-      voices.find(v => v.lang === lang && /female|woman|aditi|heera|lekha/i.test(v.name)) ||
-      // 2. Exact language code
-      voices.find(v => v.lang === lang) ||
-      // 3. Same language family (e.g. zh-CN → zh-TW)
-      voices.find(v => v.lang.startsWith(primary + "-") && /female|woman/i.test(v.name)) ||
-      voices.find(v => v.lang.startsWith(primary + "-")) ||
-      // 4. Named Indian voices as fallback for Indic scripts
+      // Tier 1 — exact lang, neural female
+      voices.find(v => exactLang(v) && isNeural(v) && isFemale(v)) ||
+      // Tier 2 — exact lang, neural any
+      voices.find(v => exactLang(v) && isNeural(v)) ||
+      // Tier 3 — exact lang, female
+      voices.find(v => exactLang(v) && isFemale(v)) ||
+      // Tier 4 — exact lang, any
+      voices.find(v => exactLang(v)) ||
+      // Tier 5 — language family, neural female
+      voices.find(v => familyLang(v) && isNeural(v) && isFemale(v)) ||
+      // Tier 6 — language family, female
+      voices.find(v => familyLang(v) && isFemale(v)) ||
+      voices.find(v => familyLang(v)) ||
+      // Tier 7 — named Indian voices for Indic scripts (Aditi on Android/Windows)
       (["hi","mr","gu","ta","te","bn","kn","ml","pa"].includes(primary)
-        ? voices.find(v => /aditi|lekha|riya|veena|heera|priya/i.test(v.name)) ?? null
+        ? voices.find(v => /aditi|lekha|riya|neerja|veena|heera|priya/i.test(v.name)) ?? null
         : null) ||
-      // 5. Google Mandarin for Chinese
+      // Tier 8 — Google Mandarin for Chinese
       (primary === "zh" ? voices.find(v => /google/i.test(v.name) && v.lang.startsWith("zh")) ?? null : null) ||
-      // 6. Fallback to Indian English female
-      voices.find(v => v.lang === "en-IN" && /female|woman|aditi|heera/i.test(v.name)) ||
+      // Tier 9 — Indian English fallback (en-IN Neerja / Aditi / Riya on most platforms)
+      voices.find(v => v.lang === "en-IN" && (isNeural(v) || isFemale(v))) ||
       voices.find(v => v.lang === "en-IN") ||
+      voices.find(v => v.lang.startsWith("en") && (isNeural(v) || isFemale(v))) ||
       voices.find(v => v.lang.startsWith("en")) ||
       null
     );
@@ -380,11 +437,14 @@ export default function AvatarAssistant() {
       return;
     }
     const item = speechQueue.current.shift()!;
-    const { rate, pitch } = LANG_TTS[item.lang] ?? LANG_TTS["en-IN"];
-    const utt = new SpeechSynthesisUtterance(item.text);
-    utt.lang  = item.lang;
-    utt.rate  = rate;
-    utt.pitch = pitch;
+    const { rate, pitch, volume } = LANG_TTS[item.lang] ?? LANG_TTS["en-IN"];
+    const cleaned = cleanForSpeech(item.text, item.lang);
+    if (!cleaned) { speakNext(); return; }  // skip empty after cleaning
+    const utt = new SpeechSynthesisUtterance(cleaned);
+    utt.lang   = item.lang;
+    utt.rate   = rate;
+    utt.pitch  = pitch;
+    utt.volume = volume;
     const v = getVoiceForLang(item.lang);
     if (v) utt.voice = v;
     utt.onstart = () => setAvatarState("speaking");
