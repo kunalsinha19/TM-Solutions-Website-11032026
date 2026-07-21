@@ -39,22 +39,22 @@ function detectLang(text: string): string {
 }
 
 // ── TTS tuning per language ────────────────────────────────────────────────────
-// Lower rate + slight pitch variation = more natural, less robotic.
+// Slower rates + slight pitch variation = more natural, less robotic.
 // Pitch 1.0 is neutral; 1.05–1.1 adds warmth without sounding odd on most voices.
 const LANG_TTS: Record<string, { rate: number; pitch: number; volume: number }> = {
-  "zh-CN": { rate: 0.80, pitch: 1.0,  volume: 1 },
-  "zh-TW": { rate: 0.80, pitch: 1.0,  volume: 1 },
-  "hi-IN": { rate: 0.82, pitch: 1.05, volume: 1 },
-  "mr-IN": { rate: 0.82, pitch: 1.05, volume: 1 },
-  "ta-IN": { rate: 0.83, pitch: 1.0,  volume: 1 },
-  "te-IN": { rate: 0.83, pitch: 1.0,  volume: 1 },
-  "bn-IN": { rate: 0.83, pitch: 1.02, volume: 1 },
-  "gu-IN": { rate: 0.83, pitch: 1.0,  volume: 1 },
-  "kn-IN": { rate: 0.83, pitch: 1.0,  volume: 1 },
-  "ml-IN": { rate: 0.82, pitch: 1.0,  volume: 1 },
-  "pa-IN": { rate: 0.83, pitch: 1.02, volume: 1 },
-  "ar-SA": { rate: 0.82, pitch: 1.0,  volume: 1 },
-  "en-IN": { rate: 0.83, pitch: 1.05, volume: 1 },
+  "zh-CN": { rate: 0.78, pitch: 1.0,  volume: 1 },
+  "zh-TW": { rate: 0.78, pitch: 1.0,  volume: 1 },
+  "hi-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
+  "mr-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
+  "ta-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "te-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "bn-IN": { rate: 0.80, pitch: 1.02, volume: 1 },
+  "gu-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "kn-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "ml-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "pa-IN": { rate: 0.80, pitch: 1.02, volume: 1 },
+  "ar-SA": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "en-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
 };
 
 // ── Text pre-processing for natural speech ────────────────────────────────────
@@ -72,11 +72,11 @@ function cleanForSpeech(text: string, lang: string): string {
   // Strip headers (# ## ###)
   t = t.replace(/^#{1,3}\s+/gm, "");
 
-  // Numbered lists: "1. Item" → natural reading
-  t = t.replace(/^\d+\.\s+/gm, "");
+  // Numbered lists: "1. Item" → prepend comma for a natural pause before each item
+  t = t.replace(/^\d+\.\s+/gm, ", ");
 
-  // Bullet/dash lists → add comma spacing so engine pauses naturally
-  t = t.replace(/^[-•*]\s+/gm, "");
+  // Bullet/dash lists → comma so engine pauses naturally
+  t = t.replace(/^[-•*]\s+/gm, ", ");
 
   // Common abbreviations that engines stumble on
   t = t.replace(/\be\.g\./gi, "for example");
@@ -331,6 +331,7 @@ export default function AvatarAssistant() {
   const [hasTTS, setHasTTS]       = useState(false);
   const [unread, setUnread]       = useState(0);
   const [quoteSubmitted, setQuoteSubmitted] = useState(false);
+  const [speakingLang, setSpeakingLang] = useState("");
 
   const synthRef    = useRef<SpeechSynthesis | null>(null);
   const voicesRef   = useRef<SpeechSynthesisVoice[]>([]);
@@ -432,6 +433,7 @@ export default function AvatarAssistant() {
     if (!hasTTS || !voiceOn || speechQueue.current.length === 0) {
       isSpeaking.current = false;
       streamBuffer.current = "";
+      setSpeakingLang("");
       setAvatarState("idle");
       if (hasSR && voiceOn && isOpen) setTimeout(() => startListening(), 700);
       return;
@@ -439,17 +441,27 @@ export default function AvatarAssistant() {
     const item = speechQueue.current.shift()!;
     const { rate, pitch, volume } = LANG_TTS[item.lang] ?? LANG_TTS["en-IN"];
     const cleaned = cleanForSpeech(item.text, item.lang);
-    if (!cleaned) { speakNext(); return; }  // skip empty after cleaning
+    if (!cleaned) { speakNext(); return; }
+
+    const v = getVoiceForLang(item.lang);
+
+    // If text contains non-Latin script (Devanagari, Tamil, Chinese, Arabic, …)
+    // but no native voice found for that language, skip to avoid garbled phonemic reading.
+    const primaryLang = item.lang.split("-")[0];
+    const hasNativeVoice = v != null && (v.lang === item.lang || v.lang.startsWith(primaryLang + "-"));
+    const hasNonLatinText = /[^ -ɏḀ-ỿ]/.test(cleaned);
+    if (hasNonLatinText && !hasNativeVoice) { speakNext(); return; }
+
     const utt = new SpeechSynthesisUtterance(cleaned);
     utt.lang   = item.lang;
+    // Slight random pitch variation per utterance (±0.03) for a more human cadence
     utt.rate   = rate;
-    utt.pitch  = pitch;
+    utt.pitch  = pitch + (Math.random() * 0.06 - 0.03);
     utt.volume = volume;
-    const v = getVoiceForLang(item.lang);
     if (v) utt.voice = v;
-    utt.onstart = () => setAvatarState("speaking");
-    utt.onend   = () => speakNext();
-    utt.onerror = () => speakNext();
+    utt.onstart = () => { setAvatarState("speaking"); setSpeakingLang(item.lang !== "en-IN" ? item.lang : ""); };
+    utt.onend   = () => { setSpeakingLang(""); speakNext(); };
+    utt.onerror = () => { setSpeakingLang(""); speakNext(); };
     synthRef.current?.speak(utt);
   }, [hasTTS, hasSR, voiceOn, isOpen, getVoiceForLang]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -657,6 +669,12 @@ export default function AvatarAssistant() {
   const stateLabel = { idle: "Type or tap mic", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking…" }[avatarState];
   const stateColor = { idle: "text-muted", listening: "text-blue-400", thinking: "text-amber-400", speaking: "text-green-400" }[avatarState];
 
+  const LANG_LABELS: Record<string, string> = {
+    "hi-IN": "Hindi", "mr-IN": "Marathi", "ta-IN": "Tamil", "te-IN": "Telugu",
+    "bn-IN": "Bengali", "gu-IN": "Gujarati", "kn-IN": "Kannada", "ml-IN": "Malayalam",
+    "pa-IN": "Punjabi", "zh-CN": "Mandarin", "zh-TW": "Chinese", "ar-SA": "Arabic",
+  };
+
   return (
     <>
       <style>{STYLES}</style>
@@ -754,11 +772,27 @@ export default function AvatarAssistant() {
             </div>
           </div>
 
-          {/* Avatar display */}
-          <div className="shrink-0 flex flex-col items-center gap-2 py-4" style={{ background: "var(--color-surface)" }}>
-            <div className={`h-32 w-32 ${avatarState === "idle" ? "tara-idle" : ""}`}>
+          {/* Avatar display — warm gradient ensures visibility on any theme */}
+          <div
+            className="shrink-0 flex flex-col items-center gap-2 pt-4 pb-3"
+            style={{ background: "linear-gradient(180deg,#FEF3C7 0%,#FDE68A 100%)" }}
+          >
+            {/* Circular frame — white bg + amber ring clips SVG and stands out on dark */}
+            <div
+              className={`relative h-[7.5rem] w-[7.5rem] rounded-full overflow-hidden ${avatarState === "idle" ? "tara-idle" : ""}`}
+              style={{
+                background: "#FFFBF0",
+                border: "3px solid #D97706",
+                boxShadow: avatarState === "listening"
+                  ? "0 0 0 6px rgba(59,130,246,0.3), 0 4px 20px rgba(0,0,0,0.18)"
+                  : avatarState === "speaking"
+                  ? "0 0 0 6px rgba(217,119,6,0.35), 0 4px 20px rgba(0,0,0,0.18)"
+                  : "0 4px 20px rgba(0,0,0,0.18)",
+              }}
+            >
               <TaraFace state={avatarState} mouthOpen={mouthOpen} />
             </div>
+
             <div className="flex flex-col items-center gap-1">
               {avatarState === "listening" && <Waveform active color="#3B82F6" />}
               {avatarState === "speaking"  && <Waveform active color="#D97706" />}
@@ -767,14 +801,19 @@ export default function AvatarAssistant() {
                   {avatarState === "thinking" && (
                     <span className="flex gap-1">
                       {[0, 1, 2].map(i => (
-                        <span key={i} className="h-1.5 w-1.5 rounded-full animate-bounce bg-amber-500"
+                        <span key={i} className="h-1.5 w-1.5 rounded-full animate-bounce bg-amber-600"
                           style={{ animationDelay: `${i * 150}ms` }} />
                       ))}
                     </span>
                   )}
                 </div>
               )}
-              <span className={`text-xs font-semibold ${stateColor}`}>{stateLabel}</span>
+              <span className="text-xs font-semibold text-amber-800">{stateLabel}</span>
+              {speakingLang && LANG_LABELS[speakingLang] && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-medium">
+                  🔊 Speaking in {LANG_LABELS[speakingLang]}
+                </span>
+              )}
             </div>
           </div>
 
