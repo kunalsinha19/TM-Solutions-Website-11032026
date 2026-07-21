@@ -20,7 +20,8 @@ function isValidUrl(value) {
   if (typeof value !== "string" || !value.trim()) {
     return false;
   }
-
+  // Accept base64 data URIs (used for logo/favicon persistence across redeploys)
+  if (value.startsWith("data:image/")) return true;
   try {
     new URL(value);
     return true;
@@ -264,11 +265,9 @@ function validateSettingsPayload(req, _res, next) {
     max: 160
   });
   validateStringField(payload.logoUrl, "logoUrl", errors, {
-    max: 500,
     absoluteUrl: true
   });
   validateStringField(payload.faviconUrl, "faviconUrl", errors, {
-    max: 500,
     absoluteUrl: true
   });
   validateStringField(payload.themeMode, "themeMode", errors, {
@@ -299,7 +298,6 @@ function validateSettingsLogoPayload(req, _res, next) {
   validateStringField(payload.logoUrl, "logoUrl", errors, {
     required: true,
     allowEmpty: false,
-    max: 500,
     absoluteUrl: true
   });
 
