@@ -607,6 +607,435 @@ const posts = [
 ];
 
 /* ══════════════════════════════════════════════════════════ */
+/*  BLOG 6 — Folding Machines Buying Guide                    */
+/* ══════════════════════════════════════════════════════════ */
+const blog6Content = `
+${h2("Why Paper Folding Machines Matter for Indian Print Shops")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+Every commercial print shop folds — brochures, leaflets, mailers, restaurant menus, annual reports. If you are folding manually, you are bleeding time. A single <strong>automatic buckle folder</strong> replaces 5 manual workers and produces <strong>10,000–25,000 folds per hour</strong> with perfect crispness. For SME print shops targeting corporate clients, a folding machine is no longer optional — it is table stakes.
+</p>
+
+${statBox([
+  {val:"25K/hr", label:"Auto Folder Speed"},
+  {val:"5x", label:"Labour Saved"},
+  {val:"₹40K+", label:"Starting Price"},
+  {val:"8+", label:"Fold Types"},
+])}
+
+${h2("Fold Types — What Each Machine Supports")}
+<svg viewBox="0 0 700 200" style="width:100%;font-family:system-ui,sans-serif;margin:20px 0" xmlns="http://www.w3.org/2000/svg">
+  ${[
+    ["Z-Fold","Tri-fold mailers","#6366f1"],
+    ["C-Fold","Brochures","#0891b2"],
+    ["Half-Fold","Leaflets, cards","#7c3aed"],
+    ["Gate-Fold","Premium menus","#d97706"],
+    ["Accordion","Instruction manuals","#059669"],
+    ["Cross-Fold","Maps, newsletters","#db2777"],
+  ].map(([name,use,c],i) => {
+    const x = 58 + (i % 3) * 220;
+    const y = i < 3 ? 30 : 110;
+    return `<rect x="${x-50}" y="${y}" width="140" height="60" rx="10" fill="${c}22" stroke="${c}" stroke-width="1.5"/>
+    <text x="${x+20}" y="${y+22}" text-anchor="middle" font-size="13" font-weight="700" fill="${c}">${name}</text>
+    <text x="${x+20}" y="${y+40}" text-anchor="middle" font-size="10" fill="#64748b">${use}</text>`;
+  }).join("")}
+</svg>
+
+${h2("Manual vs. Semi-Auto vs. Fully Automatic")}
+<div style="overflow-x:auto;margin:20px 0">
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr style="background:#fef7ed">
+    <th style="padding:10px 14px;text-align:left;border:1px solid #fde68a;color:#92400e">Feature</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#92400e">Manual</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#92400e">Semi-Auto</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#d97706;font-weight:800">Auto Buckle</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Speed</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">500/hr</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">3,000/hr</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">25,000/hr</td></tr>
+    <tr style="background:#f9fafb"><td style="padding:9px 14px;border:1px solid #e5e7eb">Consistency</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Variable</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Good</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">Perfect</td></tr>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Operators needed</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">3–5</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">2</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">1</td></tr>
+    <tr style="background:#f9fafb"><td style="padding:9px 14px;border:1px solid #e5e7eb">Paper weight</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Any</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">60–170 gsm</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">50–350 gsm</td></tr>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Price range</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">₹5K–₹20K</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">₹40K–₹1.5L</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">₹1.5L–₹8L</td></tr>
+  </tbody>
+</table>
+</div>
+
+${h2("Which Folding Machine for Which Business?")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+<strong>Small print shops (under 50 orders/day):</strong> A table-top semi-automatic folder in the ₹40K–₹80K range handles most leaflet and brochure jobs. Look for models with at least 3 buckle plates.
+</p>
+<p style="font-size:15px;line-height:1.8;color:#374151">
+<strong>Mid-size commercial printers:</strong> An automatic buckle-plate folder with a 4-station configuration (₹1.5L–₹3L) covers Z-fold, C-fold, accordion and gate-fold in one pass.
+</p>
+<p style="font-size:15px;line-height:1.8;color:#374151">
+<strong>Large format / direct mail printers:</strong> A high-speed continuous tower folder (₹5L–₹8L) integrated with your digital press maximises throughput for bulk mailers and catalogues.
+</p>
+
+${h2("Key Specs to Check Before Buying")}
+<ul style="font-size:15px;line-height:2;color:#374151;padding-left:20px">
+  <li><strong>Sheet size range</strong> — minimum A6 up to A2 (or SRA3 for large-format work)</li>
+  <li><strong>Paper weight</strong> — 50–350 gsm covers most coated and uncoated stocks</li>
+  <li><strong>Number of buckle plates</strong> — 4 plates = 8+ fold types in one pass</li>
+  <li><strong>Pile feeder height</strong> — taller piles = less reloading downtime</li>
+  <li><strong>Digital counter</strong> — helps you quote accurately per 1,000 units</li>
+  <li><strong>After-sales service</strong> — ask for spare rollers and service availability in your city</li>
+</ul>
+
+${cta("Browse TM Solutions Folding Machines")}
+`;
+
+/* ══════════════════════════════════════════════════════════ */
+/*  BLOG 7 — Creasing & Scoring Machines                      */
+/* ══════════════════════════════════════════════════════════ */
+const blog7Content = `
+${h2("The Hidden Problem in Every Indian Print Shop")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+You spend lakhs on a good digital press, but your finished brochures still crack at the fold. Why? Because <strong>thick coated paper (170 gsm and above)</strong> must be <em>creased before folding</em> — not folded raw. A creasing machine pre-compresses the fibre along the fold line, preventing ink cracking on gloss and silk stocks. This single machine can be the difference between amateur-looking output and print-shop-quality work that commands premium prices.
+</p>
+
+${statBox([
+  {val:"170+ gsm", label:"When Creasing Is Needed"},
+  {val:"99%", label:"Crack Reduction"},
+  {val:"₹25K", label:"Entry-Level Price"},
+  {val:"3-in-1", label:"Crease+Score+Perf"},
+])}
+
+${h2("Creasing vs Scoring vs Perforating — What's the Difference?")}
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin:24px 0">
+  ${[
+    ["📐","Creasing","Compresses paper along fold line — used for thick coated stock","#6366f1"],
+    ["✂️","Scoring","Cuts halfway through board — used for cardboard, greyboard","#d97706"],
+    ["⋯","Perforating","Makes tear lines — used for coupons, tickets, stubs","#059669"],
+  ].map(([e,name,desc,c]) => `
+    <div style="flex:1;min-width:180px;background:${c}11;border:1.5px solid ${c}44;border-radius:12px;padding:20px">
+      <p style="font-size:28px;margin:0 0 8px">${e}</p>
+      <p style="font-size:15px;font-weight:800;color:${c};margin:0 0 6px">${name}</p>
+      <p style="font-size:13px;color:#64748b;margin:0;line-height:1.6">${desc}</p>
+    </div>`).join("")}
+</div>
+
+${h2("Machine Types & Price Ranges in India")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+<strong>Manual table-top creaser (₹25K–₹60K):</strong> Operator feeds one sheet at a time. Ideal for small shops doing occasional thick-stock jobs — greeting cards, box blanks, invitation cards.
+</p>
+<p style="font-size:15px;line-height:1.8;color:#374151">
+<strong>Electric auto-feed creaser (₹80K–₹2L):</strong> Feeds a pile automatically at 2,500–6,000 sheets/hour. Best for commercial printers doing regular brochure and folder jobs on 200–400 gsm stock.
+</p>
+<p style="font-size:15px;line-height:1.8;color:#374151">
+<strong>Combination crease/score/perf machine (₹1.5L–₹4L):</strong> Three tools in one pass — perfect for packaging converters, greeting card manufacturers and stationery producers.
+</p>
+
+${h2("Crease Channel Sizing — The Detail Most Buyers Miss")}
+<div style="background:#fef7ed;border:2px solid #d97706;border-radius:12px;padding:20px 24px;margin:20px 0">
+  <p style="font-size:14px;font-weight:800;color:#92400e;margin:0 0 10px;text-transform:uppercase;letter-spacing:1px">Pro tip from the workshop</p>
+  <p style="font-size:14px;line-height:1.8;color:#374151;margin:0">
+    The crease channel (male and female tool) must be <strong>1.5× the paper thickness</strong>. Too narrow = cracking. Too wide = loose, ugly fold. Always ask your supplier whether the machine comes with interchangeable crease channel sets — this determines whether you can switch between 170 gsm and 400 gsm jobs without buying a second machine.
+  </p>
+</div>
+
+${h2("What to Buy: Quick Decision Guide")}
+<ul style="font-size:15px;line-height:2;color:#374151;padding-left:20px">
+  <li>Greeting cards, invitations (small volume) → Manual table-top creaser ₹25K–₹40K</li>
+  <li>Brochures, corporate folders (medium volume) → Electric auto-feed creaser ₹80K–₹1.5L</li>
+  <li>Rigid boxes, packaging blanks → Combination crease/score machine ₹2L+</li>
+  <li>High-volume stationery + perforated pads → 3-in-1 combo unit ₹3L–₹4L</li>
+</ul>
+
+${h2("5 Questions to Ask Before You Buy")}
+<ol style="font-size:15px;line-height:2;color:#374151;padding-left:20px">
+  <li>What is the maximum paper thickness (gsm) supported?</li>
+  <li>Does it accept digital-print coated stocks (some creasers slip on UV coating)?</li>
+  <li>Are interchangeable crease tools included in the price?</li>
+  <li>What is the sheet size range — can it handle SRA3 (320 × 450 mm)?</li>
+  <li>Is spare parts support available in your city?</li>
+</ol>
+
+${cta("Get a Free Creasing Machine Consultation")}
+`;
+
+/* ══════════════════════════════════════════════════════════ */
+/*  BLOG 8 — Complete Print Shop Setup Guide                  */
+/* ══════════════════════════════════════════════════════════ */
+const blog8Content = `
+${h2("Starting a Commercial Print Shop in India: The Complete Machine Checklist")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+India adds roughly <strong>8,000 new print businesses every year</strong>. But 40% shut down within 3 years — not because of bad printers, but because they under-invested in finishing equipment. Clients judge you on the final product, not the press. A ₹20 lakh digital press paired with ₹2 lakh of finishing machines loses every time to a ₹10 lakh press backed by ₹8 lakh of proper finishing. This guide lays out the exact equipment stack for each business stage.
+</p>
+
+${statBox([
+  {val:"8,000/yr", label:"New Print Shops India"},
+  {val:"40%", label:"Fail in 3 Years"},
+  {val:"₹5L–₹50L", label:"Setup Cost Range"},
+  {val:"18mo", label:"Avg Break-even"},
+])}
+
+${h2("Stage 1 — Starter Shop (Budget: ₹5L–₹12L)")}
+<div style="background:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0">
+  <p style="font-size:14px;font-weight:800;color:#15803d;margin:0 0 8px">Best for: Visiting cards, leaflets, basic stationery</p>
+  <ul style="font-size:14px;line-height:2;color:#374151;margin:0;padding-left:18px">
+    <li>A3 digital inkjet or laser printer (₹2L–₹4L)</li>
+    <li>Manual/electric paper cutter 450–520mm (₹30K–₹80K)</li>
+    <li>Table-top laminator, A3 pouch (₹20K–₹40K)</li>
+    <li>Semi-auto folding machine (₹40K–₹60K)</li>
+    <li>Manual corner rounding + hole punch (₹8K–₹15K)</li>
+  </ul>
+</div>
+
+${h2("Stage 2 — Growth Shop (Budget: ₹12L–₹30L)")}
+<div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0">
+  <p style="font-size:14px;font-weight:800;color:#1d4ed8;margin:0 0 8px">Best for: Corporate brochures, booklets, premium stationery</p>
+  <ul style="font-size:14px;line-height:2;color:#374151;margin:0;padding-left:18px">
+    <li>SRA3 colour digital press (₹6L–₹15L)</li>
+    <li>Hydraulic paper cutter 760–920mm (₹1.5L–₹3L)</li>
+    <li>Roll laminator 650mm (₹1.5L–₹2.5L)</li>
+    <li>Perfect binding machine / saddle stitcher (₹2L–₹4L)</li>
+    <li>Electric creasing + scoring machine (₹80K–₹1.5L)</li>
+    <li>Auto buckle folding machine (₹1.5L–₹2.5L)</li>
+    <li>Hot foil stamping machine (₹1L–₹3L)</li>
+  </ul>
+</div>
+
+${h2("Stage 3 — Commercial Printing House (Budget: ₹30L–₹1Cr)")}
+<div style="background:#fef7ed;border-left:4px solid #d97706;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0">
+  <p style="font-size:14px;font-weight:800;color:#92400e;margin:0 0 8px">Best for: Packaging, books, annual reports, luxury print</p>
+  <ul style="font-size:14px;line-height:2;color:#374151;margin:0;padding-left:18px">
+    <li>Offset printing press or B2 digital press (₹15L–₹60L)</li>
+    <li>Guillotine cutter 1100–1320mm (₹4L–₹8L)</li>
+    <li>Industrial roll laminator 1050–1300mm (₹4L–₹10L)</li>
+    <li>High-speed perfect binder (₹5L–₹12L)</li>
+    <li>Flat-bed die-cutting machine (₹6L–₹15L)</li>
+    <li>High-speed foil stamping machine (₹5L–₹12L)</li>
+    <li>Tower buckle folder (₹3L–₹8L)</li>
+    <li>UV varnishing machine (₹8L–₹20L)</li>
+  </ul>
+</div>
+
+${h2("ROI Reality Check")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+A mid-size print shop running a roll laminator at ₹2L can charge ₹1.5–₹3 per A4 sheet for lamination. At 5,000 sheets/day, that is <strong>₹7,500–₹15,000 in daily revenue from one machine alone</strong>. Most laminator investments pay back within 3–6 months. Perfect binding machines show even faster ROI for shops that produce notebooks, textbooks, or corporate annual reports.
+</p>
+
+${statBox([
+  {val:"₹7.5K/day", label:"Laminator Revenue (5K sheets)"},
+  {val:"3–6 mo", label:"Laminator Payback"},
+  {val:"₹15K/day", label:"Binder Revenue (500 books)"},
+  {val:"6–12 mo", label:"Binder Payback"},
+])}
+
+${h2("5 Mistakes New Print Shop Owners Make")}
+<ol style="font-size:15px;line-height:2;color:#374151;padding-left:20px">
+  <li><strong>Buying a large press before a large cutter</strong> — your press output is only as fast as your cutting speed.</li>
+  <li><strong>Choosing pouch laminators over roll laminators</strong> — pouch laminators cost less but are 10× slower and 3× more expensive per sheet.</li>
+  <li><strong>Skipping creasing machines</strong> — your thick-stock brochures will crack at the fold without creasing.</li>
+  <li><strong>Ignoring after-sales service</strong> — a machine that breaks down for 2 weeks costs more in lost jobs than you saved on purchase price.</li>
+  <li><strong>Underestimating electricity load</strong> — industrial laminators and cutters need 3-phase power; plan your electrical layout before delivery.</li>
+</ol>
+
+${cta("Build Your Print Shop — Talk to a TMS Equipment Expert")}
+`;
+
+/* ══════════════════════════════════════════════════════════ */
+/*  BLOG 9 — Automatic vs Semi-Automatic Binding              */
+/* ══════════════════════════════════════════════════════════ */
+const blog9Content = `
+${h2("Why Binding Machine Choice Determines Your Profitability")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+The binding market in India is growing at <strong>9% CAGR</strong>, powered by the education sector, corporate publishing, and the exploding demand for premium product catalogues. Yet many print shops run 10-year-old manual binders and lose large contracts because they cannot meet turnaround times. Choosing the right binding machine — automatic vs semi-automatic — is not just a capital decision; it is a capacity and client acquisition decision.
+</p>
+
+${statBox([
+  {val:"9% CAGR", label:"India Binding Market Growth"},
+  {val:"500/hr", label:"Semi-Auto Output"},
+  {val:"3,000/hr", label:"Fully Auto Output"},
+  {val:"₹3L–₹15L", label:"Auto Binder Range"},
+])}
+
+${h2("Perfect Binding: Semi-Auto vs Fully Automatic")}
+<div style="overflow-x:auto;margin:20px 0">
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr style="background:#fef7ed">
+    <th style="padding:10px 14px;text-align:left;border:1px solid #fde68a;color:#92400e">Spec</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#92400e">Semi-Auto (1 clamp)</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#92400e">Semi-Auto (3 clamp)</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#d97706;font-weight:800">Fully Automatic</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Output/hr</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">120–200</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">350–500</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">2,000–3,500</td></tr>
+    <tr style="background:#f9fafb"><td style="padding:9px 14px;border:1px solid #e5e7eb">Operators</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">1–2</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">1–2</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">1</td></tr>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Glue type</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">PUR or EVA</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">PUR or EVA</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">PUR + EVA (switchable)</td></tr>
+    <tr style="background:#f9fafb"><td style="padding:9px 14px;border:1px solid #e5e7eb">Max book size</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">A4</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">A3</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">A2 (custom)</td></tr>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Warmup time</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">8–12 min</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">8–12 min</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">3–5 min</td></tr>
+    <tr style="background:#f9fafb"><td style="padding:9px 14px;border:1px solid #e5e7eb">Price (India)</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">₹40K–₹1.2L</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">₹1L–₹3L</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#d97706">₹5L–₹15L</td></tr>
+  </tbody>
+</table>
+</div>
+
+${h2("PUR Glue vs EVA Glue — Which Do You Need?")}
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin:24px 0">
+  <div style="flex:1;min-width:220px;background:#eff6ff;border:1.5px solid #3b82f6;border-radius:12px;padding:20px">
+    <p style="font-size:15px;font-weight:800;color:#1d4ed8;margin:0 0 8px">EVA (Hot Melt)</p>
+    <ul style="font-size:13px;color:#374151;margin:0;padding-left:16px;line-height:2">
+      <li>Lower cost per kg</li>
+      <li>Faster open time</li>
+      <li>Works for standard paper (60–150 gsm)</li>
+      <li>Not suitable for laminated covers or coated stock</li>
+      <li>Standard choice for notebooks, textbooks</li>
+    </ul>
+  </div>
+  <div style="flex:1;min-width:220px;background:#fef7ed;border:1.5px solid #d97706;border-radius:12px;padding:20px">
+    <p style="font-size:15px;font-weight:800;color:#92400e;margin:0 0 8px">PUR (Reactive)</p>
+    <ul style="font-size:13px;color:#374151;margin:0;padding-left:16px;line-height:2">
+      <li>3× stronger bond than EVA</li>
+      <li>Bonds laminated and coated covers</li>
+      <li>Flex-lay-flat quality</li>
+      <li>Premium corporate reports, art books</li>
+      <li>Higher cost per kg — worth it for high-end jobs</li>
+    </ul>
+  </div>
+</div>
+
+${h2("When to Go Automatic: The Volume Threshold")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+The breakeven between a ₹1.5L semi-auto binder and a ₹7L automatic is roughly <strong>300 books/day</strong>. Below that, the semi-auto wins on capital cost. Above that, the automatic pays for itself in 8–14 months through labour saving alone — even before accounting for the larger corporate contracts an automatic machine lets you bid on.
+</p>
+
+${h2("Saddle Stitching: When to Choose It Over Perfect Binding")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+Saddle stitching (riding stapler) wins for: <strong>magazines, thin booklets (under 80 pages), event programmes, brochures</strong>. It is faster, cheaper per unit at low page counts, and the books open completely flat. Perfect binding wins for: <strong>textbooks, reports, catalogues, thick booklets (80+ pages)</strong> where a spine is needed for shelf display.
+</p>
+
+${cta("Compare Binding Machines — Get a Free TMS Quote")}
+`;
+
+/* ══════════════════════════════════════════════════════════ */
+/*  BLOG 10 — Maintenance & ROI Guide                         */
+/* ══════════════════════════════════════════════════════════ */
+const blog10Content = `
+${h2("Every Print Finishing Machine Has a Hidden Revenue Number — Do You Know Yours?")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+Most print shop owners calculate machine cost. Very few calculate machine <em>revenue capacity</em>. Your roll laminator, running 8 hours/day, can process <strong>8,000–12,000 A4 sheets per shift</strong>. At ₹2 per sheet, that is ₹16,000–₹24,000 daily from a single ₹2L machine. Yet most shops use their laminator at 30–40% capacity because they do not market the capability. This guide shows you how to maximise ROI on every piece of finishing equipment you own.
+</p>
+
+${statBox([
+  {val:"₹24K/day", label:"Laminator Revenue Potential"},
+  {val:"₹18K/day", label:"Binder Revenue Potential"},
+  {val:"6 months", label:"Typical Payback Period"},
+  {val:"3–5 yr", label:"Average Machine Lifespan"},
+])}
+
+${h2("ROI Calculator — Fill In Your Numbers")}
+<div style="background:#fef7ed;border:2px solid #d97706;border-radius:12px;padding:24px;margin:24px 0">
+  <p style="font-size:14px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px">Laminator ROI (Example)</p>
+  <div style="font-size:13px;color:#374151;line-height:2.2">
+    <div style="display:flex;justify-content:space-between;border-bottom:1px solid #fde68a;padding:4px 0"><span>Machine price</span><span style="font-weight:700">₹2,00,000</span></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px solid #fde68a;padding:4px 0"><span>Daily sheets (8 hrs)</span><span style="font-weight:700">8,000</span></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px solid #fde68a;padding:4px 0"><span>Charge per A4 sheet</span><span style="font-weight:700">₹2.00</span></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px solid #fde68a;padding:4px 0"><span>Film cost per sheet</span><span style="font-weight:700">₹0.40</span></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px solid #fde68a;padding:4px 0"><span>Net daily profit</span><span style="font-weight:700;color:#d97706">₹12,800</span></div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Break-even (25 working days/mo)</span><span style="font-weight:700;color:#22c55e">~6–7 months</span></div>
+  </div>
+</div>
+
+${h2("Preventive Maintenance Schedule for Indian Conditions")}
+<p style="font-size:15px;line-height:1.8;color:#374151">
+India's heat and humidity are hard on rollers, glue pots and cutting edges. A disciplined maintenance schedule prevents 90% of breakdowns.
+</p>
+<div style="overflow-x:auto;margin:20px 0">
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr style="background:#fef7ed">
+    <th style="padding:10px 14px;text-align:left;border:1px solid #fde68a;color:#92400e">Task</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#92400e">Laminator</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#92400e">Binder</th>
+    <th style="padding:10px 14px;text-align:center;border:1px solid #fde68a;color:#92400e">Cutter</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Clean rollers/knives</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Daily</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">After each job</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Daily</td></tr>
+    <tr style="background:#f9fafb"><td style="padding:9px 14px;border:1px solid #e5e7eb">Lubricate moving parts</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Weekly</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Weekly</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Weekly</td></tr>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Check glue pot residue</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">—</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Monthly</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">—</td></tr>
+    <tr style="background:#f9fafb"><td style="padding:9px 14px;border:1px solid #e5e7eb">Inspect electrical wiring</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Monthly</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Monthly</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Monthly</td></tr>
+    <tr><td style="padding:9px 14px;border:1px solid #e5e7eb">Replace worn parts</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">6 months</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">6 months</td><td style="padding:9px 14px;border:1px solid #e5e7eb;text-align:center">Annually</td></tr>
+  </tbody>
+</table>
+</div>
+
+${h2("5 Ways to Increase Revenue from Existing Machines")}
+<ol style="font-size:15px;line-height:2.2;color:#374151;padding-left:20px">
+  <li><strong>Add matte lamination to your menu.</strong> Most clients have only seen gloss — matte adds a premium feel they will pay 30–40% more for.</li>
+  <li><strong>Bundle finishing into print quotes.</strong> Lamination + cutting + folding as a package is harder to price-compare than selling each service separately.</li>
+  <li><strong>Target wedding and event printers.</strong> Invitation card producers need creasing, foiling and lamination — and they have zero price sensitivity in peak season (Oct–Feb).</li>
+  <li><strong>Run a second shift.</strong> Finishing machines rarely need a highly skilled operator — a ₹18,000/month operator running your laminator for 4 hours in the evening doubles its annual output.</li>
+  <li><strong>Offer sample kits to corporates.</strong> Send a laminated, foiled, bound sample booklet to marketing managers. The tactile quality sells itself — no brochure needed.</li>
+</ol>
+
+${h2("Warning Signs Your Machine Needs Servicing")}
+<ul style="font-size:15px;line-height:2;color:#374151;padding-left:20px">
+  <li>Laminator: film wrinkling at corners despite correct temperature — roller pressure may be uneven</li>
+  <li>Binder: pages pulling out of spine within 24 hours — glue temperature too low or wrong glue type</li>
+  <li>Cutter: cuts not perpendicular — back gauge may need recalibration</li>
+  <li>Foil stamper: foil not adhering uniformly — platen temperature too low or impression pressure off</li>
+</ul>
+
+${cta("Get a Service Quote or Upgrade Consultation")}
+`;
+
+posts.push(
+  {
+    title: "Automatic Paper Folding Machines in India: The Complete Buyer's Guide for Print Shops",
+    slug: "paper-folding-machine-buying-guide-india",
+    excerpt: "From table-top semi-auto folders to high-speed tower buckle machines — this guide maps every folding machine type to the right Indian print shop size, with a full comparison of fold types, speed and price.",
+    content: blog6Content,
+    tags: ["Folding Machine", "Print Shop", "Buying Guide", "Buckle Folder"],
+    seoTitle: "Automatic Paper Folding Machine India — Buyer's Guide | TM Solutions",
+    seoDescription: "Which paper folding machine is right for your print shop? Z-fold, C-fold, gate-fold, auto vs semi-auto, price ranges India. TM Solutions guide.",
+    readingTimeMin: 6,
+    status: "published",
+  },
+  {
+    title: "Creasing & Scoring Machines India: Stop Your Brochures Cracking at the Fold",
+    slug: "creasing-scoring-machine-india-guide",
+    excerpt: "Thick coated stock cracks when folded raw. A creasing machine solves this. This guide explains the difference between creasing, scoring and perforating — and which machine to buy for your Indian print shop.",
+    content: blog7Content,
+    tags: ["Creasing Machine", "Scoring Machine", "Print Finishing", "Packaging"],
+    seoTitle: "Creasing & Scoring Machine India — Stop Brochures Cracking | TM Solutions",
+    seoDescription: "Electric creasing machines for Indian print shops. Stop coated paper cracking at folds. Crease vs score vs perf, price guide, buying tips.",
+    readingTimeMin: 5,
+    status: "published",
+  },
+  {
+    title: "How to Set Up a Commercial Print Shop in India: The Complete Machine Checklist",
+    slug: "commercial-print-shop-setup-guide-india",
+    excerpt: "Starting a print business in India? This guide breaks down the exact machine stack for three budget levels — starter, growth and commercial — with ROI numbers, common mistakes and a step-by-step setup checklist.",
+    content: blog8Content,
+    tags: ["Print Shop Setup", "India", "Business Guide", "Print Finishing"],
+    seoTitle: "Commercial Print Shop Setup Guide India — Machine Checklist | TM Solutions",
+    seoDescription: "Complete guide to setting up a print business in India. Machine checklists for ₹5L, ₹15L, ₹50L budgets. ROI numbers, common mistakes, buying tips.",
+    readingTimeMin: 7,
+    status: "published",
+  },
+  {
+    title: "Perfect Binding Machine: Automatic vs Semi-Automatic — Which Is Right for Your Volume?",
+    slug: "automatic-vs-semi-automatic-binding-machine-india",
+    excerpt: "Should you buy a ₹1L semi-auto binder or a ₹7L fully automatic? This guide shows you the exact volume threshold, PUR vs EVA glue comparison, and a side-by-side spec table for Indian print shops.",
+    content: blog9Content,
+    tags: ["Perfect Binding", "Glue Binder", "Automatic", "India"],
+    seoTitle: "Automatic vs Semi-Auto Binding Machine India — Which to Buy? | TM Solutions",
+    seoDescription: "Auto vs semi-auto perfect binding machine India. Volume thresholds, PUR vs EVA glue, speed comparison, price guide. Find the right binder.",
+    readingTimeMin: 6,
+    status: "published",
+  },
+  {
+    title: "Print Finishing Machine Maintenance & ROI: How to Make Every Machine Pay for Itself Twice",
+    slug: "print-finishing-machine-maintenance-roi-india",
+    excerpt: "Your laminator, binder and cutter each have a hidden revenue number. This guide shows you the ROI calculation, daily maintenance schedule for Indian conditions, and 5 proven ways to double finishing revenue.",
+    content: blog10Content,
+    tags: ["ROI", "Maintenance", "Print Finishing", "India", "Business"],
+    seoTitle: "Print Finishing Machine ROI & Maintenance Guide India | TM Solutions",
+    seoDescription: "Calculate ROI on your laminator, binder and cutter. Daily maintenance schedules for Indian climate. 5 ways to double finishing revenue.",
+    readingTimeMin: 6,
+    status: "published",
+  }
+);
+
+/* ══════════════════════════════════════════════════════════ */
 async function seedBlogs() {
   for (const post of posts) {
     await BlogPost.findOneAndUpdate(
@@ -616,7 +1045,7 @@ async function seedBlogs() {
     );
     console.log("[seed-blogs] ✓", post.slug);
   }
-  console.log("[seed-blogs] All 5 blog posts seeded.");
+  console.log("[seed-blogs] All blog posts seeded.");
 }
 
 module.exports = { seedBlogs, posts };

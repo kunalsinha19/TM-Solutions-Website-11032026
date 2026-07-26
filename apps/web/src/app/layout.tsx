@@ -10,15 +10,70 @@ import VisitorTracker from "../components/analytics/VisitorTracker";
 import AvatarAssistant from "../components/chat/AvatarAssistant";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tmsolutionsindia.com"),
   title: {
-    default: "TM Solutions — Industrial B2B Products & Equipment",
-    template: "%s | TM Solutions"
+    default: "TM Solutions India — Print Finishing & Packaging Machines | Lamination, Binding, Die-Cutting",
+    template: "%s | TM Solutions India",
   },
-  description: "Premium industrial products, smart automation solutions, and fast quote turnaround for enterprise buyers. Trusted by 200+ companies.",
+  description:
+    "India's trusted supplier of print finishing machines — lamination machines, perfect binding, die-cutting, hot foil stamping, paper cutters & folding machines. Pan-India delivery. Free consultation. Get a quote today.",
+  keywords: [
+    "print finishing machines India",
+    "lamination machine India",
+    "perfect binding machine India",
+    "die cutting machine India",
+    "hot foil stamping machine",
+    "paper cutter machine India",
+    "folding machine India",
+    "packaging machines India",
+    "B2B printing equipment",
+    "TM Solutions India",
+    "Tara Maa Solutions",
+    "buy printing machine India",
+    "commercial laminator India",
+    "book binding machine India",
+    "roll laminator India",
+    "print shop equipment",
+    "guillotine paper cutter",
+    "thermal lamination machine",
+    "creasing scoring machine India",
+    "print finishing equipment supplier",
+  ],
   openGraph: {
-    siteName: "TM Solutions",
-    type: "website"
-  }
+    siteName: "TM Solutions India",
+    type: "website",
+    url: "https://tmsolutionsindia.com",
+    title: "TM Solutions India — Print Finishing & Packaging Machines",
+    description:
+      "India's trusted supplier of lamination machines, perfect binding, die-cutting, hot foil stamping, paper cutters & packaging equipment. Pan-India delivery.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "TM Solutions India — Print Finishing & Packaging Machines",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TM Solutions India — Print Finishing & Packaging Machines",
+    description:
+      "Lamination, binding, die-cutting, hot foil stamping, paper cutters & more. Pan-India delivery. Free consultation.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://tmsolutionsindia.com",
+  },
 };
 
 // Runs synchronously before first paint — eliminates the light-mode flash on dark/green preference.
