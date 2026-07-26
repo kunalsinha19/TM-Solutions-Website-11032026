@@ -19,7 +19,7 @@ type AvatarState = "idle" | "listening" | "thinking" | "speaking";
 type Message = { role: "user" | "bot"; text: string; ts?: number };
 
 const SUBMIT_QUOTE_RE = /SUBMIT_QUOTE:\{[^}]+\}/s;
-const GREETING = "Namaste! I'm Tara, your assistant at Tara Maa Solutions. I can help you find the right industrial product, get pricing, or request a quote. How can I help you today?";
+const GREETING = "Namaste! I'm Tara, your personal advisor at Tara Maa Solutions. Whether you're looking for the right industrial product or want to send us your requirement — I'm here to help. What can I do for you today?";
 
 // ── Language detection using Unicode script ranges ────────────────────────────
 function detectLang(text: string): string {
