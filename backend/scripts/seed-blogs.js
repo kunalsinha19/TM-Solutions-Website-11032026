@@ -384,7 +384,7 @@ ${h2("Decision Flowchart — Which Binding Is Right for You?")}
     box(80,200,140,30,"Saddle Stitch ✓","#86efac")+
     box(200,200,120,30,"Saddle Stitch ✓","#86efac")+
     box(265,200,120,30,"Perfect Bind ✓","#fde68a")+
-    box(380,200,120,30,"Either works ✓","#e0f2fe")`
+    box(380,200,120,30,"Either works ✓","#e0f2fe")
   })()}
 </svg>
 
