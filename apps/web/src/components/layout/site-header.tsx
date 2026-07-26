@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ThemeToggle } from "../theme/theme-toggle";
@@ -38,13 +37,13 @@ export function SiteHeader({
           <div className="flex min-w-0 items-center gap-2.5">
             <Link href="/" className="shrink-0 group" aria-label="Tara Maa Solutions home">
               {logoUrl ? (
-                <Image
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                   src={logoUrl}
                   alt="Tara Maa Solutions"
                   width={36}
                   height={36}
                   className="h-9 w-9 shrink-0 rounded-xl object-contain ring-2 ring-accent/20 group-hover:ring-accent/40 transition-all duration-300"
-                  priority
                 />
               ) : (
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white text-[11px] font-extrabold tracking-tight shadow-glow-sm ring-2 ring-accent/20 group-hover:shadow-glow group-hover:ring-accent/40 transition-all duration-300">

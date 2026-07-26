@@ -196,7 +196,7 @@ async function getSiteLogo(): Promise<string | null> {
     const w = raw as Record<string, unknown>;
     const s = (w.settings && typeof w.settings === "object" ? w.settings : w) as Record<string, unknown>;
     const url = (s.logoUrl ?? s.logo ?? "") as string;
-    return url && url.startsWith("http") ? url : null;
+    return url && (url.startsWith("http") || url.startsWith("data:")) ? url : null;
   } catch {
     return null;
   }
@@ -209,12 +209,12 @@ async function getSiteHeaderData(): Promise<{
   contactPhone: string | null;
 }> {
   try {
-    const raw = await request<unknown>("/settings", { next: { revalidate: 300 } });
+    const raw = await request<unknown>("/settings", { next: { revalidate: 60 } });
     if (!raw || typeof raw !== "object") return { logoUrl: null, contactEmail: null, contactPhone: null };
     const w = raw as Record<string, unknown>;
     const s = (w.settings && typeof w.settings === "object" ? w.settings : w) as Record<string, unknown>;
     const url = (s.logoUrl ?? s.logo ?? "") as string;
-    const logoUrl = url && url.startsWith("http") ? url : null;
+    const logoUrl = url && (url.startsWith("http") || url.startsWith("data:")) ? url : null;
     const ci = (s.contactInfo && typeof s.contactInfo === "object" ? s.contactInfo : {}) as Record<string, unknown>;
     const contactEmail = (ci.email as string) || null;
     const contactPhone = (ci.phone as string) || null;
