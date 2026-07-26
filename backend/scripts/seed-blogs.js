@@ -1,7 +1,3 @@
-require("dotenv").config({ path: require("path").join(__dirname, "../.env") });
-const mongoose = require("mongoose");
-const { MONGODB_URI } = require("../src/config/env");
-require("../src/config/db");
 const BlogPost = require("../src/models/BlogPost");
 
 /* ─── helpers ────────────────────────────────────────────── */
@@ -611,19 +607,26 @@ const posts = [
 ];
 
 /* ══════════════════════════════════════════════════════════ */
-async function seed() {
-  await mongoose.connection.asPromise();
-  console.log("Connected to MongoDB");
+async function seedBlogs() {
   for (const post of posts) {
     await BlogPost.findOneAndUpdate(
       { slug: post.slug },
       { ...post, publishedAt: new Date() },
       { upsert: true, new: true, runValidators: true }
     );
-    console.log("✓", post.slug);
+    console.log("[seed-blogs] ✓", post.slug);
   }
-  console.log("\nAll 5 blog posts seeded!");
-  process.exit(0);
+  console.log("[seed-blogs] All 5 blog posts seeded.");
 }
 
-seed().catch(e => { console.error(e); process.exit(1); });
+module.exports = { seedBlogs, posts };
+
+/* Run standalone: node backend/scripts/seed-blogs.js */
+if (require.main === module) {
+  require("dotenv").config({ path: require("path").join(__dirname, "../.env") });
+  require("../src/config/db")();
+  const mongoose = require("mongoose");
+  mongoose.connection.once("open", () =>
+    seedBlogs().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); })
+  );
+}

@@ -5,8 +5,22 @@ const { PORT } = require("./src/config/env");
 
 dotenv.config();
 
+async function autoSeedBlogs() {
+  try {
+    const BlogPost = require("./src/models/BlogPost");
+    const count = await BlogPost.countDocuments();
+    if (count === 0) {
+      const { seedBlogs } = require("./scripts/seed-blogs");
+      await seedBlogs();
+    }
+  } catch (err) {
+    console.warn("[auto-seed] Blog seeding skipped:", err.message);
+  }
+}
+
 async function startServer() {
   await connectDB();
+  await autoSeedBlogs();
   app.listen(PORT, () => {
     console.log(`Backend API running on port ${PORT}`);
   });
