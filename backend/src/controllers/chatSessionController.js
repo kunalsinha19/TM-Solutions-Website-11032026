@@ -8,6 +8,27 @@ exports.upsert = async (req, res) => {
       productsDiscussed = [], emailCaptured = "", phoneCaptured = "",
       hasQuoteRequest = false, hasPriceInquiry = false, hasUrgency = false,
       quoteSubmitted = false,
+      quantityMentioned = "", timelineMentioned = "", industryMentioned = "",
+    } = req.body;
+
+    if (!sessionId) return res.status(400).json({ success: false, error: "sessionId required" });
+
+    const ip = (req.headers["cf-connecting-ip"] ?? req.headers["x-real-ip"] ??
+      (req.headers["x-forwarded-for"] ?? "").split(",")[0] ?? req.ip ?? "").trim();
+    const ua = (req.headers["user-agent"] ?? "").slice(0, 300);
+
+    const cleanMessages = (messages || []).slice(-60).map(m => ({
+      role: m.role, text: String(m.text ?? "").slice(0, 800), timestamp: m.timestamp ?? new Date(),
+    }));
+
+    const session = await ChatSession.findOneAndUpdate(
+      { sessionId },
+      {
+        $set: {
+          messages: cleanMessages,
+          leadScore, leadSignals,
+          productsDiscussed, emailCaptured, phoneCaptured,
+          hasQuoteRequest, hasPriceInquiry, hasUrgency, quoteSubmitted,
           quantityMentioned, timelineMentioned, industryMentioned,
           lastActivityAt: new Date(),
           visitorIp: ip, userAgent: ua,
@@ -32,13 +53,23 @@ exports.list = async (req, res) => {
     const skip  = (page - 1) * limit;
 
     const filter = {};
-    if (req.query.hasQuote === "true")  filter.hasQuoteRequest = true;
-    if (req.query.hasQuote === "false") filter.hasQuoteRequest = false;
-    if (req.query.minScore) filter.leadScore = { $gte: parseInt(req.query.minScore) };
+
+    // Named filter presets (used by PageAnalytics tab)
+    const preset = req.query.filter;
+    if (preset === "hot")   filter.leadScore = { $gte: 70 };
+    if (preset === "warm")  filter.leadScore = { $gte: 40, $lt: 70 };
+    if (preset === "quote") filter.hasQuoteRequest = true;
+
+    // Legacy explicit params
+    if (!preset) {
+      if (req.query.hasQuote === "true")  filter.hasQuoteRequest = true;
+      if (req.query.hasQuote === "false") filter.hasQuoteRequest = false;
+      if (req.query.minScore) filter.leadScore = { $gte: parseInt(req.query.minScore) };
+    }
 
     const [sessions, total] = await Promise.all([
       ChatSession.find(filter)
-        .sort({ leadScore: -1, startedAt: -1 })
+        .sort({ leadScore: -1, lastActivityAt: -1 })
         .skip(skip).limit(limit)
         .select("-userAgent -visitorIp -__v")
         .lean(),
@@ -48,6 +79,79 @@ exports.list = async (req, res) => {
     res.json({ success: true, sessions, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
     console.error("[chatSession.list]", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+};
+
+// GET /api/chat-sessions/stats — analytics summary (protected)
+exports.stats = async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalSessions,
+      emailCaptures,
+      phoneCaptures,
+      quoteRequests,
+      quoteSubmitted,
+      scoreAgg,
+      hotCount,
+      warmCount,
+      topProductsAgg,
+      topSignalsAgg,
+      dailyAgg,
+    ] = await Promise.all([
+      ChatSession.countDocuments({}),
+      ChatSession.countDocuments({ emailCaptured: { $ne: "" } }),
+      ChatSession.countDocuments({ phoneCaptured: { $ne: "" } }),
+      ChatSession.countDocuments({ hasQuoteRequest: true }),
+      ChatSession.countDocuments({ quoteSubmitted: true }),
+      ChatSession.aggregate([{ $group: { _id: null, avg: { $avg: "$leadScore" }, max: { $max: "$leadScore" } } }]),
+      ChatSession.countDocuments({ leadScore: { $gte: 70 } }),
+      ChatSession.countDocuments({ leadScore: { $gte: 40, $lt: 70 } }),
+      ChatSession.aggregate([
+        { $unwind: "$productsDiscussed" },
+        { $group: { _id: "$productsDiscussed", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 8 },
+      ]),
+      ChatSession.aggregate([
+        { $unwind: "$leadSignals" },
+        { $group: { _id: "$leadSignals", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ]),
+      ChatSession.aggregate([
+        { $match: { lastActivityAt: { $gte: thirtyDaysAgo } } },
+        { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$lastActivityAt" } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+      ]),
+    ]);
+
+    const avgScore = scoreAgg[0]?.avg ?? 0;
+    const maxScore = scoreAgg[0]?.max ?? 0;
+    const coolCount = totalSessions - hotCount - warmCount;
+
+    res.json({
+      success: true,
+      stats: {
+        totalSessions,
+        emailCaptures,
+        phoneCaptures,
+        quoteRequests,
+        quoteSubmitted,
+        avgLeadScore: Math.round(avgScore * 10) / 10,
+        maxLeadScore: maxScore,
+        emailCaptureRate: totalSessions ? Math.round((emailCaptures / totalSessions) * 100) : 0,
+        quoteRequestRate: totalSessions ? Math.round((quoteRequests / totalSessions) * 100) : 0,
+        scoreDistribution: { hot: hotCount, warm: warmCount, cool: Math.max(0, coolCount) },
+        topProducts: topProductsAgg,
+        topSignals: topSignalsAgg,
+        dailyActivity: dailyAgg,
+      },
+    });
+  } catch (err) {
+    console.error("[chatSession.stats]", err);
     res.status(500).json({ success: false, error: "Server error" });
   }
 };

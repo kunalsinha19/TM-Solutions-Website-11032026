@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "../lib/api.js";
 
 /* ─── Animated counter ──────────────────────────────────────────────── */
@@ -278,16 +278,64 @@ function Panel({ eyebrow, title, children, action }) {
   );
 }
 
+/* ─── Tara mini stats ─────────────────────────────────────────────────── */
+function TaraMiniStats({ taraStats }) {
+  if (!taraStats) return null;
+  const { totalSessions, emailCaptures, quoteRequests, avgLeadScore, scoreDistribution } = taraStats;
+  const tiles = [
+    { label: "Chat Sessions",  value: totalSessions, color: "#6366f1", icon: "💬" },
+    { label: "Emails Captured",value: emailCaptures,  color: "#8b5cf6", icon: "✉️" },
+    { label: "Quote Requests", value: quoteRequests,  color: "#10b981", icon: "📋" },
+    { label: "Avg Lead Score", value: `${avgLeadScore ?? 0}`, color: "#f59e0b", icon: "⭐", raw: true },
+  ];
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 10 }}>
+        {tiles.map(t => (
+          <div key={t.label} className="dash-metric-tile" style={{ borderLeft: `3px solid ${t.color}` }}>
+            <span className="dash-metric-icon">{t.icon}</span>
+            <div>
+              <p className="dash-metric-value" style={{ color: t.color }}>{t.raw ? t.value : (t.value ?? 0).toLocaleString()}</p>
+              <p className="dash-metric-label">{t.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      {scoreDistribution && (
+        <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
+          {[
+            { label: "Hot leads",  count: scoreDistribution.hot,  color: "#ef4444" },
+            { label: "Warm leads", count: scoreDistribution.warm, color: "#f59e0b" },
+            { label: "Cool leads", count: scoreDistribution.cool, color: "#94a3b8" },
+          ].map(s => (
+            <div key={s.label} style={{ flex: 1, padding: "8px 10px", borderRadius: 8, background: s.color + "12", border: `1px solid ${s.color}33`, textAlign: "center" }}>
+              <p style={{ fontSize: 20, fontWeight: 700, color: s.color, margin: 0 }}>{s.count ?? 0}</p>
+              <p style={{ fontSize: 10, color: s.color, margin: 0, fontWeight: 600 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main Dashboard ─────────────────────────────────────────────────── */
 export default function Dashboard({ token }) {
   const [data, setData] = useState(null);
+  const [taraStats, setTaraStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    api.getAnalyticsSummary(token)
-      .then(setData)
+    Promise.all([
+      api.getAnalyticsSummary(token),
+      api.getTaraStats(token).catch(() => null),
+    ])
+      .then(([analytics, tara]) => {
+        setData(analytics);
+        setTaraStats(tara?.stats ?? null);
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [token]);
@@ -493,6 +541,13 @@ export default function Dashboard({ token }) {
           ) : <p className="dash-empty">No login history.</p>}
         </Panel>
       </div>
+
+      {/* ── Tara AI Assistant Stats ── */}
+      {taraStats && (
+        <Panel eyebrow="Tara AI" title="Chatbot Lead Performance">
+          <TaraMiniStats taraStats={taraStats} />
+        </Panel>
+      )}
 
     </div>
   );

@@ -162,9 +162,11 @@ export const api = {
   getLiveVisitors: (token) =>
     request("/analytics/live", { headers: { Authorization: `Bearer ${token}` } }),
   getChatSessions: (token, { page = 1, filter = "" } = {}) => {
-    const params = new URLSearchParams({ page, limit: 20, sortBy: "leadScore", ...(filter && { filter }) });
+    const params = new URLSearchParams({ page, limit: 20, ...(filter && { filter }) });
     return request(`/chat-sessions?${params}`, { headers: { Authorization: `Bearer ${token}` } });
   },
+  getTaraStats: (token) =>
+    request("/chat-sessions/stats", { headers: { Authorization: `Bearer ${token}` } }),
 
   // Activity logs
   getActivityLogs: (token, { page = 1, category = "" } = {}) => {
