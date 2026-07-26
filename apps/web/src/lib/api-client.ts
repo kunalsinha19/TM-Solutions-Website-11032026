@@ -267,7 +267,7 @@ async function getBlogPosts({ page = 1, tag = "" }: { page?: number; tag?: strin
   total: number;
   pages: number;
 }> {
-  const params = new URLSearchParams({ page: String(page), limit: "9" });
+  const params = new URLSearchParams({ page: String(page), limit: "12" });
   if (tag) params.set("tag", tag);
   const raw = await request<unknown>(`/blog?${params}`, { next: { revalidate: 300 } });
   const d = (raw as Record<string, unknown>) ?? {};

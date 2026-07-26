@@ -3,11 +3,22 @@ import type { Metadata } from "next";
 import { apiClient } from "../../../lib/api-client";
 
 export const metadata: Metadata = {
-  title: "Blog — Industrial Insights & Product Guides",
-  description: "Expert articles on industrial equipment, automation, packaging machinery, and B2B procurement tips from TM Solutions.",
+  title: "Blog — Print Finishing & Packaging Machine Guides India",
+  description: "Expert guides on lamination machines, perfect binding, die-cutting, paper cutters, folding machines & more. India-specific buying advice from TM Solutions.",
+  keywords: ["print finishing blog", "lamination machine guide India", "binding machine India", "paper cutter guide", "packaging machine tips"],
 };
 
 export const revalidate = 60;
+
+const TAG_FILTERS = [
+  { label: "All", value: "" },
+  { label: "Lamination", value: "Roll Laminator" },
+  { label: "Binding", value: "Glue Binder" },
+  { label: "Paper Cutter", value: "Paper Cutter" },
+  { label: "Folding", value: "Folding Machine" },
+  { label: "Packaging", value: "Packaging" },
+  { label: "Buying Guide", value: "Buying Guide" },
+];
 
 export default async function BlogListPage({
   searchParams,
@@ -24,12 +35,35 @@ export default async function BlogListPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       {/* Header */}
-      <div className="mb-10 text-center">
+      <div className="mb-8 text-center">
         <p className="text-sm font-semibold uppercase tracking-widest text-accent">Resources</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight">Industrial Insights</h1>
         <p className="mt-3 text-muted max-w-xl mx-auto">
-          Expert guides, product comparisons, and industry news to help you make better procurement decisions.
+          Expert buying guides, machine comparisons and India-specific tips to help print shops make smarter equipment decisions.
         </p>
+        {total > 0 && (
+          <p className="mt-2 text-xs text-muted">{total} article{total !== 1 ? "s" : ""}</p>
+        )}
+      </div>
+
+      {/* Tag filter strip */}
+      <div className="flex flex-wrap gap-2 justify-center mb-10">
+        {TAG_FILTERS.map(({ label, value }) => {
+          const active = tag === value;
+          return (
+            <Link
+              key={value}
+              href={`/blog${value ? `?tag=${encodeURIComponent(value)}` : ""}`}
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold border transition-colors ${
+                active
+                  ? "bg-accent text-white border-accent"
+                  : "bg-panel border-border/70 text-muted hover:text-accent hover:border-accent/50"
+              }`}
+            >
+              {label}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Post grid */}
@@ -60,9 +94,9 @@ export default async function BlogListPage({
                 {/* Tags */}
                 {post.tags && post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
-                    {post.tags.slice(0, 2).map((tag) => (
-                      <span key={tag} className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
-                        {tag}
+                    {post.tags.slice(0, 2).map((t) => (
+                      <span key={t} className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
+                        {t}
                       </span>
                     ))}
                   </div>
@@ -116,6 +150,31 @@ export default async function BlogListPage({
           )}
         </div>
       )}
+
+      {/* Bottom CTA */}
+      <div className="mt-16 rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg,#d97706,#92400e)" }}>
+        <p className="text-sm font-bold tracking-widest uppercase mb-1" style={{ color: "#fde68a" }}>Ready to upgrade?</p>
+        <p className="text-2xl font-extrabold mb-2" style={{ color: "#ffffff" }}>Find the right machine for your print shop</p>
+        <p className="text-sm mb-6" style={{ color: "#fef3c7" }}>Pan-India delivery · Free consultation · EMI available</p>
+        <div className="flex flex-wrap gap-3 justify-center">
+          <a
+            href="https://wa.me/917595056476?text=Hi%2C+I+want+to+know+more+about+your+print+finishing+machines."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 font-bold text-sm"
+            style={{ background: "#25d366", color: "#ffffff" }}
+          >
+            💬 WhatsApp Us
+          </a>
+          <Link
+            href="/products"
+            className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 font-bold text-sm"
+            style={{ background: "#ffffff", color: "#92400e" }}
+          >
+            Browse All Products →
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

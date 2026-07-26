@@ -125,14 +125,42 @@ export default async function BlogDetailPage({
           </p>
         )}
 
-        {/* Content */}
-        <div
-          className="mt-8 prose prose-invert max-w-none leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: post.content || "" }}
-        />
+        {/* Content — isolated white card so hardcoded blog colours work in every theme */}
+        <div className="mt-8 rounded-2xl border border-border/30 overflow-hidden shadow-sm">
+          <div
+            className="max-w-none leading-relaxed p-6 sm:p-8"
+            style={{ background: "#ffffff", color: "#1a0f08", fontFamily: "inherit", overflowWrap: "break-word" }}
+            dangerouslySetInnerHTML={{ __html: post.content || "" }}
+          />
+        </div>
+
+        {/* WhatsApp CTA */}
+        <div className="mt-10 rounded-2xl p-6 sm:p-8 text-center" style={{ background: "linear-gradient(135deg,#d97706,#92400e)" }}>
+          <p className="text-sm font-bold tracking-widest uppercase mb-1" style={{ color: "#fde68a" }}>Got a question?</p>
+          <p className="text-xl font-extrabold mb-2" style={{ color: "#ffffff" }}>Talk to our experts — no sales pressure</p>
+          <p className="text-sm mb-5" style={{ color: "#fef3c7" }}>Get a free quote, spec advice, or a machine demo in your city.</p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <a
+              href="https://wa.me/917595056476?text=Hi%2C+I+read+your+blog+and+want+to+know+more+about+your+machines."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 font-bold text-sm"
+              style={{ background: "#25d366", color: "#ffffff" }}
+            >
+              💬 Chat on WhatsApp
+            </a>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 font-bold text-sm"
+              style={{ background: "#ffffff", color: "#92400e" }}
+            >
+              Get a Free Quote →
+            </Link>
+          </div>
+        </div>
 
         {/* Back link */}
-        <div className="mt-12 pt-8 border-t border-border/60">
+        <div className="mt-8 pt-6 border-t border-border/60">
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"

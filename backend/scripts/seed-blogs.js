@@ -995,7 +995,7 @@ posts.push(
     excerpt: "Thick coated stock cracks when folded raw. A creasing machine solves this. This guide explains the difference between creasing, scoring and perforating — and which machine to buy for your Indian print shop.",
     content: blog7Content,
     tags: ["Creasing Machine", "Scoring Machine", "Print Finishing", "Packaging"],
-    seoTitle: "Creasing & Scoring Machine India — Stop Brochures Cracking | TM Solutions",
+    seoTitle: "Creasing Machine India: Fix Cracked Brochures | TM Solutions",
     seoDescription: "Electric creasing machines for Indian print shops. Stop coated paper cracking at folds. Crease vs score vs perf, price guide, buying tips.",
     readingTimeMin: 5,
     status: "published",
@@ -1006,7 +1006,7 @@ posts.push(
     excerpt: "Starting a print business in India? This guide breaks down the exact machine stack for three budget levels — starter, growth and commercial — with ROI numbers, common mistakes and a step-by-step setup checklist.",
     content: blog8Content,
     tags: ["Print Shop Setup", "India", "Business Guide", "Print Finishing"],
-    seoTitle: "Commercial Print Shop Setup Guide India — Machine Checklist | TM Solutions",
+    seoTitle: "Print Shop Setup India: Machine Checklist | TM Solutions",
     seoDescription: "Complete guide to setting up a print business in India. Machine checklists for ₹5L, ₹15L, ₹50L budgets. ROI numbers, common mistakes, buying tips.",
     readingTimeMin: 7,
     status: "published",
@@ -1017,7 +1017,7 @@ posts.push(
     excerpt: "Should you buy a ₹1L semi-auto binder or a ₹7L fully automatic? This guide shows you the exact volume threshold, PUR vs EVA glue comparison, and a side-by-side spec table for Indian print shops.",
     content: blog9Content,
     tags: ["Perfect Binding", "Glue Binder", "Automatic", "India"],
-    seoTitle: "Automatic vs Semi-Auto Binding Machine India — Which to Buy? | TM Solutions",
+    seoTitle: "Auto vs Semi-Auto Binding Machine India | TM Solutions",
     seoDescription: "Auto vs semi-auto perfect binding machine India. Volume thresholds, PUR vs EVA glue, speed comparison, price guide. Find the right binder.",
     readingTimeMin: 6,
     status: "published",
@@ -1037,15 +1037,21 @@ posts.push(
 
 /* ══════════════════════════════════════════════════════════ */
 async function seedBlogs() {
+  let ok = 0;
   for (const post of posts) {
-    await BlogPost.findOneAndUpdate(
-      { slug: post.slug },
-      { ...post, publishedAt: new Date() },
-      { upsert: true, new: true, runValidators: true }
-    );
-    console.log("[seed-blogs] ✓", post.slug);
+    try {
+      await BlogPost.findOneAndUpdate(
+        { slug: post.slug },
+        { ...post, publishedAt: new Date() },
+        { upsert: true, new: true, runValidators: true }
+      );
+      console.log("[seed-blogs] ✓", post.slug);
+      ok++;
+    } catch (err) {
+      console.error("[seed-blogs] ✗", post.slug, err.message);
+    }
   }
-  console.log("[seed-blogs] All blog posts seeded.");
+  console.log(`[seed-blogs] ${ok}/${posts.length} blog posts seeded.`);
 }
 
 module.exports = { seedBlogs, posts };
