@@ -19,7 +19,142 @@ type AvatarState = "idle" | "listening" | "thinking" | "speaking";
 type Message = { role: "user" | "bot"; text: string };
 
 const SUBMIT_QUOTE_RE = /SUBMIT_QUOTE:\{[^}]+\}/s;
-const GREETING = "Hi! I'm Tara, your assistant at Tara Maa Solutions. I can help you find the right industrial product, answer questions, or get you a quote. How can I help you today?";
+const GREETING = "Namaste! I'm Tara, your personal advisor at Tara Maa Solutions. Whether you're looking for the right industrial product or want to send us your requirement — I'm here to help. What can I do for you today?";
+
+// ── Language detection using Unicode script ranges ────────────────────────────
+function detectLang(text: string): string {
+  if (/[一-鿿㐀-䶿＀-￯　-〿]/.test(text)) return "zh-CN"; // Chinese / Mandarin
+  if (/[ऀ-ॿ]/.test(text)) return "hi-IN";  // Devanagari → Hindi / Marathi
+  if (/[஀-௿]/.test(text)) return "ta-IN";  // Tamil
+  if (/[ఀ-౿]/.test(text)) return "te-IN";  // Telugu
+  if (/[ঀ-৿]/.test(text)) return "bn-IN";  // Bengali
+  if (/[઀-૿]/.test(text)) return "gu-IN";  // Gujarati
+  if (/[ಀ-೿]/.test(text)) return "kn-IN";  // Kannada
+  if (/[ഀ-ൿ]/.test(text)) return "ml-IN";  // Malayalam
+  if (/[਀-੿]/.test(text)) return "pa-IN";  // Punjabi (Gurmukhi)
+  if (/[؀-ۿ]/.test(text)) return "ar-SA";  // Arabic
+  // Hinglish — Latin-script Hindi words. Use en-IN: it handles the English
+  // portions natively and pronounces romanised Hindi far better than a hi-IN
+  // voice trying to read English phonetically.
+  if (/\b(kya|hai|nahi|haan|bahut|accha|theek|kitna|kyun|kaise|yeh|woh|mera|aapka|bhai|namaste|dhanyawad|chahiye|jaldi|abhi)\b/i.test(text)) return "en-IN";
+  return "en-IN";
+}
+
+// ── TTS tuning per language ────────────────────────────────────────────────────
+// Slower rates + slight pitch variation = more natural, less robotic.
+// Pitch 1.0 is neutral; 1.05–1.1 adds warmth without sounding odd on most voices.
+const LANG_TTS: Record<string, { rate: number; pitch: number; volume: number }> = {
+  "zh-CN": { rate: 0.78, pitch: 1.0,  volume: 1 },
+  "zh-TW": { rate: 0.78, pitch: 1.0,  volume: 1 },
+  "hi-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
+  "mr-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
+  "ta-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "te-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "bn-IN": { rate: 0.80, pitch: 1.02, volume: 1 },
+  "gu-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "kn-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "ml-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "pa-IN": { rate: 0.80, pitch: 1.02, volume: 1 },
+  "ar-SA": { rate: 0.80, pitch: 1.0,  volume: 1 },
+  "en-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
+};
+
+// ── Text pre-processing for natural speech ────────────────────────────────────
+// Removes markdown syntax, bullet formatting, and patterns that cause robotic
+// pauses when read literally by the speech engine.
+function cleanForSpeech(text: string, lang: string): string {
+  let t = text;
+
+  // Strip markdown bold/italic/code
+  t = t.replace(/\*\*([^*]+)\*\*/g, "$1");
+  t = t.replace(/\*([^*]+)\*/g, "$1");
+  t = t.replace(/_([^_]+)_/g, "$1");
+  t = t.replace(/`([^`]+)`/g, "$1");
+
+  // Strip headers (# ## ###)
+  t = t.replace(/^#{1,3}\s+/gm, "");
+
+  // Numbered lists: "1. Item" → prepend comma for a natural pause before each item
+  t = t.replace(/^\d+\.\s+/gm, ", ");
+
+  // Bullet/dash lists → comma so engine pauses naturally
+  t = t.replace(/^[-•*]\s+/gm, ", ");
+
+  // Common abbreviations that engines stumble on
+  t = t.replace(/\be\.g\./gi, "for example");
+  t = t.replace(/\bi\.e\./gi, "that is");
+  t = t.replace(/\betc\./gi, "and so on");
+  t = t.replace(/\bvs\./gi, "versus");
+  t = t.replace(/\bapprox\./gi, "approximately");
+
+  // ₹ → Rupees for Indian English
+  if (lang.endsWith("-IN") || lang === "hi-IN") {
+    t = t.replace(/₹\s?(\d[\d,]*)/g, "$1 Rupees");
+  }
+
+  // Collapse multiple blank lines
+  t = t.replace(/\n{3,}/g, "\n\n");
+
+  // Trim trailing whitespace per line
+  t = t.split("\n").map(l => l.trim()).join(" ").replace(/\s{2,}/g, " ").trim();
+
+  return t;
+}
+
+// TTS queue item (carries language so voice stays correct per sentence)
+type SpeechItem = { text: string; lang: string };
+
+// ── Lead analysis (runs client-side, zero extra API cost) ─────────────────────
+function analyzeSession(msgs: Message[]) {
+  const userText = msgs.filter(m => m.role === "user").map(m => m.text).join(" ").toLowerCase();
+  const allText  = msgs.map(m => m.text).join(" ").toLowerCase();
+
+  const signals: string[] = [];
+  let score = 0;
+
+  if (/product|machine|printer|automation|equipment|laminat|sublim|electrical|pump|motor|plc|sensor/i.test(userText)) { signals.push("product_interest"); score += 20; }
+  if (/price|cost|rate|budget|how much|kitna|daam|rupee|rs\b|₹|quote|quotation/i.test(userText)) { signals.push("price_inquiry"); score += 20; }
+  if (/urgent|asap|immediately|jaldi|abhi|this week|by (tomorrow|monday|tuesday|wednesday|thursday|friday)|quick(ly)?/i.test(userText)) { signals.push("urgency"); score += 15; }
+  if (/quote|order|buy|purchase|want to (get|order|buy)|place an order/i.test(userText)) { signals.push("quote_requested"); score += 15; }
+  if (msgs.filter(m => m.role === "user").length >= 5) { signals.push("high_engagement"); score += 10; }
+
+  const emailMatch = userText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const emailCaptured = emailMatch ? emailMatch[0] : "";
+  if (emailCaptured) { signals.push("email_captured"); score += 10; }
+
+  const phoneMatch = userText.match(/(\+91[\s-]?)?[6-9]\d{9}/);
+  const phoneCaptured = phoneMatch ? phoneMatch[0] : "";
+  if (phoneCaptured) { signals.push("phone_captured"); score += 5; }
+
+  // Products discussed: extract capitalized nouns from bot responses hinting at products
+  const productHints = (allText.match(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)*)\b/g) ?? []).slice(0, 5);
+
+  // Extract qualification signals Tara collects
+  const quantityMatch  = userText.match(/\b(\d+)\s*(?:units?|machines?|pieces?|pcs?|sets?|nos?\.?)/i);
+  const quantityMentioned = quantityMatch ? quantityMatch[0] : "";
+  const timelineMatch  = userText.match(/\b(this week|next week|this month|next month|in \d+\s*(?:days?|weeks?|months?)|asap|immediately|by [a-z]+day|urgent)/i);
+  const timelineMentioned = timelineMatch ? timelineMatch[0] : "";
+  const industryMatch  = userText.match(/\b(print(?:ing)?|packag(?:ing)?|school|office|hospital|pharma|textile|food|retail|manufacturin?g|signage|offset|digital print|screen print)/i);
+  const industryMentioned = industryMatch ? industryMatch[0] : "";
+
+  if (quantityMentioned) { signals.push("quantity_mentioned"); score += 10; }
+  if (timelineMentioned) { signals.push("timeline_mentioned"); score += 5; }
+  if (industryMentioned) { signals.push("industry_mentioned"); score += 5; }
+
+  return {
+    leadScore: Math.min(score, 100),
+    leadSignals: signals,
+    productsDiscussed: productHints,
+    emailCaptured,
+    phoneCaptured,
+    hasQuoteRequest: signals.includes("quote_requested"),
+    hasPriceInquiry: signals.includes("price_inquiry"),
+    hasUrgency: signals.includes("urgency"),
+    quantityMentioned,
+    timelineMentioned,
+    industryMentioned,
+  };
+}
 
 // ── Tara SVG Avatar ───────────────────────────────────────────────────────────
 function TaraFace({ state, mouthOpen }: { state: AvatarState; mouthOpen: boolean }) {

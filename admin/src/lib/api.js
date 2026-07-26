@@ -188,6 +188,18 @@ export const api = {
   syncYouTubeShorts: (token) =>
     request("/youtube/shorts/sync", { method: "POST", headers: { Authorization: `Bearer ${token}` } }),
 
+  // Blog
+  getBlogPosts: (token, { page = 1 } = {}) => {
+    const params = new URLSearchParams({ page, limit: 20 });
+    return request(`/blog/admin/all?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+  },
+  createBlogPost: (token, payload) =>
+    request("/blog", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }),
+  updateBlogPost: (token, id, payload) =>
+    request(`/blog/${id}`, { method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }),
+  deleteBlogPost: (token, id) =>
+    request(`/blog/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }),
+
   uploadMedia: async (token, file) => {
     const data = new FormData();
     data.append("file", file);

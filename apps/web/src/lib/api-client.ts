@@ -246,6 +246,44 @@ async function getYouTubeShorts(): Promise<YoutubeShort[]> {
   }
 }
 
+export type BlogPost = {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content?: string;
+  coverImage?: string;
+  tags?: string[];
+  seoTitle?: string;
+  seoDescription?: string;
+  status: "draft" | "published";
+  publishedAt?: string;
+  updatedAt?: string;
+  readingTimeMin?: number;
+};
+
+async function getBlogPosts({ page = 1, tag = "" }: { page?: number; tag?: string } = {}): Promise<{
+  posts: BlogPost[];
+  total: number;
+  pages: number;
+}> {
+  const params = new URLSearchParams({ page: String(page), limit: "9" });
+  if (tag) params.set("tag", tag);
+  const raw = await request<unknown>(`/blog?${params}`, { next: { revalidate: 300 } });
+  const d = (raw as Record<string, unknown>) ?? {};
+  return {
+    posts: (Array.isArray(d.posts) ? d.posts : []) as BlogPost[],
+    total: (d.total as number) ?? 0,
+    pages: (d.pages as number) ?? 1,
+  };
+}
+
+async function getBlogPost(slug: string): Promise<{ post: BlogPost }> {
+  const raw = await request<unknown>(`/blog/${slug}`, { next: { revalidate: 300 } });
+  const d = (raw as Record<string, unknown>) ?? {};
+  return { post: (d.post ?? raw) as BlogPost };
+}
+
 export const apiClient = {
   getSettings: () => request<SiteSettings>("/settings", { next: { revalidate: 60 } }),
   getProducts,
@@ -255,6 +293,8 @@ export const apiClient = {
   getSiteLogo,
   getSiteHeaderData,
   getYouTubeShorts,
+  getBlogPosts,
+  getBlogPost,
   getSeoPage: (slug: string) => request<SeoPage>(`/seo-pages/${slug}`, { next: { revalidate: 60 } }),
   submitQuote: (payload: QuoteRequest) =>
     request<QuoteRequest>("/quotes", {

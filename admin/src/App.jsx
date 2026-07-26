@@ -16,6 +16,9 @@ import ProfileManager from "./components/ProfileManager";
 import YouTubeManager from "./components/YouTubeManager";
 import LiveVisitors from "./components/LiveVisitors";
 import SystemLogs from "./components/SystemLogs";
+import PageAnalytics from "./components/PageAnalytics";
+import LeadsManager from "./components/LeadsManager";
+import BlogManager from "./components/BlogManager";
 
 const PAGE_TITLES = {
   dashboard:    "Dashboard",
@@ -28,6 +31,8 @@ const PAGE_TITLES = {
   youtubeShorts:"YouTube Shorts",
   brochures:    "Brochures",
   quotes:       "Quote Requests",
+  leads:        "Tara Leads",
+  blog:         "Blog",
   settings:     "Website Settings",
   admins:       "Admins",
   activityLogs: "Activity Logs",
@@ -62,6 +67,8 @@ export default function App() {
       case "youtubeShorts": return <YouTubeManager token={t} />;
       case "brochures":     return <BrochureManager token={t} />;
       case "quotes":        return <QuoteRequestManager token={t} />;
+      case "leads":         return <LeadsManager token={t} />;
+      case "blog":          return <BlogManager token={t} />;
       case "settings":      return <SettingsManager token={t} />;
       case "admins":        return <AdminManager token={t} profile={auth.profile} />;
       case "activityLogs":  return <ActivityLogs token={t} />;
