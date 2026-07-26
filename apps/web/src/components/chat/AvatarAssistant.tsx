@@ -56,22 +56,22 @@ function detectLang(text: string): string {
 }
 
 // ── TTS tuning per language ────────────────────────────────────────────────────
-// Slower rates + slight pitch variation = more natural, less robotic.
-// Pitch 1.0 is neutral; 1.05–1.1 adds warmth without sounding odd on most voices.
+// Indian voices need slightly slower rate (0.75) for intelligibility.
+// Pitch 1.05–1.08 adds warmth without sounding odd on most voices.
 const LANG_TTS: Record<string, { rate: number; pitch: number; volume: number }> = {
-  "zh-CN": { rate: 0.78, pitch: 1.0,  volume: 1 },
-  "zh-TW": { rate: 0.78, pitch: 1.0,  volume: 1 },
-  "hi-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
-  "mr-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
-  "ta-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
-  "te-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
-  "bn-IN": { rate: 0.80, pitch: 1.02, volume: 1 },
-  "gu-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
-  "kn-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
-  "ml-IN": { rate: 0.80, pitch: 1.0,  volume: 1 },
-  "pa-IN": { rate: 0.80, pitch: 1.02, volume: 1 },
-  "ar-SA": { rate: 0.80, pitch: 1.0,  volume: 1 },
-  "en-IN": { rate: 0.80, pitch: 1.05, volume: 1 },
+  "zh-CN": { rate: 0.75, pitch: 1.0,  volume: 1 },
+  "zh-TW": { rate: 0.75, pitch: 1.0,  volume: 1 },
+  "hi-IN": { rate: 0.75, pitch: 1.06, volume: 1 },
+  "mr-IN": { rate: 0.75, pitch: 1.06, volume: 1 },
+  "ta-IN": { rate: 0.74, pitch: 1.04, volume: 1 },
+  "te-IN": { rate: 0.74, pitch: 1.04, volume: 1 },
+  "bn-IN": { rate: 0.75, pitch: 1.05, volume: 1 },
+  "gu-IN": { rate: 0.75, pitch: 1.04, volume: 1 },
+  "kn-IN": { rate: 0.74, pitch: 1.04, volume: 1 },
+  "ml-IN": { rate: 0.74, pitch: 1.04, volume: 1 },
+  "pa-IN": { rate: 0.75, pitch: 1.05, volume: 1 },
+  "ar-SA": { rate: 0.78, pitch: 1.0,  volume: 1 },
+  "en-IN": { rate: 0.82, pitch: 1.06, volume: 1 },
 };
 
 // ── Text pre-processing for natural speech ────────────────────────────────────
@@ -79,6 +79,10 @@ const LANG_TTS: Record<string, { rate: number; pitch: number; volume: number }> 
 // pauses when read literally by the speech engine.
 function cleanForSpeech(text: string, lang: string): string {
   let t = text;
+
+  // Strip UI tokens that must never be read aloud
+  t = t.replace(/OPTIONS:\s*\[[^\]]*\]/gs, "");
+  t = t.replace(/SUBMIT_QUOTE:\{[^}]+\}/gs, "");
 
   // Strip markdown bold/italic/code
   t = t.replace(/\*\*([^*]+)\*\*/g, "$1");
@@ -393,7 +397,15 @@ export default function AvatarAssistant() {
     if (tts) {
       const loadVoices = () => {
         const v = window.speechSynthesis.getVoices();
-        if (v.length) voicesRef.current = v;
+        if (v.length) {
+          voicesRef.current = v;
+          // Voices sometimes load after the greeting is already queued (Chrome race).
+          // Kick the queue now so the greeting actually plays.
+          if (speechQueue.current.length > 0 && !isSpeaking.current) {
+            isSpeaking.current = true;
+            speakNextRef.current();
+          }
+        }
       };
       loadVoices();
       window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -444,44 +456,51 @@ export default function AvatarAssistant() {
     const allVoices = voicesRef.current.length ? voicesRef.current : (synthRef.current?.getVoices() ?? []);
     const primary = lang.split("-")[0];
 
-    // Strip out known male-named voices so they never leak through any tier.
-    // A voice only gets blocked if its name matches AND it's not explicitly labelled female.
-    const knownMaleRe = /\b(david|mark|daniel|jorge|thomas|fred|rishi|bruce|arthur|aaron|albert|xander|carlos|enrique|alex|lee|ralph|junior|bad news|hysterical|boing|cellos|deranged|organ|pipe)\b/i;
+    // Filter out clearly non-Indian male voices only; keep all Indian voices regardless of gender
+    // so we don't accidentally block "Google हिन्दी", "Google Tamil", etc.
+    const knownMaleRe = /\b(david|mark|daniel|jorge|thomas|fred|bruce|arthur|aaron|albert|xander|carlos|enrique|ralph|junior|bad news|hysterical|boing|cellos|deranged|organ|pipe)\b/i;
+    const isIndianLang = ["hi","mr","ta","te","bn","gu","kn","ml","pa"].includes(primary);
     const voices = allVoices.filter(v =>
-      !(knownMaleRe.test(v.name) && !/female|woman/i.test(v.name))
+      isIndianLang || !(knownMaleRe.test(v.name) && !/female|woman/i.test(v.name))
     );
 
     const isNeural  = (v: SpeechSynthesisVoice) => /neural|natural|wavenet|premium/i.test(v.name);
-    const isFemale  = (v: SpeechSynthesisVoice) => /female|woman|aditi|heera|lekha|aria|zira|neerja|priya|riya|veena|kanya|samantha|victoria|karen/i.test(v.name);
+    // Expanded Indian female voice name list covering Google, Microsoft, Samsung TTS
+    const isFemale  = (v: SpeechSynthesisVoice) => /female|woman|aditi|heera|lekha|aria|zira|neerja|priya|riya|veena|kanya|samantha|victoria|karen|swara|ananya|kavya|tanvi|divya|rashmi|sunita|rekha|pooja|aarti|meera|sita|gita/i.test(v.name);
+    const isGoogle  = (v: SpeechSynthesisVoice) => /google/i.test(v.name);
     const exactLang = (v: SpeechSynthesisVoice) => v.lang === lang;
     const famLang   = (v: SpeechSynthesisVoice) => v.lang.startsWith(primary + "-");
 
     return (
-      // Tier 1 — exact lang, neural female
+      // Tier 1 — exact lang, Google neural female (best quality on Android)
+      voices.find(v => exactLang(v) && isGoogle(v) && isFemale(v)) ||
+      // Tier 2 — exact lang, Google (Google TTS pronounces Indian languages best)
+      voices.find(v => exactLang(v) && isGoogle(v)) ||
+      // Tier 3 — exact lang, any neural female
       voices.find(v => exactLang(v) && isNeural(v) && isFemale(v)) ||
-      // Tier 2 — exact lang, female (no male leaks here)
+      // Tier 4 — exact lang, female
       voices.find(v => exactLang(v) && isFemale(v)) ||
-      // Tier 3 — exact lang, neural (male already filtered from voices list)
-      voices.find(v => exactLang(v) && isNeural(v)) ||
-      // Tier 4 — exact lang, any remaining (male names stripped above)
+      // Tier 5 — exact lang, any
       voices.find(v => exactLang(v)) ||
-      // Tier 5 — language family, neural female
+      // Tier 6 — language family, Google
+      voices.find(v => famLang(v) && isGoogle(v)) ||
+      // Tier 7 — language family, neural female
       voices.find(v => famLang(v) && isNeural(v) && isFemale(v)) ||
-      // Tier 6 — language family, female
+      // Tier 8 — language family, female
       voices.find(v => famLang(v) && isFemale(v)) ||
-      // Tier 7 — language family, any (male-stripped)
+      // Tier 9 — language family, any
       voices.find(v => famLang(v)) ||
-      // Tier 8 — named Indian female voices (Aditi/Lekha/Riya — common on Android/Windows)
-      (["hi","mr","gu","ta","te","bn","kn","ml","pa"].includes(primary)
-        ? voices.find(v => /aditi|lekha|riya|neerja|veena|heera|priya/i.test(v.name)) ?? null
+      // Tier 10 — named Indian female voices (common on Android/Windows/Samsung)
+      (isIndianLang
+        ? allVoices.find(v => /aditi|lekha|riya|neerja|veena|heera|priya|swara|ananya|kavya|tanvi/i.test(v.name)) ?? null
         : null) ||
-      // Tier 9 — Google Mandarin for Chinese
-      (primary === "zh" ? voices.find(v => /google/i.test(v.name) && v.lang.startsWith("zh")) ?? null : null) ||
-      // Tier 10 — Indian English female fallback (en-IN Neerja/Aditi/Riya on most platforms)
-      voices.find(v => v.lang === "en-IN" && (isNeural(v) || isFemale(v))) ||
-      voices.find(v => v.lang === "en-IN") ||
-      voices.find(v => v.lang.startsWith("en") && (isNeural(v) || isFemale(v))) ||
-      voices.find(v => v.lang.startsWith("en")) ||
+      // Tier 11 — Google Mandarin for Chinese
+      (primary === "zh" ? allVoices.find(v => isGoogle(v) && v.lang.startsWith("zh")) ?? null : null) ||
+      // Tier 12 — Indian English female fallback (en-IN Neerja/Aditi on most platforms)
+      allVoices.find(v => v.lang === "en-IN" && (isGoogle(v) || isNeural(v) || isFemale(v))) ||
+      allVoices.find(v => v.lang === "en-IN") ||
+      allVoices.find(v => v.lang.startsWith("en-") && (isNeural(v) || isFemale(v))) ||
+      allVoices.find(v => v.lang.startsWith("en")) ||
       null
     );
   }, []);
@@ -589,17 +608,16 @@ export default function AvatarAssistant() {
   // ── Extract sentences from stream for real-time TTS ───────────────────────
   const extractSentences = useCallback((chunk: string) => {
     streamBuffer.current += chunk;
-    const lang = currentLang.current;
-    // Chinese uses 。！？ as terminators; other scripts use .!?
-    const isChinese = lang.startsWith("zh");
-    const re = isChinese
-      ? /[^。！？\n]+[。！？\n]/g
-      : /[^.!?]*[.!?](?:\s|$)/g;
+    // Universal boundary: Latin .!? + Devanagari danda (।) + Chinese/Japanese stops 。！？
+    const re = /[^.!?।。！？\n]+[.!?।。！？\n](?:\s|$)?/g;
     let m: RegExpExecArray | null;
     let last = 0;
     while ((m = re.exec(streamBuffer.current)) !== null) {
       const s = m[0].trim();
-      if (s.length > 1) speechQueue.current.push({ text: s, lang });
+      if (s.length > 1) {
+        // Detect language per sentence so mixed-language bot responses use the correct voice
+        speechQueue.current.push({ text: s, lang: detectLang(s) });
+      }
       last = re.lastIndex;
     }
     streamBuffer.current = streamBuffer.current.slice(last);
@@ -669,7 +687,8 @@ export default function AvatarAssistant() {
       }
 
       if (streamBuffer.current.trim()) {
-        speechQueue.current.push({ text: streamBuffer.current.trim(), lang: currentLang.current });
+        const tail = streamBuffer.current.trim();
+        speechQueue.current.push({ text: tail, lang: detectLang(tail) });
         streamBuffer.current = "";
       }
       if (!isSpeaking.current && speechQueue.current.length > 0 && hasTTS && voiceOn) {
