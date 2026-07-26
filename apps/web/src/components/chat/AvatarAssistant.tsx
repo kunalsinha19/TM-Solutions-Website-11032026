@@ -714,7 +714,7 @@ export default function AvatarAssistant() {
     saveSession(messages, quoteSubmitted);
   }, [messages, quoteSubmitted, saveSession]);
 
-  const stateLabel = { idle: "Type or tap mic", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking…" }[avatarState];
+  const stateLabel = { idle: "Type or tap mic", listening: "Listening…", thinking: "Thinking…", speaking: "Tap mic or type to interrupt" }[avatarState];
   const stateColor = { idle: "text-muted", listening: "text-blue-400", thinking: "text-amber-400", speaking: "text-green-400" }[avatarState];
 
   const LANG_LABELS: Record<string, string> = {
@@ -901,8 +901,23 @@ export default function AvatarAssistant() {
           >
             {hasSR && (
               <button
-                onClick={() => avatarState === "listening" ? stopListening() : startListening()}
-                disabled={avatarState === "thinking" || avatarState === "speaking"}
+                onClick={() => {
+                  if (avatarState === "listening") {
+                    stopListening();
+                  } else {
+                    // Interrupt Tara mid-speech if needed, then listen
+                    if (avatarState === "speaking") {
+                      synthRef.current?.cancel();
+                      speakGenRef.current++;
+                      speechQueue.current = [];
+                      isSpeaking.current = false;
+                      streamBuffer.current = "";
+                      setAvatarState("idle");
+                    }
+                    startListening();
+                  }
+                }}
+                disabled={avatarState === "thinking"}
                 aria-label={avatarState === "listening" ? "Stop" : "Speak"}
                 className="h-9 w-9 shrink-0 flex items-center justify-center rounded-full transition-all disabled:opacity-40"
                 style={avatarState === "listening"
@@ -928,14 +943,13 @@ export default function AvatarAssistant() {
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); } }}
               placeholder="Type or tap mic…"
-              disabled={avatarState === "thinking" || avatarState === "speaking"}
-              className="flex-1 rounded-xl px-3 py-2 text-sm outline-none disabled:opacity-50"
+              className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
               style={{ background: "var(--color-panel)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}
             />
 
             <button
               onClick={() => sendMessage(inputText)}
-              disabled={!inputText.trim() || avatarState === "thinking" || avatarState === "speaking"}
+              disabled={!inputText.trim() || avatarState === "thinking"}
               aria-label="Send"
               className="h-9 w-9 shrink-0 flex items-center justify-center rounded-full transition-all disabled:opacity-30"
               style={{ background: inputText.trim() ? "linear-gradient(135deg,#D97706,#92400E)" : "var(--color-border)" }}
