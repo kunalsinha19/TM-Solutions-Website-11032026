@@ -129,15 +129,9 @@ function analyzeSession(msgs: Message[]) {
   // Products discussed: extract capitalized nouns from bot responses hinting at products
   const productHints = (allText.match(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)*)\b/g) ?? []).slice(0, 5);
 
-  return {
-    leadScore: Math.min(score, 100),
-    leadSignals: signals,
-    productsDiscussed: productHints,
-    emailCaptured,
-    phoneCaptured,
-    hasQuoteRequest: signals.includes("quote_requested"),
-    hasPriceInquiry: signals.includes("price_inquiry"),
-    hasUrgency: signals.includes("urgency"),
+    quantityMentioned,
+    timelineMentioned,
+    industryMentioned,
   };
 }
 

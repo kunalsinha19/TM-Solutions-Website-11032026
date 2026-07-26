@@ -8,26 +8,7 @@ exports.upsert = async (req, res) => {
       productsDiscussed = [], emailCaptured = "", phoneCaptured = "",
       hasQuoteRequest = false, hasPriceInquiry = false, hasUrgency = false,
       quoteSubmitted = false,
-    } = req.body;
-
-    if (!sessionId) return res.status(400).json({ success: false, error: "sessionId required" });
-
-    const ip = (req.headers["cf-connecting-ip"] ?? req.headers["x-real-ip"] ??
-      (req.headers["x-forwarded-for"] ?? "").split(",")[0] ?? req.ip ?? "").trim();
-    const ua = (req.headers["user-agent"] ?? "").slice(0, 300);
-
-    const cleanMessages = (messages || []).slice(-60).map(m => ({
-      role: m.role, text: String(m.text ?? "").slice(0, 800), timestamp: m.timestamp ?? new Date(),
-    }));
-
-    const session = await ChatSession.findOneAndUpdate(
-      { sessionId },
-      {
-        $set: {
-          messages: cleanMessages,
-          leadScore, leadSignals,
-          productsDiscussed, emailCaptured, phoneCaptured,
-          hasQuoteRequest, hasPriceInquiry, hasUrgency, quoteSubmitted,
+          quantityMentioned, timelineMentioned, industryMentioned,
           lastActivityAt: new Date(),
           visitorIp: ip, userAgent: ua,
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),

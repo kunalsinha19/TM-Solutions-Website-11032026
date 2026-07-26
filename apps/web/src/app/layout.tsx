@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { SiteFooter } from "../components/layout/site-footer";
 import { SiteHeader } from "../components/layout/site-header";
@@ -28,6 +29,21 @@ export default async function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   const { logoUrl, contactEmail, contactPhone } = await apiClient.getSiteHeaderData();
 
+  const localBusinessJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: "TM Solutions",
+    url: "https://tmsolutionsindia.com",
+    telephone: contactPhone ?? "+91-9876543210",
+    email: contactEmail ?? "taramaasolutions2025@gmail.com",
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "IN",
+    },
+    description: "Premium industrial products, smart automation solutions, and fast quote turnaround for enterprise buyers. Trusted by 200+ companies across India.",
+    sameAs: ["https://wa.me/919876543210"],
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -35,6 +51,11 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <Script
+          id="local-business-jsonld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        />
         <VisitorTracker />
         <ScrollToTop />
         <SiteHeader logoUrl={logoUrl} contactEmail={contactEmail} contactPhone={contactPhone} />

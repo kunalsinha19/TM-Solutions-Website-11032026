@@ -23,6 +23,11 @@ const chatSessionSchema = new mongoose.Schema({
   hasUrgency:         { type: Boolean, default: false },
   quoteSubmitted:     { type: Boolean, default: false, index: true },
 
+  // Tara qualification data
+  quantityMentioned:  { type: String, default: "" },
+  timelineMentioned:  { type: String, default: "" },
+  industryMentioned:  { type: String, default: "" },
+
   // Visitor context
   visitorIp:  { type: String, default: "" },
   userAgent:  { type: String, default: "", maxlength: 300 },
