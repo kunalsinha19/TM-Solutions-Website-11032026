@@ -7,12 +7,8 @@ dotenv.config();
 
 async function autoSeedBlogs() {
   try {
-    const BlogPost = require("./src/models/BlogPost");
-    const count = await BlogPost.countDocuments();
-    if (count === 0) {
-      const { seedBlogs } = require("./scripts/seed-blogs");
-      await seedBlogs();
-    }
+    const { seedBlogs } = require("./scripts/seed-blogs");
+    await seedBlogs();
   } catch (err) {
     console.warn("[auto-seed] Blog seeding skipped:", err.message);
   }

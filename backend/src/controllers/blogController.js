@@ -1,6 +1,7 @@
 const BlogPost   = require("../models/BlogPost");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError   = require("../utils/apiError");
+const path       = require("path");
 
 function estimateReadingTime(content = "") {
   return Math.max(1, Math.round(content.split(/\s+/).length / 200));
@@ -75,6 +76,14 @@ exports.remove = asyncHandler(async (req, res) => {
   const post = await BlogPost.findByIdAndDelete(req.params.id);
   if (!post) throw new ApiError(404, "Post not found");
   res.json({ success: true });
+});
+
+// POST /api/blog/seed-demo — admin trigger to upsert the 5 demo blog posts
+exports.seedDemo = asyncHandler(async (_req, res) => {
+  const { seedBlogs } = require(path.join(__dirname, "../../../scripts/seed-blogs"));
+  await seedBlogs();
+  const count = await BlogPost.countDocuments({ status: "published" });
+  res.json({ success: true, message: "Demo blog posts seeded", publishedCount: count });
 });
 
 // GET /api/blog/admin/all — admin list (all statuses)

@@ -85,6 +85,7 @@ export default function BlogManager({ token }) {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(null); // null | "new" | post object
   const [deleteId, setDeleteId] = useState(null);
@@ -111,6 +112,24 @@ export default function BlogManager({ token }) {
   useEffect(() => { load(); }, [load]);
 
   const apiBase = `${import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:4000/api"}/blog`;
+
+  const seedDemoPosts = async () => {
+    setSeeding(true);
+    setError("");
+    try {
+      const res = await fetch(`${apiBase}/seed-demo`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || "Seed failed");
+      load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const save = async (payload) => {
     setSaving(true);
@@ -188,7 +207,16 @@ export default function BlogManager({ token }) {
       ) : posts.length === 0 ? (
         <div className="panel" style={{ textAlign: "center", padding: "3rem" }}>
           <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>✍️</p>
-          <p className="muted">No articles yet. Click &quot;New Article&quot; to get started.</p>
+          <p className="muted" style={{ marginBottom: "1.25rem" }}>No articles yet. Click &quot;New Article&quot; to create one, or import the 5 demo posts.</p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={seedDemoPosts}
+            disabled={seeding}
+            style={{ background: "#d97706", borderColor: "#d97706" }}
+          >
+            {seeding ? "Importing…" : "📥 Import 5 Demo Posts"}
+          </button>
         </div>
       ) : (
         <div className="panel" style={{ overflow: "hidden", padding: 0 }}>
