@@ -60,18 +60,12 @@ ${statBox([
 ])}
 
 ${h2("The Print Finishing Workflow")}
-<svg viewBox="0 0 700 90" style="width:100%;font-family:system-ui,sans-serif;margin:20px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:16px 4px;margin:20px 0;align-items:center">
   ${[
     ["✂️","Cut","#6366f1"],["🧊","Laminate","#0891b2"],["📐","Crease","#7c3aed"],
     ["📂","Fold","#059669"],["📚","Bind","#d97706"],["💎","Foil","#db2777"],["📦","Pack","#16a34a"]
-  ].map(([e,l,c],i)=>{
-    const x = 50 + i*92;
-    return `<circle cx="${x}" cy="35" r="28" fill="${c}22" stroke="${c}" stroke-width="2"/>
-    <text x="${x}" y="31" text-anchor="middle" font-size="16">${e}</text>
-    <text x="${x}" y="47" text-anchor="middle" font-size="9" fill="${c}" font-weight="700">${l}</text>
-    ${i<6?`<text x="${x+34}" y="37" text-anchor="middle" font-size="16" fill="#94a3b8">→</text>`:""}`
-  }).join("")}
-</svg>
+  ].map(([e,l,c],i) => `<div style="flex:0 0 auto;text-align:center;background:${c}22;border:2px solid ${c};border-radius:14px;padding:12px 14px;min-width:70px"><div style="font-size:26px;line-height:1">${e}</div><div style="font-size:13px;font-weight:700;color:${c};margin-top:6px;white-space:nowrap">${l}</div></div>${i<6?`<div style="font-size:20px;color:#94a3b8;flex:0 0 auto">›</div>`:""}`).join("")}
+</div>
 
 ${h2("Which Machines Do You Need? — Pick Your Stage")}
 <input type="radio" id="tab1" name="rm" class="rm-radio" checked/>
@@ -144,7 +138,8 @@ ${statBox([
 ])}
 
 ${h2("How Hot Foil Stamping Works — Step by Step")}
-<svg viewBox="0 0 680 110" style="width:100%;font-family:system-ui,sans-serif;margin:20px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0">
+<svg viewBox="0 0 680 110" style="width:680px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   ${[
     ["🔧","Make Die","Design etched onto\nmetal plate","#6366f1"],
     ["🔥","Heat Plate","120–180°C\nelectric heat","#ef4444"],
@@ -161,9 +156,11 @@ ${h2("How Hot Foil Stamping Works — Step by Step")}
     ${i<4?`<text x="${x+56}" y="55" text-anchor="middle" font-size="18" fill="#94a3b8">›</text>`:""}`
   }).join("")}
 </svg>
+</div>
 
 ${h2("Where Indian Businesses Use Foil Stamping Most")}
-<svg viewBox="0 0 400 200" style="width:100%;max-width:420px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0">
+<svg viewBox="0 0 400 200" style="width:420px;height:auto;display:block;font-family:system-ui,sans-serif" xmlns="http://www.w3.org/2000/svg">
   ${(()=>{
     const data=[
       {pct:35,label:"Wedding Cards",color:"#d97706",emoji:"💍"},
@@ -197,6 +194,7 @@ ${h2("Where Indian Businesses Use Foil Stamping Most")}
       legend;
   })()}
 </svg>
+</div>
 
 ${h2("The Origin Story: Why All Good Foil Machines Come from Wenzhou")}
 <p style="font-size:15px;line-height:1.8;color:#374151">
@@ -244,7 +242,8 @@ A paper cutter is the first machine most print shops buy — and the most common
 </p>
 
 ${h2("Cutting Width vs. Use Case — Visual Guide")}
-<svg viewBox="0 0 600 280" style="width:100%;font-family:system-ui,sans-serif;margin:16px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0">
+<svg viewBox="0 0 600 280" style="width:600px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   ${(()=>{
     const rows=[
       {label:"250–320mm (A4/A3)", bar:22, color:"#6366f1", use:"Home studio, schools, photo labs", weight:"17–35 kg"},
@@ -264,6 +263,7 @@ ${h2("Cutting Width vs. Use Case — Visual Guide")}
     }).join("");
   })()}
 </svg>
+</div>
 
 ${h2("Manual vs Electric vs Hydraulic — Full Comparison")}
 <div style="overflow-x:auto;margin:20px 0">
@@ -295,7 +295,8 @@ ${h2("Manual vs Electric vs Hydraulic — Full Comparison")}
 </div>
 
 ${h2("Anatomy of a Paper Cutter — Know What You're Buying")}
-<svg viewBox="0 0 500 220" style="width:100%;font-family:system-ui,sans-serif;margin:16px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0">
+<svg viewBox="0 0 500 220" style="width:500px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   <rect x="60" y="40" width="380" height="130" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
   <rect x="60" y="40" width="380" height="20" rx="8" fill="#334155"/>
   <text x="250" y="55" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">PAPER CUTTER ANATOMY</text>
@@ -314,6 +315,7 @@ ${h2("Anatomy of a Paper Cutter — Know What You're Buying")}
   <line x1="415" y1="85" x2="393" y2="78" stroke="#d97706" stroke-width="1.5"/>
   <text x="250" y="195" text-anchor="middle" font-size="10" fill="${SLATE}">Back-gauge sets the cut margin. Clamp holds the stack. Blade descends on press.</text>
 </svg>
+</div>
 
 ${h2("Indian Conditions — What to Ask Your Supplier")}
 <ul style="line-height:2.2;font-size:14px;color:#374151">
@@ -334,7 +336,8 @@ Walk into any print shop and they're running one of two binding workflows: <stro
 </p>
 
 ${h2("Visual: What's Inside Each Binding Method")}
-<svg viewBox="0 0 560 180" style="width:100%;font-family:system-ui,sans-serif;margin:20px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0">
+<svg viewBox="0 0 560 180" style="width:560px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   <g>
     <rect x="20" y="30" width="240" height="130" rx="6" fill="#fef7ed" stroke="${AMBER}" stroke-width="2"/>
     <text x="140" y="22" text-anchor="middle" font-size="13" font-weight="800" fill="${AMBER}">📚 PERFECT BINDING (Glue)</text>
@@ -359,9 +362,11 @@ ${h2("Visual: What's Inside Each Binding Method")}
     <text x="460" y="173" text-anchor="middle" font-size="9" fill="#dc2626">✗ Max ~64 pages</text>
   </g>
 </svg>
+</div>
 
 ${h2("Decision Flowchart — Which Binding Is Right for You?")}
-<svg viewBox="0 0 560 260" style="width:100%;font-family:system-ui,sans-serif;margin:16px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0">
+<svg viewBox="0 0 560 260" style="width:560px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   ${(()=>{
     const box=(x,y,w,h,text,fill,tc="#374151")=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill}" stroke="${tc=="#fff"?"transparent":"#e2e8f0"}"/>
     <text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-size="11" font-weight="700" fill="${tc}">${text}</text>`;
@@ -387,9 +392,11 @@ ${h2("Decision Flowchart — Which Binding Is Right for You?")}
     box(380,200,120,30,"Either works ✓","#e0f2fe")
   })()}
 </svg>
+</div>
 
 ${h2("Cost Per Unit at Different Quantities")}
-<svg viewBox="0 0 500 180" style="width:100%;font-family:system-ui,sans-serif;margin:16px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0">
+<svg viewBox="0 0 500 180" style="width:500px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   ${(()=>{
     const qtys=["100","500","1,000","5,000"];
     const perfect=[42,28,18,12];
@@ -412,6 +419,7 @@ ${h2("Cost Per Unit at Different Quantities")}
     <text x="30" y="180" font-size="9" fill="${SLATE}">Print run (units)</text>`;
   })()}
 </svg>
+</div>
 
 ${h2("Which Product Needs Which Binding?")}
 <div style="overflow-x:auto;margin:20px 0">
@@ -448,7 +456,8 @@ India's packaging industry is sprinting toward <strong>₹7.4 lakh crore by 2028
 </p>
 
 ${h2("India Packaging Market — Growth Trajectory")}
-<svg viewBox="0 0 540 180" style="width:100%;font-family:system-ui,sans-serif;margin:20px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0">
+<svg viewBox="0 0 540 180" style="width:540px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   ${(()=>{
     const pts=[
       [2020,2.8],[2021,3.0],[2022,3.5],[2023,4.1],[2024,4.9],[2025,5.7],[2026,6.3],[2027,6.9],[2028,7.4]
@@ -469,9 +478,11 @@ ${h2("India Packaging Market — Growth Trajectory")}
       <text x="${w/2+ox}" y="12" text-anchor="middle" font-size="12" font-weight="800" fill="${DARK}">India Packaging Market Growth (₹ Lakh Crore)</text>`;
   })()}
 </svg>
+</div>
 
 ${h2("The Packaging Value Chain — Where You Add Value")}
-<svg viewBox="0 0 680 120" style="width:100%;font-family:system-ui,sans-serif;margin:20px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0">
+<svg viewBox="0 0 680 120" style="width:680px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   ${[
     ["🗞️","Raw Paper","Base cost","#94a3b8"],["🖨️","Print","+ ₹0.8/sh","#6366f1"],
     ["🧊","Laminate","+ ₹1.2/sh","#0891b2"],["📐","Crease","+ ₹0.3/sh","#7c3aed"],
@@ -487,6 +498,7 @@ ${h2("The Packaging Value Chain — Where You Add Value")}
   }).join("")+
   `<text x="340" y="108" text-anchor="middle" font-size="11" fill="${SLATE}">Value added per 1000 sheets through full finishing chain: ₹5,900+</text>`}
 </svg>
+</div>
 
 ${h2("Thermal vs Cold Lamination — Choose for Your Products")}
 <div style="overflow-x:auto;margin:20px 0">
@@ -623,7 +635,8 @@ ${statBox([
 ])}
 
 ${h2("Fold Types — What Each Machine Supports")}
-<svg viewBox="0 0 700 200" style="width:100%;font-family:system-ui,sans-serif;margin:20px 0" xmlns="http://www.w3.org/2000/svg">
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0">
+<svg viewBox="0 0 700 200" style="width:700px;height:auto;font-family:system-ui,sans-serif;display:block" xmlns="http://www.w3.org/2000/svg">
   ${[
     ["Z-Fold","Tri-fold mailers","#6366f1"],
     ["C-Fold","Brochures","#0891b2"],
@@ -639,6 +652,7 @@ ${h2("Fold Types — What Each Machine Supports")}
     <text x="${x+20}" y="${y+40}" text-anchor="middle" font-size="10" fill="#64748b">${use}</text>`;
   }).join("")}
 </svg>
+</div>
 
 ${h2("Manual vs. Semi-Auto vs. Fully Automatic")}
 <div style="overflow-x:auto;margin:20px 0">
