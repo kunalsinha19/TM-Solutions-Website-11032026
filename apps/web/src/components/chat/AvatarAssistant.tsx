@@ -33,8 +33,10 @@ function detectLang(text: string): string {
   if (/[ഀ-ൿ]/.test(text)) return "ml-IN";  // Malayalam
   if (/[਀-੿]/.test(text)) return "pa-IN";  // Punjabi (Gurmukhi)
   if (/[؀-ۿ]/.test(text)) return "ar-SA";  // Arabic
-  // Hinglish — common Hindi words in Latin script
-  if (/\b(kya|hai|nahi|haan|bahut|accha|theek|kitna|kyun|kaise|yeh|woh|mera|aapka|bhai|namaste|dhanyawad|chahiye|jaldi|abhi)\b/i.test(text)) return "hi-IN";
+  // Hinglish — Latin-script Hindi words. Use en-IN: it handles the English
+  // portions natively and pronounces romanised Hindi far better than a hi-IN
+  // voice trying to read English phonetically.
+  if (/\b(kya|hai|nahi|haan|bahut|accha|theek|kitna|kyun|kaise|yeh|woh|mera|aapka|bhai|namaste|dhanyawad|chahiye|jaldi|abhi)\b/i.test(text)) return "en-IN";
   return "en-IN";
 }
 
@@ -339,11 +341,17 @@ export default function AvatarAssistant() {
   const speechQueue = useRef<SpeechItem[]>([]);
   const isSpeaking  = useRef(false);
   const streamBuffer = useRef("");
-  const currentLang  = useRef("en-IN");   // tracks detected language of active conversation
+  const currentLang  = useRef("en-IN");
   const scrollRef   = useRef<HTMLDivElement>(null);
   const mouthTimer  = useRef<NodeJS.Timeout | null>(null);
   const sessionSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const sessionId   = useRef<string>("");
+  // Generation counter — incremented on every cancel/new-message so stale
+  // onend/onerror callbacks from a previous utterance chain become no-ops.
+  const speakGenRef  = useRef(0);
+  // Stable ref to speakNext so onend closures always call the latest version
+  // regardless of which closure captured it — prevents double-chain on re-render.
+  const speakNextRef = useRef<() => void>(() => {});
 
   // ── Browser API setup ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -378,48 +386,68 @@ export default function AvatarAssistant() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  // ── Mouth animation ───────────────────────────────────────────────────────
+  // ── Mouth animation + Chrome TTS keepalive ───────────────────────────────
   useEffect(() => {
-    if (avatarState === "speaking") {
-      mouthTimer.current = setInterval(() => setMouthOpen(o => !o), 220);
-    } else {
+    if (avatarState !== "speaking") {
       if (mouthTimer.current) clearInterval(mouthTimer.current);
       setMouthOpen(false);
+      return;
     }
-    return () => { if (mouthTimer.current) clearInterval(mouthTimer.current); };
+    mouthTimer.current = setInterval(() => setMouthOpen(o => !o), 220);
+    // Chrome silently stops SpeechSynthesis after ~15s. pause+resume every
+    // 10s keeps the engine alive without audible interruption.
+    const keepAlive = setInterval(() => {
+      if (synthRef.current?.speaking) {
+        synthRef.current.pause();
+        synthRef.current.resume();
+      }
+    }, 10_000);
+    return () => {
+      if (mouthTimer.current) clearInterval(mouthTimer.current);
+      clearInterval(keepAlive);
+      setMouthOpen(false);
+    };
   }, [avatarState]);
 
   // ── Get best voice for a given language ──────────────────────────────────
   const getVoiceForLang = useCallback((lang: string): SpeechSynthesisVoice | null => {
-    const voices = voicesRef.current.length ? voicesRef.current : (synthRef.current?.getVoices() ?? []);
-    const primary = lang.split("-")[0]; // "zh", "hi", "ta", "en", …
-    // Neural / Wavenet voices sound far more human — prioritise them
+    const allVoices = voicesRef.current.length ? voicesRef.current : (synthRef.current?.getVoices() ?? []);
+    const primary = lang.split("-")[0];
+
+    // Strip out known male-named voices so they never leak through any tier.
+    // A voice only gets blocked if its name matches AND it's not explicitly labelled female.
+    const knownMaleRe = /\b(david|mark|daniel|jorge|thomas|fred|rishi|bruce|arthur|aaron|albert|xander|carlos|enrique|alex|lee|ralph|junior|bad news|hysterical|boing|cellos|deranged|organ|pipe)\b/i;
+    const voices = allVoices.filter(v =>
+      !(knownMaleRe.test(v.name) && !/female|woman/i.test(v.name))
+    );
+
     const isNeural  = (v: SpeechSynthesisVoice) => /neural|natural|wavenet|premium/i.test(v.name);
-    const isFemale  = (v: SpeechSynthesisVoice) => /female|woman|aditi|heera|lekha|aria|zira|neerja|priya|riya|veena/i.test(v.name);
+    const isFemale  = (v: SpeechSynthesisVoice) => /female|woman|aditi|heera|lekha|aria|zira|neerja|priya|riya|veena|kanya|samantha|victoria|karen/i.test(v.name);
     const exactLang = (v: SpeechSynthesisVoice) => v.lang === lang;
-    const familyLang= (v: SpeechSynthesisVoice) => v.lang.startsWith(primary + "-");
+    const famLang   = (v: SpeechSynthesisVoice) => v.lang.startsWith(primary + "-");
 
     return (
       // Tier 1 — exact lang, neural female
       voices.find(v => exactLang(v) && isNeural(v) && isFemale(v)) ||
-      // Tier 2 — exact lang, neural any
-      voices.find(v => exactLang(v) && isNeural(v)) ||
-      // Tier 3 — exact lang, female
+      // Tier 2 — exact lang, female (no male leaks here)
       voices.find(v => exactLang(v) && isFemale(v)) ||
-      // Tier 4 — exact lang, any
+      // Tier 3 — exact lang, neural (male already filtered from voices list)
+      voices.find(v => exactLang(v) && isNeural(v)) ||
+      // Tier 4 — exact lang, any remaining (male names stripped above)
       voices.find(v => exactLang(v)) ||
       // Tier 5 — language family, neural female
-      voices.find(v => familyLang(v) && isNeural(v) && isFemale(v)) ||
+      voices.find(v => famLang(v) && isNeural(v) && isFemale(v)) ||
       // Tier 6 — language family, female
-      voices.find(v => familyLang(v) && isFemale(v)) ||
-      voices.find(v => familyLang(v)) ||
-      // Tier 7 — named Indian voices for Indic scripts (Aditi on Android/Windows)
+      voices.find(v => famLang(v) && isFemale(v)) ||
+      // Tier 7 — language family, any (male-stripped)
+      voices.find(v => famLang(v)) ||
+      // Tier 8 — named Indian female voices (Aditi/Lekha/Riya — common on Android/Windows)
       (["hi","mr","gu","ta","te","bn","kn","ml","pa"].includes(primary)
         ? voices.find(v => /aditi|lekha|riya|neerja|veena|heera|priya/i.test(v.name)) ?? null
         : null) ||
-      // Tier 8 — Google Mandarin for Chinese
+      // Tier 9 — Google Mandarin for Chinese
       (primary === "zh" ? voices.find(v => /google/i.test(v.name) && v.lang.startsWith("zh")) ?? null : null) ||
-      // Tier 9 — Indian English fallback (en-IN Neerja / Aditi / Riya on most platforms)
+      // Tier 10 — Indian English female fallback (en-IN Neerja/Aditi/Riya on most platforms)
       voices.find(v => v.lang === "en-IN" && (isNeural(v) || isFemale(v))) ||
       voices.find(v => v.lang === "en-IN") ||
       voices.find(v => v.lang.startsWith("en") && (isNeural(v) || isFemale(v))) ||
@@ -441,7 +469,7 @@ export default function AvatarAssistant() {
     const item = speechQueue.current.shift()!;
     const { rate, pitch, volume } = LANG_TTS[item.lang] ?? LANG_TTS["en-IN"];
     const cleaned = cleanForSpeech(item.text, item.lang);
-    if (!cleaned) { speakNext(); return; }
+    if (!cleaned) { speakNextRef.current(); return; }
 
     const v = getVoiceForLang(item.lang);
 
@@ -450,20 +478,39 @@ export default function AvatarAssistant() {
     const primaryLang = item.lang.split("-")[0];
     const hasNativeVoice = v != null && (v.lang === item.lang || v.lang.startsWith(primaryLang + "-"));
     const hasNonLatinText = /[^ -ɏḀ-ỿ]/.test(cleaned);
-    if (hasNonLatinText && !hasNativeVoice) { speakNext(); return; }
+    if (hasNonLatinText && !hasNativeVoice) { speakNextRef.current(); return; }
+
+    // Snapshot generation so a stale onend/onerror (e.g. from a cancelled
+    // utterance after sendMessage) becomes a no-op — fixes voice overlap.
+    const gen = ++speakGenRef.current;
 
     const utt = new SpeechSynthesisUtterance(cleaned);
     utt.lang   = item.lang;
-    // Slight random pitch variation per utterance (±0.03) for a more human cadence
     utt.rate   = rate;
     utt.pitch  = pitch + (Math.random() * 0.06 - 0.03);
     utt.volume = volume;
     if (v) utt.voice = v;
-    utt.onstart = () => { setAvatarState("speaking"); setSpeakingLang(item.lang !== "en-IN" ? item.lang : ""); };
-    utt.onend   = () => { setSpeakingLang(""); speakNext(); };
-    utt.onerror = () => { setSpeakingLang(""); speakNext(); };
+    utt.onstart = () => {
+      if (speakGenRef.current !== gen) return;
+      setAvatarState("speaking");
+      setSpeakingLang(item.lang !== "en-IN" ? item.lang : "");
+    };
+    utt.onend = () => {
+      if (speakGenRef.current !== gen) return;
+      setSpeakingLang("");
+      speakNextRef.current();
+    };
+    utt.onerror = () => {
+      if (speakGenRef.current !== gen) return;
+      setSpeakingLang("");
+      speakNextRef.current();
+    };
     synthRef.current?.speak(utt);
   }, [hasTTS, hasSR, voiceOn, isOpen, getVoiceForLang]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Always keep speakNextRef pointing at the latest version so onend closures
+  // never invoke a stale capture after a re-render.
+  useEffect(() => { speakNextRef.current = speakNext; }, [speakNext]);
 
   // ── Voice recognition ──────────────────────────────────────────────────────
   const startListening = useCallback(() => {
@@ -528,14 +575,15 @@ export default function AvatarAssistant() {
     streamBuffer.current = streamBuffer.current.slice(last);
     if (!isSpeaking.current && speechQueue.current.length > 0 && hasTTS && voiceOn) {
       isSpeaking.current = true;
-      speakNext();
+      speakNextRef.current();
     }
-  }, [hasTTS, voiceOn, speakNext]);
+  }, [hasTTS, voiceOn]);
 
   // ── Send message ───────────────────────────────────────────────────────────
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim()) return;
     synthRef.current?.cancel();
+    speakGenRef.current++;        // invalidate any in-flight onend callbacks
     speechQueue.current = [];
     isSpeaking.current = false;
     streamBuffer.current = "";
