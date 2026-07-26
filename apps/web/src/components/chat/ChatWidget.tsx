@@ -6,6 +6,8 @@ interface Message {
   role: "user" | "bot";
   text: string;
   isQuoteSuccess?: boolean;
+  options?: string[];
+  optionsUsed?: boolean;
 }
 
 const STORAGE_KEY = "tms-chat-history";
@@ -14,31 +16,30 @@ const MAX_HISTORY = 20;
 function loadHistory(): Message[] {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    // Strip options from history — they're stale after reload
+    return (JSON.parse(raw) as Message[]).map(m => ({ ...m, options: undefined, optionsUsed: true }));
   } catch { return []; }
 }
 function saveHistory(msgs: Message[]) {
   try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(msgs.slice(-MAX_HISTORY))); } catch {}
 }
 
-// Detect script → TTS language tag
 function detectLang(text: string): string {
-  if (/[ऀ-ॿ]/.test(text)) return "hi-IN";   // Devanagari (Hindi/Marathi)
-  if (/[஀-௿]/.test(text)) return "ta-IN";   // Tamil
-  if (/[ఀ-౿]/.test(text)) return "te-IN";   // Telugu
-  if (/[ঀ-৿]/.test(text)) return "bn-IN";   // Bengali
-  if (/[઀-૿]/.test(text)) return "gu-IN";   // Gujarati
-  if (/[਀-੿]/.test(text)) return "pa-IN";   // Punjabi
-  if (/[ಀ-೿]/.test(text)) return "kn-IN";   // Kannada
-  if (/[ഀ-ൿ]/.test(text)) return "ml-IN";   // Malayalam
+  if (/[ऀ-ॿ]/.test(text)) return "hi-IN";
+  if (/[஀-௿]/.test(text)) return "ta-IN";
+  if (/[ఀ-౿]/.test(text)) return "te-IN";
+  if (/[ঀ-৿]/.test(text)) return "bn-IN";
+  if (/[઀-૿]/.test(text)) return "gu-IN";
+  if (/[਀-੿]/.test(text)) return "pa-IN";
+  if (/[ಀ-೿]/.test(text)) return "kn-IN";
+  if (/[ഀ-ൿ]/.test(text)) return "ml-IN";
   return "en-IN";
 }
 
-// Parse SUBMIT_QUOTE:{...} token from bot response
 function extractQuote(text: string): { clean: string; quote: Record<string, string> | null } {
   const idx = text.indexOf("SUBMIT_QUOTE:");
   if (idx === -1) return { clean: text, quote: null };
-
   const after = text.slice(idx + "SUBMIT_QUOTE:".length).trim();
   let depth = 0; let end = -1;
   for (let i = 0; i < after.length; i++) {
@@ -46,12 +47,28 @@ function extractQuote(text: string): { clean: string; quote: Record<string, stri
     else if (after[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
   }
   if (end === -1) return { clean: text.slice(0, idx).trim(), quote: null };
-
   try {
     const quote = JSON.parse(after.slice(0, end + 1));
     return { clean: text.slice(0, idx).trim(), quote };
   } catch {
     return { clean: text.slice(0, idx).trim(), quote: null };
+  }
+}
+
+function extractOptions(text: string): { clean: string; options: string[] | null } {
+  // Look for OPTIONS:[...] token — may be on its own line or inline
+  const marker = "OPTIONS:";
+  const idx = text.indexOf(marker);
+  if (idx === -1) return { clean: text, options: null };
+  const after = text.slice(idx + marker.length).trim();
+  const end = after.indexOf("]");
+  if (end === -1) return { clean: text.slice(0, idx).trim(), options: null };
+  try {
+    const parsed = JSON.parse(after.slice(0, end + 1));
+    const options = Array.isArray(parsed) ? parsed.filter((o): o is string => typeof o === "string" && o.length > 0) : null;
+    return { clean: text.slice(0, idx).trim(), options };
+  } catch {
+    return { clean: text.slice(0, idx).trim(), options: null };
   }
 }
 
@@ -82,11 +99,15 @@ export default function ChatWidget() {
   const [listening, setListening] = useState(false);
   const [hasSR, setHasSR]         = useState(false);
   const [hasTTS, setHasTTS]       = useState(false);
+  // "Other" option state — which message idx has the inline input open
+  const [otherFor, setOtherFor]   = useState<number | null>(null);
+  const [otherText, setOtherText] = useState("");
 
-  const bottomRef    = useRef<HTMLDivElement>(null);
-  const inputRef     = useRef<HTMLInputElement>(null);
-  const abortRef     = useRef<AbortController | null>(null);
-  const recognRef    = useRef<ISpeechRecognition | null>(null);
+  const bottomRef  = useRef<HTMLDivElement>(null);
+  const inputRef   = useRef<HTMLInputElement>(null);
+  const abortRef   = useRef<AbortController | null>(null);
+  const recognRef  = useRef<ISpeechRecognition | null>(null);
+  const otherRef   = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMessages(loadHistory());
@@ -102,11 +123,15 @@ export default function ChatWidget() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
 
+  useEffect(() => {
+    if (otherFor !== null) setTimeout(() => otherRef.current?.focus(), 80);
+  }, [otherFor]);
+
   // ── TTS ──────────────────────────────────────────────────────────────────────
   const speak = useCallback((text: string) => {
     if (!voiceOn || typeof window === "undefined" || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const clean = text.replace(/SUBMIT_QUOTE:[^}]*\}/g, "").trim();
+    const clean = text.replace(/SUBMIT_QUOTE:[^}]*\}/g, "").replace(/OPTIONS:\[.*?\]/g, "").trim();
     if (!clean) return;
     const u = new SpeechSynthesisUtterance(clean);
     u.lang = detectLang(clean);
@@ -119,21 +144,17 @@ export default function ChatWidget() {
     if (typeof window === "undefined") return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
-
     const r = new SR();
-    r.lang = "hi-IN"; // Works for Hinglish too; browser's ML handles mixed
+    r.lang = "hi-IN";
     r.continuous = false;
     r.interimResults = false;
-
     r.onresult = (e: SpeechRecognitionEvent) => {
-      const transcript = e.results[0][0].transcript;
-      setInput(transcript);
+      setInput(e.results[0][0].transcript);
       setListening(false);
       recognRef.current = null;
     };
     r.onerror = () => { setListening(false); recognRef.current = null; };
     r.onend   = () => { setListening(false); recognRef.current = null; };
-
     r.start();
     recognRef.current = r;
     setListening(true);
@@ -165,11 +186,19 @@ export default function ChatWidget() {
   const sendText = useCallback(async (msg: string) => {
     if (!msg.trim() || streaming) return;
 
+    // Mark any open options as used
+    setOtherFor(null);
+    setOtherText("");
+
     const userMsg: Message = { role: "user", text: msg };
     const placeholder: Message = { role: "bot", text: "…" };
 
     setMessages(prev => {
-      const next = [...prev, userMsg, placeholder];
+      // Mark last bot message options as used when user replies
+      const updated = prev.map((m, idx) =>
+        m.role === "bot" && idx === prev.length - 1 && m.options ? { ...m, optionsUsed: true } : m
+      );
+      const next = [...updated, userMsg, placeholder];
       saveHistory(next);
       return next;
     });
@@ -195,16 +224,13 @@ export default function ChatWidget() {
       const decoder = new TextDecoder();
       let buffer    = "";
       let fullText  = "";
-      let firstChunk = true;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
-
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6).trim();
@@ -213,66 +239,55 @@ export default function ChatWidget() {
             const { text } = JSON.parse(payload);
             if (!text) continue;
             fullText += text;
-
-            if (firstChunk) {
-              setMessages(prev => {
-                const next = [...prev];
-                const last = next[next.length - 1];
-                if (last?.role === "bot") next[next.length - 1] = { role: "bot", text: fullText };
-                return next;
-              });
-              firstChunk = false;
-            } else {
-              setMessages(prev => {
-                const next = [...prev];
-                const last = next[next.length - 1];
-                if (last?.role === "bot") next[next.length - 1] = { role: "bot", text: fullText };
-                return next;
-              });
-            }
+            setMessages(prev => {
+              const next = [...prev];
+              const last = next[next.length - 1];
+              if (last?.role === "bot") next[next.length - 1] = { role: "bot", text: fullText };
+              return next;
+            });
           } catch { /* skip malformed */ }
         }
       }
 
-      // Post-stream: handle SUBMIT_QUOTE token
-      const { clean, quote } = extractQuote(fullText);
+      // Post-stream: handle SUBMIT_QUOTE then OPTIONS tokens
+      const { clean: afterQuote, quote } = extractQuote(fullText);
+      const { clean: finalText, options } = extractOptions(afterQuote);
 
       if (quote) {
-        // Show clean text (without the token)
         setMessages(prev => {
           const next = [...prev];
           const last = next[next.length - 1];
-          if (last?.role === "bot") next[next.length - 1] = { role: "bot", text: clean };
+          if (last?.role === "bot") next[next.length - 1] = { role: "bot", text: finalText };
           return next;
         });
-        speak(clean);
-
-        // Submit the quote (include transcript for admin chat history)
+        speak(finalText);
         const ok = await submitQuote(quote, messages);
         const confirmMsg: Message = ok
           ? {
               role: "bot",
-              text: `✅ Quote submitted successfully! We'll contact you at ${quote.email || quote.phone} within 24 hours. Is there anything else I can help you with?`,
+              text: `✅ Quote submitted! We'll contact you at ${quote.email || quote.phone} within 24 hours. Is there anything else I can help you with?`,
               isQuoteSuccess: true,
+              options: ["Ask another question", "Browse products"],
             }
           : { role: "bot", text: "⚠️ Quote submission failed. Please try the form at /quote or email us at taramaasolutions2025@gmail.com." };
-
-        setMessages(prev => {
-          const next = [...prev, confirmMsg];
-          saveHistory(next);
-          return next;
-        });
+        setMessages(prev => { const next = [...prev, confirmMsg]; saveHistory(next); return next; });
         speak(confirmMsg.text);
       } else {
-        // Normal message — show final text, speak it
+        // Normal message — apply cleaned text + options
         setMessages(prev => {
           const next = [...prev];
           const last = next[next.length - 1];
-          if (last?.role === "bot") next[next.length - 1] = { role: "bot", text: fullText };
+          if (last?.role === "bot") {
+            next[next.length - 1] = {
+              role: "bot",
+              text: finalText,
+              ...(options ? { options } : {}),
+            };
+          }
           saveHistory(next);
           return next;
         });
-        speak(fullText);
+        speak(finalText);
       }
 
       if (!open) setUnread(u => u + 1);
@@ -302,8 +317,38 @@ export default function ChatWidget() {
   };
 
   const clearChat = () => {
-    setMessages([]); sessionStorage.removeItem(STORAGE_KEY);
+    setMessages([]);
+    sessionStorage.removeItem(STORAGE_KEY);
+    setOtherFor(null);
+    setOtherText("");
     if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+  };
+
+  // ── Option chip click ─────────────────────────────────────────────────────────
+  const handleOptionClick = useCallback((msgIdx: number, text: string) => {
+    setMessages(prev => {
+      const next = [...prev];
+      if (next[msgIdx]) next[msgIdx] = { ...next[msgIdx], optionsUsed: true };
+      return next;
+    });
+    sendText(text);
+  }, [sendText]);
+
+  // Index of the last bot message (only show options on the most recent bot reply)
+  const lastBotIdx = messages.reduce((last, m, idx) => m.role === "bot" ? idx : last, -1);
+
+  const optChipStyle: React.CSSProperties = {
+    padding: "6px 14px",
+    borderRadius: "20px",
+    border: "1.5px solid var(--color-accent)",
+    background: "color-mix(in srgb,var(--color-accent) 10%,transparent)",
+    color: "var(--color-accent)",
+    cursor: "pointer",
+    fontSize: "12px",
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    transition: "all .15s",
+    lineHeight: 1.4,
   };
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -379,13 +424,9 @@ export default function ChatWidget() {
               </div>
             </div>
             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-              {/* TTS toggle */}
               {hasTTS && (
                 <button
-                  onClick={() => {
-                    setVoiceOn(v => !v);
-                    if (voiceOn) window.speechSynthesis?.cancel();
-                  }}
+                  onClick={() => { setVoiceOn(v => !v); if (voiceOn) window.speechSynthesis?.cancel(); }}
                   title={voiceOn ? "Mute voice" : "Enable voice replies"}
                   style={{
                     background: voiceOn ? "rgba(255,255,255,.3)" : "rgba(255,255,255,.12)",
@@ -422,7 +463,7 @@ export default function ChatWidget() {
                   {[
                     "What products do you offer?",
                     "Mujhe ek quote chahiye",
-                    "Tell me about your pumps",
+                    "Tell me about foil stamping machines",
                     "How to contact sales?",
                   ].map(q => (
                     <button key={q} onClick={() => sendText(q)} style={{
@@ -436,7 +477,7 @@ export default function ChatWidget() {
             )}
 
             {messages.map((m, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: m.role === "user" ? "flex-end" : "flex-start" }}>
                 {m.isQuoteSuccess ? (
                   <div style={{
                     maxWidth: "90%", padding: "12px 14px",
@@ -473,6 +514,83 @@ export default function ChatWidget() {
                     )}
                   </div>
                 )}
+
+                {/* Quick-reply option chips — only on the last bot message, not while streaming */}
+                {m.role === "bot" && i === lastBotIdx && !streaming &&
+                 m.options && m.options.length > 0 && !m.optionsUsed && (
+                  <div style={{ maxWidth: "84%", marginTop: "6px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {m.options.map((opt, oi) => (
+                      opt === "Other" ? (
+                        otherFor === i ? (
+                          /* Inline "Other" text input */
+                          <div key="other-input" style={{ width: "100%", display: "flex", gap: "5px", marginTop: "2px" }}>
+                            <input
+                              ref={otherRef}
+                              value={otherText}
+                              onChange={e => setOtherText(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter" && otherText.trim()) {
+                                  handleOptionClick(i, otherText.trim());
+                                  setOtherText(""); setOtherFor(null);
+                                }
+                                if (e.key === "Escape") { setOtherFor(null); setOtherText(""); }
+                              }}
+                              placeholder="Type your answer…"
+                              style={{
+                                flex: 1, fontSize: "12px", padding: "6px 12px",
+                                borderRadius: "20px",
+                                border: "1.5px solid var(--color-accent)",
+                                background: "var(--color-panel)",
+                                color: "var(--color-text)", outline: "none",
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                if (otherText.trim()) {
+                                  handleOptionClick(i, otherText.trim());
+                                  setOtherText(""); setOtherFor(null);
+                                }
+                              }}
+                              style={{
+                                padding: "6px 12px", borderRadius: "20px",
+                                background: "var(--color-accent)", color: "white",
+                                border: "none", cursor: "pointer",
+                                fontSize: "12px", fontWeight: 700,
+                              }}
+                            >Send</button>
+                          </div>
+                        ) : (
+                          <button
+                            key={`other-${oi}`}
+                            onClick={() => setOtherFor(i)}
+                            style={{
+                              ...optChipStyle,
+                              background: "transparent",
+                              border: "1.5px dashed var(--color-border)",
+                              color: "var(--color-muted)",
+                            }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-accent)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--color-accent)"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--color-muted)"; }}
+                          >✏️ Other</button>
+                        )
+                      ) : (
+                        <button
+                          key={oi}
+                          onClick={() => handleOptionClick(i, opt)}
+                          style={optChipStyle}
+                          onMouseEnter={e => {
+                            (e.currentTarget as HTMLButtonElement).style.background = "var(--color-accent)";
+                            (e.currentTarget as HTMLButtonElement).style.color = "white";
+                          }}
+                          onMouseLeave={e => {
+                            (e.currentTarget as HTMLButtonElement).style.background = "color-mix(in srgb,var(--color-accent) 10%,transparent)";
+                            (e.currentTarget as HTMLButtonElement).style.color = "var(--color-accent)";
+                          }}
+                        >{opt}</button>
+                      )
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             <div ref={bottomRef}/>
@@ -484,7 +602,6 @@ export default function ChatWidget() {
             display: "flex", gap: "6px", alignItems: "center", flexShrink: 0,
             background: "var(--color-surface)",
           }}>
-            {/* Mic button */}
             {hasSR && (
               <button
                 onClick={listening ? stopListening : startListening}
@@ -523,7 +640,6 @@ export default function ChatWidget() {
               }}
             />
 
-            {/* Send button */}
             <button
               onClick={send}
               disabled={!input.trim() || streaming}
