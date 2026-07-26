@@ -21,7 +21,7 @@ export async function generateMetadata({
   }
 }
 
-const PHONE = "919876543210"; // WhatsApp number — update via env if needed
+const PHONE = "917595056476";
 
 export default async function ProductDetailPage({
   params

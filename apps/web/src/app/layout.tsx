@@ -96,7 +96,7 @@ export default async function RootLayout({
       addressCountry: "IN",
     },
     description: "Premium industrial products, smart automation solutions, and fast quote turnaround for enterprise buyers. Trusted by 200+ companies across India.",
-    sameAs: ["https://wa.me/919876543210"],
+    sameAs: ["https://wa.me/917595056476"],
   };
 
   return (
