@@ -9,6 +9,7 @@ import { TranslateWidget } from "../translate/translate-widget";
 
 const navLinks: Array<{ href: string; label: string; youtube?: boolean }> = [
   { href: "/products", label: "Products" },
+  { href: "/blog", label: "Blog" },
   { href: "/youtube", label: "YouTube", youtube: true },
   { href: "/about", label: "About Us" },
 ];
