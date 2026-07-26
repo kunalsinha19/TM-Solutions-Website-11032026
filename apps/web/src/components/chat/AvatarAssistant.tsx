@@ -650,7 +650,7 @@ export default function AvatarAssistant() {
     let fullText = "";
 
     try {
-      const history = messages.slice(-20);
+      const history = messages.slice(-10);
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
