@@ -129,9 +129,28 @@ function analyzeSession(msgs: Message[]) {
   // Products discussed: extract capitalized nouns from bot responses hinting at products
   const productHints = (allText.match(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)*)\b/g) ?? []).slice(0, 5);
 
+  const qtyMatch = userText.match(/\b(\d+[\s-]*(?:units?|pieces?|pcs?|machines?|sets?|nos?))\b/i);
+  const quantityMentioned = qtyMatch ? qtyMatch[0] : "";
+  if (quantityMentioned) signals.push("quantity_mentioned");
+
+  const tlMatch = userText.match(/\b(this (?:week|month)|next (?:week|month)|in \d+ (?:days?|weeks?|months?)|by (?:monday|tuesday|wednesday|thursday|friday|end of month))\b/i);
+  const timelineMentioned = tlMatch ? tlMatch[0] : "";
+  if (timelineMentioned) signals.push("timeline_mentioned");
+
+  const industryMatch = userText.match(/\b(textile|packaging|printing|food(?: processing)?|pharma(?:ceutical)?|automobile|automotive|agriculture|construction|manufacturing|export|garment|leather)\b/i);
+  const industryMentioned = industryMatch ? industryMatch[0] : "";
+  if (industryMentioned) signals.push("industry_mentioned");
+
+  return {
+    leadScore:          Math.min(score, 100),
+    leadSignals:        [...new Set(signals)],
+    emailCaptured,
+    phoneCaptured,
+    productsDiscussed:  productHints,
     quantityMentioned,
     timelineMentioned,
     industryMentioned,
+    hasQuoteRequest:    signals.includes("quote_requested"),
   };
 }
 
