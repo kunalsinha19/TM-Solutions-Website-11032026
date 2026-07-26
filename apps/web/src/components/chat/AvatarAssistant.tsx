@@ -16,9 +16,24 @@ interface SRInstance {
 type SpeechRecognitionCtor = new() => SRInstance;
 
 type AvatarState = "idle" | "listening" | "thinking" | "speaking";
-type Message = { role: "user" | "bot"; text: string; ts?: number };
+type Message = { role: "user" | "bot"; text: string; options?: string[]; optionsUsed?: boolean; ts?: number };
 
 const SUBMIT_QUOTE_RE = /SUBMIT_QUOTE:\{[^}]+\}/s;
+
+function extractOptions(text: string): { clean: string; options: string[] | null } {
+  const idx = text.indexOf("OPTIONS:");
+  if (idx === -1) return { clean: text, options: null };
+  const after = text.slice(idx + 8).trim();
+  const end = after.indexOf("]");
+  if (end === -1) return { clean: text.slice(0, idx).trim(), options: null };
+  try {
+    const parsed = JSON.parse(after.slice(0, end + 1));
+    const opts = Array.isArray(parsed) ? parsed.filter((o): o is string => typeof o === "string" && o.length > 0) : null;
+    return { clean: text.slice(0, idx).trim(), options: opts };
+  } catch {
+    return { clean: text.slice(0, idx).trim(), options: null };
+  }
+}
 const GREETING = "Namaste! I'm Tara, your personal advisor at Tara Maa Solutions. Whether you're looking for the right industrial product or want to send us your requirement — I'm here to help. What can I do for you today?";
 
 // ── Language detection using Unicode script ranges ────────────────────────────
@@ -347,6 +362,8 @@ export default function AvatarAssistant() {
   const [unread, setUnread]       = useState(0);
   const [quoteSubmitted, setQuoteSubmitted] = useState(false);
   const [speakingLang, setSpeakingLang] = useState("");
+  const [otherInputActive, setOtherInputActive] = useState(false);
+  const [otherInputText, setOtherInputText] = useState("");
 
   const synthRef    = useRef<SpeechSynthesis | null>(null);
   const voicesRef   = useRef<SpeechSynthesisVoice[]>([]);
@@ -603,6 +620,8 @@ export default function AvatarAssistant() {
     recogRef.current?.stop();
 
     setInputText("");
+    setOtherInputActive(false);
+    setOtherInputText("");
     // Detect language from what the user typed/said — TTS + recognition follow suit
     currentLang.current = detectLang(text);
     const now = Date.now();
@@ -685,7 +704,13 @@ export default function AvatarAssistant() {
           saveSession(finalMsgs, true);
         } catch { /* silent */ }
       } else {
-        const finalMsgs = [...messages, userMsg, { role: "bot" as const, text: fullText, ts: Date.now() }];
+        const { clean: cleanText, options: msgOptions } = extractOptions(fullText);
+        setMessages(prev => {
+          const next = [...prev];
+          next[next.length - 1] = { role: "bot", text: cleanText, options: msgOptions ?? undefined, ts: botPlaceholder.ts };
+          return next;
+        });
+        const finalMsgs = [...messages, userMsg, { role: "bot" as const, text: cleanText, ts: Date.now() }];
         saveSession(finalMsgs, quoteSubmitted);
       }
 
@@ -711,10 +736,10 @@ export default function AvatarAssistant() {
       if (hasTTS && voiceOn) {
         speechQueue.current = [{ text: GREETING, lang: "en-IN" }];
         isSpeaking.current = true;
-        setTimeout(() => speakNext(), 500);
+        speakNextRef.current();
       }
     }
-  }, [hasOpened, hasTTS, voiceOn, speakNext]);
+  }, [hasOpened, hasTTS, voiceOn]);
 
   const close = useCallback(() => {
     synthRef.current?.cancel();
@@ -735,6 +760,8 @@ export default function AvatarAssistant() {
     "bn-IN": "Bengali", "gu-IN": "Gujarati", "kn-IN": "Kannada", "ml-IN": "Malayalam",
     "pa-IN": "Punjabi", "zh-CN": "Mandarin", "zh-TW": "Chinese", "ar-SA": "Arabic",
   };
+
+  const lastBotIdx = messages.reduce((acc, m, i) => m.role === "bot" ? i : acc, -1);
 
   return (
     <>
@@ -887,24 +914,89 @@ export default function AvatarAssistant() {
             {messages.length === 0 && (
               <div className="text-center text-xs text-muted pt-4">Start talking to Tara…</div>
             )}
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} gap-2`}>
-                {m.role === "bot" && (
-                  <div className="h-6 w-6 rounded-full overflow-hidden shrink-0 mt-0.5 bg-white ring-1 ring-amber-300">
-                    <TaraFace state="idle" mouthOpen={false} />
+            {messages.map((m, i) => {
+              const displayText = extractOptions(m.text).clean;
+              return (
+                <React.Fragment key={i}>
+                  <div className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} gap-2`}>
+                    {m.role === "bot" && (
+                      <div className="h-6 w-6 rounded-full overflow-hidden shrink-0 mt-0.5 bg-white ring-1 ring-amber-300">
+                        <TaraFace state="idle" mouthOpen={false} />
+                      </div>
+                    )}
+                    <div
+                      className="max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed"
+                      style={m.role === "user"
+                        ? { background: "linear-gradient(135deg,#D97706,#92400E)", color: "#fff", borderBottomRightRadius: "4px" }
+                        : { background: "var(--color-surface)", color: "var(--color-text)", border: "1px solid var(--color-border)", borderBottomLeftRadius: "4px" }
+                      }
+                    >
+                      {displayText || <span className="opacity-40 animate-pulse">●●●</span>}
+                    </div>
                   </div>
-                )}
-                <div
-                  className="max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed"
-                  style={m.role === "user"
-                    ? { background: "linear-gradient(135deg,#D97706,#92400E)", color: "#fff", borderBottomRightRadius: "4px" }
-                    : { background: "var(--color-surface)", color: "var(--color-text)", border: "1px solid var(--color-border)", borderBottomLeftRadius: "4px" }
-                  }
-                >
-                  {m.text || <span className="opacity-40 animate-pulse">●●●</span>}
-                </div>
-              </div>
-            ))}
+                  {m.role === "bot" && m.options && !m.optionsUsed && i === lastBotIdx && avatarState !== "thinking" && (
+                    <div className="pl-8 flex flex-wrap gap-1.5">
+                      {m.options.map((opt) =>
+                        opt === "Other" ? (
+                          otherInputActive ? (
+                            <div key="other-input" className="flex gap-1 w-full">
+                              <input
+                                autoFocus
+                                value={otherInputText}
+                                onChange={e => setOtherInputText(e.target.value)}
+                                onKeyDown={e => {
+                                  if (e.key === "Enter" && otherInputText.trim()) {
+                                    setOtherInputActive(false);
+                                    setMessages(prev => prev.map((msg, idx) => idx === i ? { ...msg, optionsUsed: true } : msg));
+                                    sendMessage(otherInputText.trim());
+                                    setOtherInputText("");
+                                  }
+                                  if (e.key === "Escape") { setOtherInputActive(false); setOtherInputText(""); }
+                                }}
+                                placeholder="Type your answer…"
+                                className="flex-1 rounded-xl px-3 py-1.5 text-sm outline-none"
+                                style={{ background: "var(--color-panel)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}
+                              />
+                              <button
+                                onClick={() => {
+                                  if (otherInputText.trim()) {
+                                    setOtherInputActive(false);
+                                    setMessages(prev => prev.map((msg, idx) => idx === i ? { ...msg, optionsUsed: true } : msg));
+                                    sendMessage(otherInputText.trim());
+                                    setOtherInputText("");
+                                  }
+                                }}
+                                disabled={!otherInputText.trim()}
+                                className="px-3 py-1.5 rounded-xl text-xs font-bold text-white disabled:opacity-40"
+                                style={{ background: "linear-gradient(135deg,#D97706,#92400E)" }}
+                              >Send</button>
+                            </div>
+                          ) : (
+                            <button
+                              key="other"
+                              onClick={() => setOtherInputActive(true)}
+                              className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
+                              style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", color: "var(--color-muted)" }}
+                            >Other</button>
+                          )
+                        ) : (
+                          <button
+                            key={opt}
+                            onClick={() => {
+                              setOtherInputActive(false);
+                              setMessages(prev => prev.map((msg, idx) => idx === i ? { ...msg, optionsUsed: true } : msg));
+                              sendMessage(opt);
+                            }}
+                            className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
+                            style={{ background: "rgba(217,119,6,0.12)", border: "1px solid rgba(217,119,6,0.3)", color: "#D97706" }}
+                          >{opt}</button>
+                        )
+                      )}
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
 
           {/* Input bar */}
