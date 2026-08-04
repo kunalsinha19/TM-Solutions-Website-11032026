@@ -67,9 +67,7 @@ export default function InvoicesPage() {
   async function downloadPdf(id: string, invoiceNo: string) {
     try {
       const token = localStorage.getItem("tara-maa-admin-access-token");
-      const raw = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api").replace(/\/+$/, "");
-      const base = raw.endsWith("/api") ? raw : `${raw}/api`;
-      const res = await fetch(`${base}/inv/invoices/${id}/pdf`, {
+      const res = await fetch(`/api/inv/invoices/${id}/pdf`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("PDF generation failed");

@@ -1,13 +1,8 @@
 import { getAccessToken } from "./auth";
 
-function apiBase() {
-  const raw = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api").replace(/\/+$/, "");
-  return raw.endsWith("/api") ? raw : `${raw}/api`;
-}
-
 export async function invFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getAccessToken();
-  const res = await fetch(`${apiBase()}/inv${path}`, {
+  const res = await fetch(`/api/inv${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",

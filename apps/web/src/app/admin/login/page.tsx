@@ -4,11 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { setAccessToken } from "../../../lib/auth";
 
-function resolveApiBase(): string {
-  const raw = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api").replace(/\/+$/, "");
-  return raw.endsWith("/api") ? raw : `${raw}/api`;
-}
-
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,7 +19,7 @@ function LoginForm() {
     if (!target.trim()) { setMessage("Enter your email or phone number"); return; }
     setLoading(true); setMessage("");
     try {
-      const res = await fetch(`${resolveApiBase()}/auth/request-otp`, {
+      const res = await fetch("/api/auth?action=request-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target: target.trim(), purpose: "admin_login" }),
@@ -37,7 +32,7 @@ function LoginForm() {
         setMessage(data.message ?? `Request failed (${res.status})`);
       }
     } catch (err) {
-      setMessage(`Could not reach server. Check your connection or contact support. (${err instanceof Error ? err.message : "network error"})`);
+      setMessage(`Network error: ${err instanceof Error ? err.message : "Failed to fetch"}`);
     } finally {
       setLoading(false);
     }
@@ -47,7 +42,7 @@ function LoginForm() {
     if (!code.trim()) { setMessage("Enter the OTP code"); return; }
     setLoading(true); setMessage("");
     try {
-      const res = await fetch(`${resolveApiBase()}/auth/verify-otp`, {
+      const res = await fetch("/api/auth?action=verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target: target.trim(), code: code.trim() }),
@@ -61,7 +56,7 @@ function LoginForm() {
         setMessage(data.message ?? `Verification failed (${res.status})`);
       }
     } catch (err) {
-      setMessage(`Could not reach server. (${err instanceof Error ? err.message : "network error"})`);
+      setMessage(`Network error: ${err instanceof Error ? err.message : "Failed to fetch"}`);
     } finally {
       setLoading(false);
     }
