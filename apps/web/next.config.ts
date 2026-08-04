@@ -20,6 +20,14 @@ const nextConfig: NextConfig = {
         source: "/admin/:path*",
         destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/admin/:path*",
       },
+      {
+        source: "/invoice",
+        destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/invoice",
+      },
+      {
+        source: "/invoice/:path*",
+        destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/invoice/:path*",
+      },
     ];
   },
 };
