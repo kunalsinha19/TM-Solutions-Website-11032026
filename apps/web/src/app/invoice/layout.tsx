@@ -28,11 +28,11 @@ export default function InvoiceLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = getAccessToken();
     if (!token) {
-      router.replace("/admin/login");
+      router.replace(`/admin/login?callbackUrl=${encodeURIComponent(pathname)}`);
     } else {
       setReady(true);
     }
-  }, [router]);
+  }, [router, pathname]);
 
   if (!ready) {
     return (

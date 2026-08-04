@@ -1,11 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 import { setAccessToken } from "../../../lib/auth";
 
-export default function AdminLoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/admin/dashboard";
+
   const [target, setTarget] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"request" | "verify">("request");
@@ -33,7 +36,7 @@ export default function AdminLoginPage() {
     const data = await response.json();
     if (response.ok) {
       setAccessToken(data.accessToken);
-      router.push("/admin/dashboard");
+      router.push(callbackUrl);
       router.refresh();
     } else {
       setMessage(data.message ?? "Verification failed");
@@ -69,5 +72,13 @@ export default function AdminLoginPage() {
         {message ? <p className="mt-4 text-sm text-muted">{message}</p> : null}
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
