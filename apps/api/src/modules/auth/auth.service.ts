@@ -5,6 +5,7 @@ import { env } from "../../config/env.js";
 import { AdminModel } from "../admins/admin.model.js";
 import { AdminSessionModel, OtpCodeModel } from "./auth.model.js";
 import { generateOtp, hashOtp } from "../../utils/otp.js";
+import { sendOtpEmail } from "../../utils/email.js";
 
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -30,9 +31,16 @@ export const authService = {
       ip
     });
 
+    // Send OTP via email (target is always email for admin login)
+    // If no SMTP is configured, the code is logged to Railway console
+    await sendOtpEmail(target, code).catch(err =>
+      console.error("[OTP] Email send failed:", err)
+    );
+
     return {
-      message: "OTP generated",
-      debugCode: env.nodeEnv === "development" ? code : undefined
+      message: "OTP sent to your email.",
+      // Always include debugCode so the UI can display it if SMTP is not set up
+      debugCode: env.nodeEnv !== "production" ? code : undefined
     };
   },
 

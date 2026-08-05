@@ -11,5 +11,15 @@ export const env = {
   refreshTokenTtlDays: Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? 30),
   otpTtlMinutes: Number(process.env.OTP_TTL_MINUTES ?? 10),
   apiOrigin: process.env.API_ORIGIN ?? "http://localhost:4000",
-  webOrigin: process.env.WEB_ORIGIN ?? "http://localhost:3000"
+  webOrigin: process.env.WEB_ORIGIN ?? "http://localhost:3000",
+  // Email (SMTP) — set these in Railway env vars
+  smtpHost: process.env.SMTP_HOST ?? "smtp.gmail.com",
+  smtpPort: Number(process.env.SMTP_PORT ?? 465),
+  smtpSecure: process.env.SMTP_SECURE !== "false", // default true
+  smtpUser: process.env.SMTP_USER ?? "",
+  smtpPass: process.env.SMTP_PASS ?? "",
+  smtpFrom: process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "",
+  // Super-admin seed (email to auto-create on first boot)
+  superAdminEmail: process.env.SUPER_ADMIN_EMAIL ?? "",
+  superAdminName: process.env.SUPER_ADMIN_NAME ?? "Super Admin",
 };
