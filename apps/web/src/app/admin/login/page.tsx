@@ -19,7 +19,7 @@ function LoginForm() {
     if (!target.trim()) { setMessage("Enter your email or phone number"); return; }
     setLoading(true); setMessage("");
     try {
-      const res = await fetch("/api/auth?action=request-otp", {
+      const res = await fetch("/api/v1/auth/request-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target: target.trim(), purpose: "admin_login" }),
@@ -42,7 +42,7 @@ function LoginForm() {
     if (!code.trim()) { setMessage("Enter the OTP code"); return; }
     setLoading(true); setMessage("");
     try {
-      const res = await fetch("/api/auth?action=verify-otp", {
+      const res = await fetch("/api/v1/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target: target.trim(), code: code.trim() }),
