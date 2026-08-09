@@ -319,15 +319,29 @@ function TaraMiniStats({ taraStats }) {
   );
 }
 
-/* ─── Main Dashboard ─────────────────────────────────────────────────── */
-export default function Dashboard({ token }) {
+/* ─── Sales Alert Banner + Main Dashboard ─────────────────────────────── */
+function SalesAlert({ count, onClick }) {
+  if (!count) return null;
+  return (
+    <div className="dash-sales-alert" onClick={onClick} role="button" tabIndex={0} onKeyDown={e => e.key === "Enter" && onClick()}>
+      <span className="dash-alert-dot" />
+      <span className="dash-alert-text">
+        <strong>{count} lead{count !== 1 ? "s" : ""} awaiting response</strong>
+        <span className="dash-alert-sub"> — click to open Lead Inbox</span>
+      </span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  );
+}
+
+export default function Dashboard({ token, onNavigate }) {
   const [data, setData] = useState(null);
   const [taraStats, setTaraStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [lastRefreshed, setLastRefreshed] = useState(null);
 
-  useEffect(() => {
-    setLoading(true);
+  function loadAll() {
     Promise.all([
       api.getAnalyticsSummary(token),
       api.getTaraStats(token).catch(() => null),
@@ -335,9 +349,17 @@ export default function Dashboard({ token }) {
       .then(([analytics, tara]) => {
         setData(analytics);
         setTaraStats(tara?.stats ?? null);
+        setLastRefreshed(new Date());
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    loadAll();
+    const id = setInterval(loadAll, 5 * 60_000);
+    return () => clearInterval(id);
   }, [token]);
 
   if (loading) return (
@@ -352,64 +374,132 @@ export default function Dashboard({ token }) {
   const countries= data?.topCountries || [];
   const pages    = data?.topPages || [];
   const devices  = data?.deviceBreakdown || [];
-  const browsers = data?.browserBreakdown || [];
-  const osData   = data?.osBreakdown || [];
   const qStatus  = data?.quoteStatusBreakdown || [];
   const activity = data?.latestActivity || [];
   const logins   = data?.recentLogins || [];
   const topBrochure  = data?.topBrochure;
   const latestQuote  = data?.latestQuote;
 
-  const convRate  = s.totalVisitors > 0 ? ((s.totalQuotes / s.totalVisitors) * 100) : 0;
-  const returnRate= s.totalVisitors > 0 ? ((s.returningVisitors / s.totalVisitors) * 100) : 0;
+  const convRate   = s.totalVisitors > 0 ? ((s.totalQuotes / s.totalVisitors) * 100) : 0;
+  const responseRate = s.totalQuotes > 0 ? (((s.totalQuotes - (s.unrepliedQuotes || 0)) / s.totalQuotes) * 100) : 0;
 
   return (
     <div className="dash-root">
 
-      {/* ── Hero KPIs ── */}
+      {/* ── Dashboard header with refresh ── */}
+      <div className="dash-topbar">
+        <div>
+          <h2 className="dash-topbar-title">Business Dashboard</h2>
+          {lastRefreshed && (
+            <p className="dash-topbar-sub">Updated {timeAgo(lastRefreshed)}</p>
+          )}
+        </div>
+        <button className="secondary dash-refresh-btn" onClick={loadAll} title="Refresh data">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      {/* ── Sales Alert ── */}
+      <SalesAlert count={s.unrepliedQuotes || 0} onClick={() => onNavigate?.("quotes")} />
+
+      {/* ── Hero KPIs (critical business metrics) ── */}
       <div className="dash-hero-grid">
         <HeroKpi
-          label="Total Visitors"
-          value={s.totalVisitors}
-          color="#6366f1"
-          sub={`${(s.newVisitors || 0).toLocaleString()} new visitors`}
-          sparkline={daily}
-        />
-        <HeroKpi
-          label="Quote Leads"
-          value={s.totalQuotes}
+          label="⭐ New Leads Today"
+          value={s.todayQuotes || 0}
           color="#f43f5e"
-          sub="Total enquiries received"
+          sub={`${(s.totalQuotes || 0).toLocaleString()} total all-time`}
         />
         <HeroKpi
-          label="Conversion Rate"
-          value={convRate}
+          label="⭐ Awaiting Response"
+          value={s.unrepliedQuotes || 0}
+          color="#f59e0b"
+          sub="Leads not yet replied to"
+          pulse={(s.unrepliedQuotes || 0) > 0}
+        />
+        <HeroKpi
+          label="⭐ Response Rate"
+          value={responseRate}
           suffix="%"
           color="#10b981"
-          sub="Visitors who enquired"
+          sub="Leads successfully replied"
           isFloat
         />
         <HeroKpi
-          label="Live Now"
+          label="⭐ Conversion Rate"
+          value={convRate}
+          suffix="%"
+          color="#6366f1"
+          sub="Visitors who enquired"
+          isFloat
+        />
+      </div>
+
+      {/* ── Traffic + Live pulse ── */}
+      <div className="dash-hero-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+        <HeroKpi
+          label="Live Visitors"
           value={s.liveVisitors}
           color="#22c55e"
           sub="Active in last 5 min"
           pulse
         />
+        <HeroKpi
+          label="Total Visitors"
+          value={s.totalVisitors}
+          color="#8b5cf6"
+          sub={`${(s.newVisitors || 0).toLocaleString()} new`}
+          sparkline={daily}
+        />
+        <HeroKpi
+          label="This Week"
+          value={s.weekVisitors}
+          color="#0ea5e9"
+          sub="Visitors last 7 days"
+        />
+        <HeroKpi
+          label="This Month"
+          value={s.monthVisitors}
+          color="#64748b"
+          sub="Visitors this month"
+        />
       </div>
 
-      {/* ── Secondary metrics ── */}
+      {/* ── Secondary metrics (compact) ── */}
       <div className="dash-metric-row">
-        <MetricTile label="Today"        value={s.todayVisitors}    icon="📅" />
-        <MetricTile label="This Week"    value={s.weekVisitors}     icon="📈" />
-        <MetricTile label="This Month"   value={s.monthVisitors}    icon="🗓️" />
-        <MetricTile label="Avg Session"  value={0} rawValue={fmtDuration(s.avgDuration)} icon="⏱️" />
-        <MetricTile label="Bounce Rate"  value={s.bounceRate}  suffix="%" icon="↩️" />
-        <MetricTile label="Return Rate"  value={returnRate}    suffix="%" icon="🔁" isFloat />
+        <MetricTile label="Today's Visitors" value={s.todayVisitors} icon="📅" />
+        <MetricTile label="Avg Session"      value={0} rawValue={fmtDuration(s.avgDuration)} icon="⏱️" />
+        <MetricTile label="Bounce Rate"      value={s.bounceRate} suffix="%" icon="↩️" />
+        <MetricTile label="Total Products"   value={s.totalProducts} icon="📦" />
+        <MetricTile label="Categories"       value={s.totalCategories} icon="🗂️" />
+        <MetricTile label="Total Leads"      value={s.totalQuotes} icon="📋" />
       </div>
 
-      {/* ── Traffic + Pages ── */}
+      {/* ── Lead Pipeline + Traffic ── */}
       <div className="dash-row-2">
+        <Panel eyebrow="⭐ Sales" title="Lead Pipeline">
+          <QuotePipeline statuses={qStatus} total={s.totalQuotes} />
+          {latestQuote && (
+            <div className="dash-latest-lead">
+              <p className="dash-sub-section-label">Latest Enquiry</p>
+              <div className="dash-lead-row">
+                <div className="dash-lead-avatar">{latestQuote.name?.[0]?.toUpperCase() || "?"}</div>
+                <div>
+                  <p className="dash-lead-name">{latestQuote.name}</p>
+                  <p className="dash-lead-meta">{latestQuote.company || latestQuote.email} · {timeAgo(latestQuote.createdAt)}</p>
+                </div>
+                <span className="dash-lead-status" style={{
+                  background: latestQuote.status === "new" ? "#fef3c7" : latestQuote.status === "closed" ? "#d1fae5" : "#ede9fe",
+                  color: latestQuote.status === "new" ? "#b45309" : latestQuote.status === "closed" ? "#059669" : "#6366f1",
+                }}>
+                  {latestQuote.status}
+                </span>
+              </div>
+            </div>
+          )}
+        </Panel>
+
         <Panel eyebrow="Analytics" title="Daily Traffic — Last 30 Days">
           {daily.length ? (
             <div className="dash-traffic-chart">
@@ -421,14 +511,17 @@ export default function Dashboard({ token }) {
             </div>
           ) : <p className="dash-empty">No traffic data yet. Tracking starts once visitors arrive.</p>}
         </Panel>
-
-        <Panel eyebrow="Content" title="Most Visited Pages">
-          <BarChart data={pages} labelKey="_id" valueKey="count" color="#b45309" />
-        </Panel>
       </div>
 
-      {/* ── Geo + Devices + Browser/OS ── */}
-      <div className="dash-row-3">
+      {/* ── Tara AI Stats (moved up — key sales intelligence) ── */}
+      {taraStats && (
+        <Panel eyebrow="⭐ Tara AI" title="Chatbot Lead Performance">
+          <TaraMiniStats taraStats={taraStats} />
+        </Panel>
+      )}
+
+      {/* ── Geo + Devices ── */}
+      <div className="dash-row-2">
         <Panel eyebrow="Geo" title="Top Countries">
           {countries.length ? (
             <div className="dash-country-list">
@@ -446,47 +539,16 @@ export default function Dashboard({ token }) {
           ) : <p className="dash-empty">No location data yet.</p>}
         </Panel>
 
-        <Panel eyebrow="Devices" title="Device Breakdown">
-          <DevicePanel devices={devices} />
-        </Panel>
-
-        <Panel eyebrow="Technology" title="Browser / OS">
-          <p className="dash-sub-section-label">Browsers</p>
-          <PillList items={browsers} iconMap={BROWSER_ICONS} color="#6366f1" />
-          <p className="dash-sub-section-label" style={{ marginTop: "0.9rem" }}>Operating Systems</p>
-          <PillList items={osData} iconMap={OS_ICONS} color="#f59e0b" />
+        <Panel eyebrow="Content" title="Most Visited Pages">
+          <BarChart data={pages} labelKey="_id" valueKey="count" color="#b45309" />
         </Panel>
       </div>
 
-      {/* ── Quote Pipeline + Audience Split ── */}
+      {/* ── Audience split + Device breakdown ── */}
       <div className="dash-row-2">
-        <Panel eyebrow="Sales" title="Lead Pipeline">
-          <QuotePipeline statuses={qStatus} total={s.totalQuotes} />
-
-          {latestQuote && (
-            <div className="dash-latest-lead">
-              <p className="dash-sub-section-label">Latest Enquiry</p>
-              <div className="dash-lead-row">
-                <div className="dash-lead-avatar">{latestQuote.name?.[0]?.toUpperCase() || "?"}</div>
-                <div>
-                  <p className="dash-lead-name">{latestQuote.name}</p>
-                  <p className="dash-lead-meta">{latestQuote.company || latestQuote.email} · {timeAgo(latestQuote.createdAt)}</p>
-                </div>
-                <span className="dash-lead-status" style={{
-                  background: latestQuote.status === "pending" ? "#fef3c7" : latestQuote.status === "closed" ? "#d1fae5" : "#ede9fe",
-                  color: latestQuote.status === "pending" ? "#b45309" : latestQuote.status === "closed" ? "#059669" : "#6366f1",
-                }}>
-                  {latestQuote.status}
-                </span>
-              </div>
-            </div>
-          )}
-        </Panel>
-
         <Panel eyebrow="Audience" title="Visitor Insights">
           <p className="dash-sub-section-label">New vs Returning</p>
           <AudienceSplit newV={s.newVisitors || 0} returning={s.returningVisitors || 0} />
-
           <div className="dash-insight-tiles">
             <div className="dash-insight-tile">
               <p className="dash-insight-val">{(s.newVisitors || 0).toLocaleString()}</p>
@@ -496,18 +558,9 @@ export default function Dashboard({ token }) {
               <p className="dash-insight-val">{(s.returningVisitors || 0).toLocaleString()}</p>
               <p className="dash-insight-key">Returning</p>
             </div>
-            <div className="dash-insight-tile">
-              <p className="dash-insight-val">{s.totalProducts || 0}</p>
-              <p className="dash-insight-key">Products</p>
-            </div>
-            <div className="dash-insight-tile">
-              <p className="dash-insight-val">{s.totalCategories || 0}</p>
-              <p className="dash-insight-key">Categories</p>
-            </div>
           </div>
-
           {topBrochure && (
-            <div className="dash-brochure-tile">
+            <div className="dash-brochure-tile" style={{ marginTop: "1rem" }}>
               <span className="dash-brochure-icon">📄</span>
               <div>
                 <p className="dash-brochure-title">{topBrochure.title}</p>
@@ -515,6 +568,10 @@ export default function Dashboard({ token }) {
               </div>
             </div>
           )}
+        </Panel>
+
+        <Panel eyebrow="Devices" title="Device Breakdown">
+          <DevicePanel devices={devices} />
         </Panel>
       </div>
 
@@ -541,13 +598,6 @@ export default function Dashboard({ token }) {
           ) : <p className="dash-empty">No login history.</p>}
         </Panel>
       </div>
-
-      {/* ── Tara AI Assistant Stats ── */}
-      {taraStats && (
-        <Panel eyebrow="Tara AI" title="Chatbot Lead Performance">
-          <TaraMiniStats taraStats={taraStats} />
-        </Panel>
-      )}
 
     </div>
   );

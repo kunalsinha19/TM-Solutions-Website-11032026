@@ -2757,3 +2757,161 @@ details.ss-panel[open] .ss-chevron { transform: rotate(180deg); }
 .status-line--success { background: #ecfdf5; color: #166534; }
 .status-line--error   { background: #fef2f2; color: #991b1b; }
 .status-line--info    { background: #eff6ff; color: #1d4ed8; }
+
+/* ══════════════════════════════════════════════════════════════
+   LEAD MANAGEMENT — Delete + Modal + Alert
+══════════════════════════════════════════════════════════════ */
+
+/* ── Lead card footer actions ── */
+.lc-action-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.lc-delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  padding: 0.45rem 0.85rem !important;
+  border-radius: 8px !important;
+  color: #dc2626 !important;
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s !important;
+}
+.lc-delete-btn:hover {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+  opacity: 1 !important;
+}
+.lc-delete-btn:active { transform: scale(0.97) !important; }
+
+/* ── Delete confirmation modal ── */
+.lm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(3px);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.lm-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  text-align: center;
+  animation: slideUp 0.18s ease;
+}
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.lm-modal-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.lm-modal-title { margin: 0 0 0.6rem; font-size: 1.15rem; font-weight: 700; color: #0f172a; }
+.lm-modal-body  { margin: 0 0 1.5rem; font-size: 0.88rem; color: #64748b; line-height: 1.6; }
+
+.lm-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.lm-delete-confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.4rem !important;
+  border-radius: 10px !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  background: #dc2626 !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer;
+}
+.lm-delete-confirm-btn:hover { background: #b91c1c !important; opacity: 1 !important; }
+.lm-delete-confirm-btn:disabled { opacity: 0.6 !important; cursor: not-allowed !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD — Sales Alert + Topbar
+══════════════════════════════════════════════════════════════ */
+
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+.dash-topbar-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.dash-topbar-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+.dash-refresh-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  font-size: 0.82rem !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px !important;
+  white-space: nowrap;
+}
+
+/* Sales alert banner */
+.dash-sales-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  border-left: 4px solid #f59e0b;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.1s;
+  user-select: none;
+}
+.dash-sales-alert:hover {
+  box-shadow: 0 4px 16px rgba(245,158,11,0.2);
+  transform: translateY(-1px);
+}
+.dash-alert-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.25);
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
+  50%       { box-shadow: 0 0 0 6px rgba(245,158,11,0.1); }
+}
+.dash-alert-text {
+  flex: 1;
+  font-size: 0.88rem;
+  color: #92400e;
+}
+.dash-alert-text strong { color: #78350f; }
+.dash-alert-sub { color: #b45309; }
+

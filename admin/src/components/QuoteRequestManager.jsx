@@ -69,8 +69,30 @@ function StatusBadge({ status }) {
   );
 }
 
+// ── Delete confirmation modal ─────────────────────────────────────────────────
+function DeleteModal({ quote, onConfirm, onCancel, deleting }) {
+  return (
+    <div className="lm-modal-overlay" onClick={onCancel}>
+      <div className="lm-modal" onClick={e => e.stopPropagation()}>
+        <div className="lm-modal-icon">🗑️</div>
+        <h3 className="lm-modal-title">Delete Lead?</h3>
+        <p className="lm-modal-body">
+          This will permanently delete the enquiry from <strong>{quote.name}</strong> ({quote.email}).
+          This action cannot be undone.
+        </p>
+        <div className="lm-modal-actions">
+          <button className="lm-delete-confirm-btn" onClick={onConfirm} disabled={deleting}>
+            {deleting ? <><span className="lc-spinner" /> Deleting…</> : "Yes, Delete Lead"}
+          </button>
+          <button className="secondary" onClick={onCancel} disabled={deleting}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Single lead card ──────────────────────────────────────────────────────────
-function LeadCard({ quote, reply, onToggleReply, onUpdateField, onSendReply, onStatusChange }) {
+function LeadCard({ quote, reply, onToggleReply, onUpdateField, onSendReply, onStatusChange, onDelete }) {
   const cfg = STATUS_CFG[quote.status] || STATUS_CFG.new;
   const [ac, abg] = AVATAR_PALETTE[nameHash(quote.name)];
 
@@ -175,7 +197,7 @@ function LeadCard({ quote, reply, onToggleReply, onUpdateField, onSendReply, onS
         </div>
       )}
 
-      {/* ── Footer: status + reply toggle ── */}
+      {/* ── Footer: status + actions ── */}
       <div className="lc-footer">
         <div className="lc-status-wrap">
           <label className="lc-status-label">Status</label>
@@ -190,19 +212,29 @@ function LeadCard({ quote, reply, onToggleReply, onUpdateField, onSendReply, onS
             <option value="closed">Closed</option>
           </select>
         </div>
-        <button
-          className={reply.open ? "lc-reply-toggle lc-reply-toggle--cancel secondary" : "lc-reply-toggle"}
-          onClick={onToggleReply}
-        >
-          {reply.open ? (
-            <>✕ Discard Draft</>
-          ) : (
-            <>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
-              Reply to Lead
-            </>
-          )}
-        </button>
+        <div className="lc-action-group">
+          <button
+            className="lc-delete-btn"
+            onClick={onDelete}
+            title="Delete this lead permanently"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Delete
+          </button>
+          <button
+            className={reply.open ? "lc-reply-toggle lc-reply-toggle--cancel secondary" : "lc-reply-toggle"}
+            onClick={onToggleReply}
+          >
+            {reply.open ? (
+              <>✕ Discard Draft</>
+            ) : (
+              <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
+                Reply to Lead
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -218,6 +250,8 @@ export default function QuoteRequestManager({ token }) {
   const [filter, setFilter] = useState("all");
   const [replyState, setReplyState] = useState({});
   const [toast, setToast] = useState(null);
+  const [deleteModal, setDeleteModal] = useState(null); // { quote } | null
+  const [deleting, setDeleting] = useState(false);
 
   function showToast(type, message) {
     setToast({ type, message });
@@ -296,6 +330,21 @@ export default function QuoteRequestManager({ token }) {
     }
   }
 
+  async function confirmDelete() {
+    if (!deleteModal) return;
+    setDeleting(true);
+    try {
+      await api.deleteQuote(token, deleteModal.quote._id);
+      setQuotes(prev => prev.filter(q => q._id !== deleteModal.quote._id));
+      showToast("success", `Lead from ${deleteModal.quote.name} deleted.`);
+      setDeleteModal(null);
+    } catch (error) {
+      showToast("error", error.message || "Failed to delete lead.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const counts = {
     all: quotes.length,
     new: quotes.filter(q => q.status === "new").length,
@@ -308,6 +357,14 @@ export default function QuoteRequestManager({ token }) {
   return (
     <div className="lm-shell">
       <Toast toast={toast} />
+      {deleteModal && (
+        <DeleteModal
+          quote={deleteModal.quote}
+          deleting={deleting}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteModal(null)}
+        />
+      )}
 
       {/* ── Page header ── */}
       <div className="lm-header">
@@ -374,6 +431,7 @@ export default function QuoteRequestManager({ token }) {
               onUpdateField={(field, val) => updateReplyField(quote._id, field, val)}
               onSendReply={() => sendReply(quote)}
               onStatusChange={status => updateStatus(quote._id, status)}
+              onDelete={() => setDeleteModal({ quote })}
             />
           ))}
         </div>

@@ -131,6 +131,11 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)
     }),
+  deleteQuote: (token, id) =>
+    request(`/quotes/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    }),
   replyToQuote: (token, id, payload) =>
     request(`/quotes/${id}/reply`, {
       method: "POST",

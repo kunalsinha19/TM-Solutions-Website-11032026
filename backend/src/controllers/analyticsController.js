@@ -145,7 +145,7 @@ exports.getSummary = asyncHandler(async (req, res) => {
 
   const [
     totalVisitors, todayVisitors, weekVisitors, monthVisitors, liveVisitors,
-    totalQuotes, totalProducts, totalCategories,
+    totalQuotes, todayQuotes, unrepliedQuotes, totalProducts, totalCategories,
     avgRes, returningVisitors, singlePage, totalForBounce,
     dailyVisitors, topCountries, topPages, deviceBreakdown,
     browserBreakdown, osBreakdown, quoteStatusBreakdown,
@@ -157,6 +157,8 @@ exports.getSummary = asyncHandler(async (req, res) => {
     Visitor.countDocuments({ isBot: false, sessionStart: { $gte: monthStart } }),
     Visitor.countDocuments({ isBot: false, isActive: true, sessionStart: { $gte: fiveMinAgo } }),
     QuoteRequest.countDocuments(),
+    QuoteRequest.countDocuments({ createdAt: { $gte: todayStart } }),
+    QuoteRequest.countDocuments({ repliedAt: null, status: { $ne: "closed" } }),
     Product.countDocuments(),
     Category.countDocuments(),
     Visitor.aggregate([{ $group: { _id: null, avg: { $avg: "$duration" } } }]),
@@ -212,7 +214,7 @@ exports.getSummary = asyncHandler(async (req, res) => {
     success: true,
     summary: {
       totalVisitors, todayVisitors, weekVisitors, monthVisitors, liveVisitors,
-      totalQuotes, totalProducts, totalCategories,
+      totalQuotes, todayQuotes, unrepliedQuotes, totalProducts, totalCategories,
       avgDuration:       Math.round(avgRes[0]?.avg || 0),
       bounceRate:        totalForBounce > 0 ? Math.round((singlePage / totalForBounce) * 100) : 0,
       returningVisitors,
