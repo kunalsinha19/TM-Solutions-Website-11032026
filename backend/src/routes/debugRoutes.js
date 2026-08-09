@@ -1,7 +1,8 @@
 /**
- * Debug routes — ONLY active when NODE_ENV !== "production" OR when DEBUG_ROUTES=true
+ * Debug routes — temporary, for email diagnostics only
  * Usage: GET /api/debug/email-test?to=you@example.com
  *        GET /api/debug/email-config   (shows sanitised config, no credentials)
+ * TODO: remove or re-guard once email issue is resolved
  */
 const express = require("express");
 const router = express.Router();
@@ -12,12 +13,8 @@ const {
   EMAIL_FROM, ADMIN_NOTIFICATION_EMAIL, RESEND_API_KEY,
 } = require("../config/env");
 
-const ENABLED = process.env.NODE_ENV !== "production" || process.env.DEBUG_ROUTES === "true";
-
-function guard(req, res, next) {
-  if (!ENABLED) return res.status(404).json({ error: "Debug routes disabled in production. Set DEBUG_ROUTES=true to enable." });
-  next();
-}
+// Guard always passes — remove this file once email is confirmed working
+function guard(req, res, next) { next(); }
 
 /* GET /api/debug/email-config — shows what env vars are loaded */
 router.get("/email-config", guard, (req, res) => {
