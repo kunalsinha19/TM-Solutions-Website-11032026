@@ -315,21 +315,31 @@ function ImportPanel({ token, onDone, onClose }) {
       const isHeader = /s\.?no|shipping/i.test(lines[0]);
       const dataLines = isHeader ? lines.slice(1) : lines;
 
+      // Auto-detect whether data has a Category column (12-col our export) or not (11-col Google Sheet)
+      const firstRow = dataLines[0]?.split(delim) || [];
+      const hasCatCol = firstRow.length >= 12;
+      // Indices shift by 1 when Category column is present
+      const CI = hasCatCol
+        ? { cat:3, pkg:4, pcs:5, sold:6, date:7, room:9, down:10, tran:11 }
+        : { cat:-1, pkg:3, pcs:4, sold:5, date:6, room:8, down:9, tran:10 };
+
+      const stripNum = s => Number((s || "").replace(/,/g, "")) || 0;
+
       const items = dataLines.map(line => {
         const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g, ""));
         return {
           sNo:          cols[0] ? Number(cols[0]) : undefined,
           shippingMark: (cols[1] || "").toUpperCase().trim(),
           description:  (cols[2] || "").trim(),
-          category:     (cols[3] || "").trim(),
-          pkg:          cols[4] ? Number(cols[4]) : 0,
-          pcs:          cols[5] ? Number(cols[5]) : 0,
-          soldPcs:      cols[6] ? Number(cols[6]) : 0,
-          soldDate:     cols[7] || null,
-          // cols[8] = Unsold — computed, skip
-          showroomQty:  cols[9]  ? Number(cols[9])  : 0,
-          godownQty:    cols[10] ? Number(cols[10]) : 0,
-          transitQty:   cols[11] ? Number(cols[11]) : 0,
+          category:     CI.cat >= 0 ? (cols[CI.cat] || "").trim() : "",
+          pkg:          stripNum(cols[CI.pkg]),
+          pcs:          stripNum(cols[CI.pcs]),
+          soldPcs:      stripNum(cols[CI.sold]),
+          soldDate:     cols[CI.date] || null,
+          // Unsold column is computed — skip
+          showroomQty:  stripNum(cols[CI.room]),
+          godownQty:    stripNum(cols[CI.down]),
+          transitQty:   stripNum(cols[CI.tran]),
         };
       }).filter(i => i.shippingMark && i.description);
 
