@@ -7,6 +7,8 @@ const { HAS_REAL_SMTP, HAS_RESEND, HAS_REAL_CAPTCHA } = require("../config/env")
 const HAS_EMAIL = HAS_RESEND || HAS_REAL_SMTP;
 const { log } = require("../utils/activityLogger");
 
+console.log("[QuoteController] boot — HAS_EMAIL:", HAS_EMAIL, "HAS_RESEND:", HAS_RESEND, "HAS_REAL_SMTP:", HAS_REAL_SMTP);
+
 exports.createQuoteRequest = asyncHandler(async (req, res) => {
   const { captchaToken, ...payload } = req.body;
 
@@ -28,15 +30,30 @@ exports.createQuoteRequest = asyncHandler(async (req, res) => {
   }
 
   const quoteRequest = await QuoteRequest.create({ ...payload, captchaVerified: captcha.success });
+  console.log("[QuoteController] created quote id:", quoteRequest._id, "from:", payload.email, "| HAS_EMAIL:", HAS_EMAIL);
 
   if (HAS_EMAIL) {
     setImmediate(async () => {
-      try { await sendQuoteRequestEmail(quoteRequest); }
-      catch (error) { console.error("Quote notification email failed:", error.message); }
+      console.log("[QuoteController] sending notification email for quote:", quoteRequest._id);
+      try {
+        await sendQuoteRequestEmail(quoteRequest);
+        console.log("[QuoteController] notification email sent ✓ for quote:", quoteRequest._id);
+      } catch (error) {
+        console.error("[QuoteController] notification email FAILED for quote:", quoteRequest._id, "| error:", error.message, "| code:", error.code, "| response:", error.response);
+      }
     });
+  } else {
+    console.warn("[QuoteController] email skipped — no provider configured (HAS_RESEND:", HAS_RESEND, "HAS_REAL_SMTP:", HAS_REAL_SMTP, ")");
   }
 
-  res.status(201).json({ success: true, quoteRequest, notification: { sent: false, reason: "smtp-not-configured" } });
+  res.status(201).json({
+    success: true,
+    quoteRequest,
+    notification: {
+      queued: HAS_EMAIL,
+      provider: HAS_RESEND ? "resend" : HAS_REAL_SMTP ? "smtp" : "none",
+    }
+  });
 });
 
 exports.getQuoteRequests = asyncHandler(async (_req, res) => {
