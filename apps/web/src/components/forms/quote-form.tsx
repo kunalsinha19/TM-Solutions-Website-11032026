@@ -136,10 +136,13 @@ export function QuoteForm({ productId }: { productId?: string }) {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       next.email = "Please enter a valid email address.";
     if (phoneDigits) {
-      if (country.min === country.max && phoneDigits.length !== country.min)
+      if (country.min === country.max && phoneDigits.length !== country.min) {
         next.phone = `Enter exactly ${country.min} digits for ${country.flag} ${country.code}.`;
-      else if (phoneDigits.length < country.min)
+      } else if (phoneDigits.length < country.min) {
         next.phone = `Enter at least ${country.min} digits for ${country.flag} ${country.code}.`;
+      } else if (countryCode === "+91" && !/^[6-9]/.test(phoneDigits)) {
+        next.phone = "Indian mobile numbers must start with 6, 7, 8, or 9.";
+      }
     }
     if (!message.trim() || message.trim().length < 10)
       next.message = "Please describe your requirement (at least 10 characters).";

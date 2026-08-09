@@ -1,7 +1,7 @@
 const asyncHandler = require("../utils/asyncHandler");
 const QuoteRequest = require("../models/QuoteRequest");
 const { validateCaptcha } = require("../services/captchaService");
-const { sendQuoteRequestEmail, sendQuoteResponseEmail, buildQuoteReply } = require("../services/emailService");
+const { sendQuoteRequestEmail, sendCustomerAck, sendQuoteResponseEmail, buildQuoteReply } = require("../services/emailService");
 const ApiError = require("../utils/apiError");
 const { HAS_REAL_SMTP, HAS_RESEND, HAS_REAL_CAPTCHA } = require("../config/env");
 const HAS_EMAIL = HAS_RESEND || HAS_REAL_SMTP;
@@ -12,14 +12,19 @@ console.log("[QuoteController] boot — HAS_EMAIL:", HAS_EMAIL, "HAS_RESEND:", H
 exports.createQuoteRequest = asyncHandler(async (req, res) => {
   const { captchaToken, ...payload } = req.body;
 
-  // Dedup: same email + message submitted within 60 seconds → return existing record
-  const DEDUP_WINDOW_MS = 60_000;
+  // Dedup: same email + message submitted within 5 minutes → return existing record
+  // This prevents double-submissions from network retries, chatbot re-fires, or accidental
+  // form resubmits without blocking a customer's genuinely new enquiry (different message).
+  const DEDUP_WINDOW_MS = 5 * 60_000; // 5 minutes
+  const normalizedEmail = (payload.email ?? "").toLowerCase().trim();
+  const normalizedMessage = (payload.message ?? "").trim();
   const existing = await QuoteRequest.findOne({
-    email: (payload.email ?? "").toLowerCase().trim(),
-    message: (payload.message ?? "").trim(),
+    email: normalizedEmail,
+    message: normalizedMessage,
     createdAt: { $gte: new Date(Date.now() - DEDUP_WINDOW_MS) },
   });
   if (existing) {
+    console.log("[QuoteController] duplicate quote suppressed for:", normalizedEmail, "| original id:", existing._id);
     return res.status(200).json({ success: true, quoteRequest: existing, duplicate: true });
   }
 
@@ -34,16 +39,28 @@ exports.createQuoteRequest = asyncHandler(async (req, res) => {
 
   if (HAS_EMAIL) {
     setImmediate(async () => {
-      console.log("[QuoteController] sending notification email for quote:", quoteRequest._id);
-      try {
-        await sendQuoteRequestEmail(quoteRequest);
-        console.log("[QuoteController] notification email sent ✓ for quote:", quoteRequest._id);
-      } catch (error) {
-        console.error("[QuoteController] notification email FAILED for quote:", quoteRequest._id, "| error:", error.message, "| code:", error.code, "| response:", error.response);
+      // Fire both emails concurrently; each failure is isolated so one doesn't block the other.
+      const [adminResult, ackResult] = await Promise.allSettled([
+        sendQuoteRequestEmail(quoteRequest),
+        sendCustomerAck(quoteRequest),
+      ]);
+
+      if (adminResult.status === "fulfilled") {
+        console.log("[QuoteController] admin notification sent ✓ for quote:", quoteRequest._id);
+      } else {
+        console.error("[QuoteController] admin notification FAILED for quote:", quoteRequest._id,
+          "| error:", adminResult.reason?.message, "| code:", adminResult.reason?.code);
+      }
+
+      if (ackResult.status === "fulfilled") {
+        console.log("[QuoteController] customer ack sent ✓ for quote:", quoteRequest._id, "→", quoteRequest.email);
+      } else {
+        console.error("[QuoteController] customer ack FAILED for quote:", quoteRequest._id,
+          "| error:", ackResult.reason?.message);
       }
     });
   } else {
-    console.warn("[QuoteController] email skipped — no provider configured (HAS_RESEND:", HAS_RESEND, "HAS_REAL_SMTP:", HAS_REAL_SMTP, ")");
+    console.warn("[QuoteController] emails skipped — no provider configured (HAS_RESEND:", HAS_RESEND, "HAS_REAL_SMTP:", HAS_REAL_SMTP, ")");
   }
 
   res.status(201).json({
