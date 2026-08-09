@@ -15,8 +15,22 @@ const {
 
 const EMAIL_TIMEOUT_MS = Number(process.env.EMAIL_TIMEOUT_MS || 15000);
 
+/* ── Startup diagnostic ─────────────────────────────────────────────── */
+console.log("[EmailService] boot config:", {
+  HAS_RESEND,
+  HAS_REAL_SMTP,
+  EMAIL_FROM,
+  SMTP_HOST: SMTP_HOST || "(not set)",
+  SMTP_PORT,
+  SMTP_SECURE,
+  SMTP_USER: SMTP_USER ? `${SMTP_USER.slice(0, 4)}…` : "(not set)",
+  SMTP_PASS: SMTP_PASS ? `${SMTP_PASS.length}-char password set` : "(not set)",
+  RESEND_API_KEY: RESEND_API_KEY ? `${RESEND_API_KEY.slice(0, 8)}…` : "(not set)",
+});
+
 /* ── Resend (HTTPS, never blocked by firewalls) ─────────────────────── */
 async function sendViaResend({ to, subject, html, text, replyTo }) {
+  console.log("[Email/Resend] attempting send →", to, "| subject:", subject);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -36,10 +50,14 @@ async function sendViaResend({ to, subject, html, text, replyTo }) {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(`Resend API error ${res.status}: ${body?.message || res.statusText}`);
+    const msg = `Resend API error ${res.status}: ${body?.message || res.statusText}`;
+    console.error("[Email/Resend] FAILED:", msg, "| full body:", JSON.stringify(body));
+    throw new Error(msg);
   }
 
-  return res.json();
+  const result = await res.json();
+  console.log("[Email/Resend] SUCCESS id:", result?.id, "→", to);
+  return result;
 }
 
 /* ── Nodemailer (SMTP fallback) ─────────────────────────────────────── */
@@ -49,8 +67,17 @@ function getTransporter() {
   if (transporter) return transporter;
 
   if (!HAS_REAL_SMTP) {
-    throw new Error("SMTP configuration is incomplete. Set real SMTP_HOST, SMTP_USER, and SMTP_PASS values.");
+    const detail = `SMTP_HOST=${SMTP_HOST || "MISSING"} SMTP_USER=${SMTP_USER || "MISSING"} SMTP_PASS=${SMTP_PASS ? "set" : "MISSING"}`;
+    throw new Error(`SMTP configuration is incomplete. ${detail}`);
   }
+
+  console.log("[Email/SMTP] creating transporter:", {
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
+    user: SMTP_USER ? `${SMTP_USER.slice(0, 4)}…` : "MISSING",
+    requireTLS: SMTP_PORT === 587,
+  });
 
   transporter = nodemailer.createTransport({
     host: SMTP_HOST,
@@ -61,7 +88,9 @@ function getTransporter() {
     tls: { minVersion: "TLSv1.2" },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
-    socketTimeout: EMAIL_TIMEOUT_MS
+    socketTimeout: EMAIL_TIMEOUT_MS,
+    logger: true,   // nodemailer internal logging
+    debug: false,   // set true for full SMTP conversation (very verbose)
   });
 
   return transporter;
@@ -80,11 +109,35 @@ function withTimeout(promise, label) {
 }
 
 async function sendViaSMTP({ to, subject, html, text, replyTo }) {
+  console.log("[Email/SMTP] attempting send →", to, "| from:", EMAIL_FROM, "| subject:", subject);
   const t = getTransporter();
-  return withTimeout(
-    t.sendMail({ from: EMAIL_FROM, to, replyTo, subject, text, html }),
-    "Email send"
-  );
+
+  // Verify connection before sending
+  try {
+    await withTimeout(t.verify(), "SMTP verify");
+    console.log("[Email/SMTP] connection verified ✓");
+  } catch (verifyErr) {
+    console.error("[Email/SMTP] connection verify FAILED:", verifyErr.message, "| code:", verifyErr.code, "| response:", verifyErr.response);
+    throw verifyErr;
+  }
+
+  try {
+    const info = await withTimeout(
+      t.sendMail({ from: EMAIL_FROM, to, replyTo, subject, text, html }),
+      "Email send"
+    );
+    console.log("[Email/SMTP] SUCCESS messageId:", info.messageId, "| response:", info.response, "→", to);
+    return info;
+  } catch (sendErr) {
+    console.error("[Email/SMTP] sendMail FAILED:", {
+      message: sendErr.message,
+      code: sendErr.code,
+      command: sendErr.command,
+      response: sendErr.response,
+      responseCode: sendErr.responseCode,
+    });
+    throw sendErr;
+  }
 }
 
 /* ── Unified send (Resend preferred, SMTP fallback) ─────────────────── */
@@ -92,7 +145,11 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
   if (HAS_RESEND) {
     return sendViaResend({ to, subject, html, text, replyTo });
   }
-  return sendViaSMTP({ to, subject, html, text, replyTo });
+  if (HAS_REAL_SMTP) {
+    return sendViaSMTP({ to, subject, html, text, replyTo });
+  }
+  console.warn("[Email] No email provider configured — skipping send. to:", to);
+  throw new Error("No email provider configured (no RESEND_API_KEY, no valid SMTP).");
 }
 
 /* ── Public helpers ──────────────────────────────────────────────────── */
@@ -115,12 +172,18 @@ async function getNotificationEmail() {
   const settings = await WebsiteSettings.findOne({ siteKey: "primary" })
     .select("masterEmail contactInfo.email")
     .lean();
-  return settings?.masterEmail || ADMIN_NOTIFICATION_EMAIL || settings?.contactInfo?.email || "";
+  const email = settings?.masterEmail || ADMIN_NOTIFICATION_EMAIL || settings?.contactInfo?.email || "";
+  console.log("[Email] notification email resolved to:", email || "(none — check WebsiteSettings.masterEmail or ADMIN_NOTIFICATION_EMAIL env var)");
+  return email;
 }
 
 async function sendQuoteRequestEmail(quoteRequest) {
+  console.log("[Email] sendQuoteRequestEmail for:", quoteRequest.name, quoteRequest.email);
   const notificationEmail = await getNotificationEmail();
-  if (!notificationEmail) throw new Error("Notification email is not configured.");
+  if (!notificationEmail) {
+    console.error("[Email] No notification email configured — quote alert NOT sent. Set masterEmail in WebsiteSettings OR set ADMIN_NOTIFICATION_EMAIL env var.");
+    throw new Error("Notification email is not configured.");
+  }
 
   const subject = `New quote request from ${quoteRequest.name}`;
   const text = [
@@ -144,6 +207,7 @@ async function sendQuoteRequestEmail(quoteRequest) {
     </div>
   `;
 
+  console.log("[Email] sending quote notification to:", notificationEmail);
   return sendEmail({ to: notificationEmail, replyTo: quoteRequest.email, subject, text, html });
 }
 
