@@ -157,84 +157,97 @@ export default function InvProductsPage() {
 
       {/* Modal */}
       {modal !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-panel rounded-2xl border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
-            <h2 className="text-lg font-bold mb-4">{modal === "new" ? "Add Product" : `Edit: ${(modal as InvProduct).name}`}</h2>
-            {error && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mb-4 border border-red-200">{error}</div>}
+        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-panel rounded-2xl border border-border w-full max-w-2xl flex flex-col max-h-[90vh] shadow-2xl">
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="text-xs font-semibold text-muted mb-1 block">Product Name *</label>
-                <input value={form.name} onChange={e => f("name", e.target.value)}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted mb-1 block">SKU</label>
-                <input value={form.sku} onChange={e => f("sku", e.target.value)}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted mb-1 block">Category</label>
-                <input list="inv-cats" value={form.category} onChange={e => f("category", e.target.value)}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
-                <datalist id="inv-cats">{categories.map(c => <option key={c} value={c} />)}</datalist>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted mb-1 block">Unit</label>
-                <select value={form.unit} onChange={e => f("unit", e.target.value)}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60">
-                  {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted mb-1 block">HSN Code</label>
-                <input value={form.hsnCode} onChange={e => f("hsnCode", e.target.value)}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent/60" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted mb-1 block">GST Rate</label>
-                <select value={form.gstRate} onChange={e => f("gstRate", Number(e.target.value))}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60">
-                  {GST_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted mb-1 block">Purchase Price (excl. GST)</label>
-                <input type="number" min="0" step="0.01" value={form.purchasePrice} onChange={e => f("purchasePrice", Number(e.target.value))}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted mb-1 block">Selling Price (excl. GST)</label>
-                <input type="number" min="0" step="0.01" value={form.sellingPrice} onChange={e => f("sellingPrice", Number(e.target.value))}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
-              </div>
-              {!form.isService && (
-                <>
-                  <div>
-                    <label className="text-xs font-semibold text-muted mb-1 block">Opening Stock</label>
-                    <input type="number" min="0" value={form.openingStock} onChange={e => f("openingStock", Number(e.target.value))}
-                      className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-muted mb-1 block">Min Stock (reorder level)</label>
-                    <input type="number" min="0" value={form.minStockQty} onChange={e => f("minStockQty", Number(e.target.value))}
-                      className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
-                  </div>
-                </>
-              )}
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="isSvc" checked={form.isService} onChange={e => f("isService", e.target.checked)}
-                  className="w-4 h-4 accent-blue-600" />
-                <label htmlFor="isSvc" className="text-sm">This is a service</label>
-              </div>
-              <div className="col-span-2">
-                <label className="text-xs font-semibold text-muted mb-1 block">Description</label>
-                <textarea rows={2} value={form.description} onChange={e => f("description", e.target.value)}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60 resize-none" />
+            {/* ── Sticky header ── */}
+            <div className="flex items-center justify-between shrink-0 border-b border-border/60 px-6 py-4">
+              <h2 className="text-base font-bold">{modal === "new" ? "Add Product" : `Edit: ${(modal as InvProduct).name}`}</h2>
+              <button onClick={() => setModal(null)} aria-label="Close"
+                className="rounded-lg p-1.5 text-muted hover:bg-surface hover:text-text transition-colors">
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            {/* ── Scrollable body ── */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {error && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg border border-red-200 mb-3">{error}</div>}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-muted mb-1 block">Product Name *</label>
+                  <input value={form.name} onChange={e => f("name", e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted mb-1 block">SKU</label>
+                  <input value={form.sku} onChange={e => f("sku", e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted mb-1 block">Category</label>
+                  <input list="inv-cats" value={form.category} onChange={e => f("category", e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
+                  <datalist id="inv-cats">{categories.map(c => <option key={c} value={c} />)}</datalist>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted mb-1 block">Unit</label>
+                  <select value={form.unit} onChange={e => f("unit", e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60">
+                    {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted mb-1 block">HSN Code</label>
+                  <input value={form.hsnCode} onChange={e => f("hsnCode", e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent/60" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted mb-1 block">GST Rate</label>
+                  <select value={form.gstRate} onChange={e => f("gstRate", Number(e.target.value))}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60">
+                    {GST_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted mb-1 block">Purchase Price (excl. GST)</label>
+                  <input type="number" min="0" step="0.01" value={form.purchasePrice} onChange={e => f("purchasePrice", Number(e.target.value))}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted mb-1 block">Selling Price (excl. GST)</label>
+                  <input type="number" min="0" step="0.01" value={form.sellingPrice} onChange={e => f("sellingPrice", Number(e.target.value))}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
+                </div>
+                {!form.isService && (
+                  <>
+                    <div>
+                      <label className="text-xs font-semibold text-muted mb-1 block">Opening Stock</label>
+                      <input type="number" min="0" value={form.openingStock} onChange={e => f("openingStock", Number(e.target.value))}
+                        className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted mb-1 block">Min Stock (reorder level)</label>
+                      <input type="number" min="0" value={form.minStockQty} onChange={e => f("minStockQty", Number(e.target.value))}
+                        className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60" />
+                    </div>
+                  </>
+                )}
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="isSvc" checked={form.isService} onChange={e => f("isService", e.target.checked)}
+                    className="w-4 h-4 accent-blue-600" />
+                  <label htmlFor="isSvc" className="text-sm">This is a service</label>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-muted mb-1 block">Description</label>
+                  <textarea rows={2} value={form.description} onChange={e => f("description", e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:border-accent/60 resize-none" />
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-2 mt-5 justify-end">
+            {/* ── Sticky footer ── */}
+            <div className="shrink-0 border-t border-border/60 px-6 py-4 flex items-center justify-end gap-2">
               <button onClick={() => setModal(null)} disabled={saving}
                 className="rounded-full border border-border px-4 py-2 text-xs font-semibold disabled:opacity-50">Cancel</button>
               <button onClick={save} disabled={saving}
