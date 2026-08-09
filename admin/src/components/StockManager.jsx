@@ -302,27 +302,41 @@ function ImportPanel({ token, onDone, onClose }) {
 
   async function handleImport() {
     setLoading(true);
+    setResult(null);
     try {
-      // Parse CSV: S.No, Shipping Mark, Description, Category, PKG, PCS, Sold (Pcs), Sold Date, Unsold, Showroom, Godown, Transit
-      const lines = raw.trim().split("\n").filter(Boolean);
+      // Parse TSV (Google Sheets) or CSV (exported file)
+      // Columns: S.No | Shipping Mark | Description | Category | PKG | PCS | Sold (Pcs) | Sold Date | Unsold (skip) | Showroom | Godown | Transit
+      const lines = raw.trim().split("\n").filter(l => l.trim());
+
+      // Auto-detect delimiter: tab = Google Sheets paste, comma = CSV file
+      const sample = lines.find(l => l.trim()) || "";
+      const delim  = sample.includes("\t") ? "\t" : ",";
+
       const isHeader = /s\.?no|shipping/i.test(lines[0]);
       const dataLines = isHeader ? lines.slice(1) : lines;
+
       const items = dataLines.map(line => {
-        const cols = line.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
+        const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g, ""));
         return {
           sNo:          cols[0] ? Number(cols[0]) : undefined,
-          shippingMark: cols[1] || "",
-          description:  cols[2] || "",
-          category:     cols[3] || "",
+          shippingMark: (cols[1] || "").toUpperCase().trim(),
+          description:  (cols[2] || "").trim(),
+          category:     (cols[3] || "").trim(),
           pkg:          cols[4] ? Number(cols[4]) : 0,
           pcs:          cols[5] ? Number(cols[5]) : 0,
           soldPcs:      cols[6] ? Number(cols[6]) : 0,
           soldDate:     cols[7] || null,
-          showroomQty:  cols[9] ? Number(cols[9])  : 0,
+          // cols[8] = Unsold — computed, skip
+          showroomQty:  cols[9]  ? Number(cols[9])  : 0,
           godownQty:    cols[10] ? Number(cols[10]) : 0,
           transitQty:   cols[11] ? Number(cols[11]) : 0,
         };
       }).filter(i => i.shippingMark && i.description);
+
+      if (!items.length) {
+        setResult({ error: `No valid rows found (detected delimiter: ${delim === "\t" ? "TAB — Google Sheets paste OK" : "comma"}). Make sure column 2 = Shipping Mark and column 3 = Description.` });
+        return;
+      }
 
       const res = await api.bulkImportStock(token, items);
       setResult(res);
@@ -340,13 +354,13 @@ function ImportPanel({ token, onDone, onClose }) {
         <div className="lm-bulk-reply-header">
           <div>
             <p className="lm-bulk-reply-title">📥 Import from CSV</p>
-            <p className="lm-bulk-reply-sub">Paste CSV rows (with or without header): S.No, Shipping Mark, Description, Category, PKG, PCS, Sold, Sold Date, Unsold, Showroom, Godown, Transit</p>
+            <p className="lm-bulk-reply-sub">Paste directly from Google Sheets (tab-separated) or a CSV file. Columns: S.No · Shipping Mark · Description · Category · PKG · PCS · Sold · Sold Date · Unsold · Showroom · Godown · Transit</p>
           </div>
           <button className="lm-bulk-close" onClick={onClose}>✕</button>
         </div>
         <label className="lc-field">
           <span>CSV Data</span>
-          <textarea rows={10} value={raw} onChange={e => setRaw(e.target.value)} placeholder={"TMS-1,Paper Cutter 4908,Paper Cutters,6,6,1,05-06-2026,,5,0,0"} style={{ fontFamily: "monospace", fontSize: "0.8rem" }} />
+          <textarea rows={10} value={raw} onChange={e => setRaw(e.target.value)} placeholder={"Copy-paste directly from Google Sheets — tab-separated is fine.\nOr comma-separated: 1,TMS-1,Paper Cutter 4908,Cutters,6,6,1,,5,0,0"} style={{ fontFamily: "monospace", fontSize: "0.8rem" }} />
         </label>
         {result && (
           <div className={`sm-import-result ${result.error ? "sm-import-result--error" : ""}`}>
