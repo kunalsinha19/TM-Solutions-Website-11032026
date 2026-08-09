@@ -110,3 +110,75 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 exports.getProfile = asyncHandler(async (req, res) => {
   res.json({ success: true, admin: req.admin });
 });
+
+// ── OTP Login (used by invoice module at /api/v1/auth/*) ─────────────────────
+// POST /auth/request-otp  { target: email, purpose: "admin_login" }
+exports.requestOtp = asyncHandler(async (req, res) => {
+  const { target } = req.body;
+  if (!target) throw new ApiError(400, "target (email) is required");
+
+  const email = String(target).toLowerCase().trim();
+  const admin = await Admin.findOne({ email, isActive: true });
+
+  // Always respond the same way (don't leak whether the email exists)
+  if (!admin) {
+    return res.json({ success: true, message: "If that email is registered, an OTP has been sent." });
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+  await PasswordResetToken.create({
+    email: admin.email,
+    token: otpHash,
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min
+  });
+
+  let debugCode;
+  try {
+    await sendPasswordResetEmail(admin.email, otp);
+  } catch (err) {
+    // If email fails, surface OTP in response so login isn't completely blocked
+    console.error("[requestOtp] email send failed:", err.message);
+    debugCode = otp;
+  }
+
+  const response = { success: true, message: "OTP sent. It expires in 10 minutes." };
+  if (debugCode) response.debugCode = debugCode;
+  res.json(response);
+});
+
+// POST /auth/verify-otp  { target: email, code: "123456" }
+exports.verifyOtp = asyncHandler(async (req, res) => {
+  const { target, code } = req.body;
+  if (!target || !code) throw new ApiError(400, "target and code are required");
+
+  const email    = String(target).toLowerCase().trim();
+  const otpHash  = crypto.createHash("sha256").update(String(code)).digest("hex");
+
+  const record = await PasswordResetToken.findOne({
+    email,
+    token:     otpHash,
+    used:      false,
+    expiresAt: { $gt: new Date() },
+  }).sort({ createdAt: -1 });
+
+  if (!record) throw new ApiError(400, "Invalid or expired OTP");
+
+  record.used = true;
+  await record.save();
+
+  const admin = await Admin.findOne({ email }).select("-passwordHash");
+  if (!admin || !admin.isActive) throw new ApiError(403, "Admin account not found or inactive");
+
+  await Admin.findByIdAndUpdate(admin._id, { lastLoginAt: new Date() });
+
+  const accessToken = generateToken({ id: admin._id, email: admin.email, role: admin.role });
+
+  setImmediate(() => {
+    const fakeReq = { headers: req.headers, socket: req.socket, admin };
+    log(fakeReq, { action: "login", category: "auth", details: "Admin logged in via OTP" });
+  });
+
+  res.json({ success: true, accessToken, admin });
+});
