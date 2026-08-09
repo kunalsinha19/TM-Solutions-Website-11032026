@@ -38,14 +38,14 @@ export function SiteFooter() {
             </p>
             <div className="mt-6 flex flex-col gap-2">
               <a
-                href="mailto:taramaasolutions2025@gmail.com"
+                href="mailto:support.tmsindia@gmail.com"
                 className="flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <rect x="1" y="2.5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
                   <path d="M1 4l6 4.5L13 4" stroke="currentColor" strokeWidth="1.2"/>
                 </svg>
-                taramaasolutions2025@gmail.com
+                support.tmsindia@gmail.com
               </a>
               <a
                 href="tel:+917595056476"

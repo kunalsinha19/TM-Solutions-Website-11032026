@@ -28,7 +28,7 @@ async function buildSystemPrompt(): Promise<string> {
   let categories: string[] = [];
   let products: Array<{ name: string; category: string }> = [];
   let siteName = "Tara Maa Solutions";
-  let email = "taramaasolutions2025@gmail.com";
+  let email = "support.tmsindia@gmail.com";
   let phones = "";
   let address = "";
 
@@ -261,7 +261,7 @@ export async function POST(req: NextRequest) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error("[Chat error]", msg);
         ctrl.enqueue(sse(JSON.stringify({
-          text: "I'm having trouble right now. Please try again or reach us at taramaasolutions2025@gmail.com."
+          text: "I'm having trouble right now. Please try again or reach us at support.tmsindia@gmail.com."
         })));
       } finally {
         ctrl.enqueue(sse("[DONE]"));

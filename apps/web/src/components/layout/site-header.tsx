@@ -25,7 +25,7 @@ export function SiteHeader({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const displayEmail = contactEmail || "taramaasolutions2025@gmail.com";
+  const displayEmail = contactEmail || "support.tmsindia@gmail.com";
   const displayPhone = contactPhone || "+91 75950 56476";
   const telHref = `tel:${displayPhone.replace(/[\s-]/g, "")}`;
 

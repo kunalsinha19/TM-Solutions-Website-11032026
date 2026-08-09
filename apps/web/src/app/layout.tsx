@@ -90,7 +90,7 @@ export default async function RootLayout({
     name: "TM Solutions",
     url: "https://tmsolutionsindia.com",
     telephone: contactPhone ?? "+91-9876543210",
-    email: contactEmail ?? "taramaasolutions2025@gmail.com",
+    email: contactEmail ?? "support.tmsindia@gmail.com",
     address: {
       "@type": "PostalAddress",
       addressCountry: "IN",

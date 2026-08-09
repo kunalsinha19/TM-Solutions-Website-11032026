@@ -18,7 +18,7 @@ export const SITE_CONFIG = {
   /** Contact email — overrides the value pulled from WebsiteSettings for static components. */
   contactEmail:
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ??
-    "taramaasolutions2025@gmail.com",
+    "support.tmsindia@gmail.com",
 
   /** Primary contact phone — used in footer and header fallbacks. */
   contactPhone:

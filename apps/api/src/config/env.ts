@@ -18,7 +18,7 @@ export const env = {
   smtpSecure: process.env.SMTP_SECURE !== "false", // default true
   smtpUser: process.env.SMTP_USER ?? "",
   smtpPass: process.env.SMTP_PASS ?? "",
-  smtpFrom: process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "",
+  smtpFrom: process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "support.tmsindia@gmail.com",
   // Super-admin seed (email to auto-create on first boot)
   superAdminEmail: process.env.SUPER_ADMIN_EMAIL ?? "",
   superAdminName: process.env.SUPER_ADMIN_NAME ?? "Super Admin",
