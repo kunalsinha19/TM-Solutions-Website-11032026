@@ -1,11 +1,8 @@
 import { NextRequest } from "next/server";
 
-function resolveApiBase(raw: string | undefined): string {
-  const base = (raw ?? "http://localhost:4000/api").replace(/\/$/, "");
-  return base.endsWith("/api") ? base : `${base}/api`;
-}
-
-const BACKEND = resolveApiBase(process.env.NEXT_PUBLIC_API_URL);
+// Server-side backend URL — set API_INTERNAL_URL in Railway → web service → Variables
+// e.g. API_INTERNAL_URL=https://api.tmsolutionsindia.com
+const BACKEND = `${(process.env.API_INTERNAL_URL ?? "http://localhost:4000").replace(/\/+$/, "")}/api/v1`;
 const GROQ_KEY = process.env.GROQ_API_KEY ?? "";
 
 // In-memory rate limiter: max 25 messages / IP / minute

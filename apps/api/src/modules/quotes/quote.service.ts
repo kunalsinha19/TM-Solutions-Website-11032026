@@ -1,11 +1,22 @@
 import { QuoteRequestModel } from "./quote.model.js";
 import { captchaService } from "../captcha/captcha.service.js";
 import { ApiError } from "../../utils/api-error.js";
+import { sendQuoteNotification } from "../../utils/email.js";
 
-async function notifyQuote(_quoteId: string) {
-  return {
-    delivered: true
-  };
+async function notifyQuote(quote: Record<string, unknown>) {
+  try {
+    await sendQuoteNotification({
+      name:    String(quote.name    ?? ""),
+      email:   String(quote.email   ?? ""),
+      phone:   String(quote.phone   ?? ""),
+      company: String(quote.company ?? ""),
+      message: String(quote.message ?? ""),
+    });
+    return { delivered: true };
+  } catch (err) {
+    console.error("[Quote notify] Email failed:", (err as Error).message);
+    return { delivered: false, error: (err as Error).message };
+  }
 }
 
 export const quoteService = {
@@ -28,7 +39,8 @@ export const quoteService = {
       ...payload,
       captchaVerified: true
     });
-    await notifyQuote(quote.id);
+    // Fire notification asynchronously — don't block the HTTP response
+    setImmediate(() => notifyQuote(quote.toObject() as Record<string, unknown>));
     return quote.toObject();
   },
 
@@ -45,7 +57,6 @@ export const quoteService = {
     if (!quote) {
       throw new ApiError(404, "Quote request not found");
     }
-
-    return notifyQuote(id);
+    return notifyQuote(quote as Record<string, unknown>);
   }
 };

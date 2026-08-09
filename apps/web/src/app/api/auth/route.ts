@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-function resolveApiBase(): string {
-  const raw = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api").replace(/\/+$/, "");
-  return raw.endsWith("/api") ? raw : `${raw}/api`;
-}
+// Server-side backend URL — never baked into client bundle
+const BACKEND_BASE = (process.env.API_INTERNAL_URL ?? "http://localhost:4000").replace(/\/+$/, "");
 
-// Proxy any POST to /api/auth?action=request-otp|verify-otp  →  backend /api/auth/:action
-// The browser calls this same-origin route so NEXT_PUBLIC_API_URL never needs to be
-// baked into the client bundle.
+// Proxy POST /api/auth?action=request-otp|verify-otp  →  backend /api/v1/auth/:action
 export async function POST(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const action = searchParams.get("action");
@@ -18,7 +14,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const upstream = await fetch(`${resolveApiBase()}/auth/${action}`, {
+    const upstream = await fetch(`${BACKEND_BASE}/api/v1/auth/${action}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

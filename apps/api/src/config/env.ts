@@ -22,4 +22,6 @@ export const env = {
   // Super-admin seed (email to auto-create on first boot)
   superAdminEmail: process.env.SUPER_ADMIN_EMAIL ?? "",
   superAdminName: process.env.SUPER_ADMIN_NAME ?? "Super Admin",
+  // Quote notification — who receives new quote emails
+  adminNotificationEmail: process.env.ADMIN_NOTIFICATION_EMAIL ?? "support.tmsindia@gmail.com",
 };
