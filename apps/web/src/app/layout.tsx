@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   description:
     "India's trusted supplier of print finishing machines — lamination machines, perfect binding, die-cutting, hot foil stamping, paper cutters & folding machines. Pan-India delivery. Free consultation. Get a quote today.",
   keywords: [
+    // English
     "print finishing machines India",
     "lamination machine India",
     "perfect binding machine India",
@@ -38,6 +39,22 @@ export const metadata: Metadata = {
     "thermal lamination machine",
     "creasing scoring machine India",
     "print finishing equipment supplier",
+    // Hindi / Hinglish
+    "lamination machine kharidna",
+    "paper cutting machine India",
+    "hot foil stamping machine price",
+    "binding machine kharidna",
+    "packaging machine India",
+    "printing machine supplier India",
+    "औद्योगिक मशीन सप्लायर",
+    "लेमिनेशन मशीन भारत",
+    "पेपर कटर मशीन",
+    "बाइंडिंग मशीन खरीदना",
+    "foil stamping machine India buy",
+    "die cutting machine buy online India",
+    "industrial machinery supplier Kolkata",
+    "TMS India machines",
+    "Tara Maa Solutions Kolkata",
   ],
   openGraph: {
     siteName: "TM Solutions India",
@@ -84,19 +101,52 @@ export default async function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   const { logoUrl, contactEmail, contactPhone } = await apiClient.getSiteHeaderData();
 
+  const logoAbsoluteUrl = logoUrl
+    ? (logoUrl.startsWith("http") ? logoUrl : `https://tmsolutionsindia.com${logoUrl}`)
+    : "https://tmsolutionsindia.com/logo.png";
+
   const localBusinessJsonLd = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: "TM Solutions",
+    "@type": ["LocalBusiness", "Organization"],
+    name: "Tara Maa Solutions",
+    alternateName: "TM Solutions India",
     url: "https://tmsolutionsindia.com",
-    telephone: contactPhone ?? "+91-9876543210",
-    email: contactEmail ?? "taramaasolutions2025@gmail.com",
+    logo: {
+      "@type": "ImageObject",
+      url: logoAbsoluteUrl,
+      width: 200,
+      height: 60,
+    },
+    image: logoAbsoluteUrl,
+    telephone: contactPhone ?? "+91-75950 56476",
+    email: contactEmail ?? "support.tmsindia@gmail.com",
     address: {
       "@type": "PostalAddress",
+      addressLocality: "Kolkata",
+      addressRegion: "West Bengal",
       addressCountry: "IN",
     },
-    description: "Premium industrial products, smart automation solutions, and fast quote turnaround for enterprise buyers. Trusted by 200+ companies across India.",
-    sameAs: ["https://wa.me/917595056476"],
+    description: "Tara Maa Solutions — भारत के भरोसेमंद B2B औद्योगिक उपकरण सप्लायर। Lamination machines, paper cutters, binding, die-cutting, hot foil stamping. Pan-India delivery.",
+    knowsLanguage: ["en", "hi"],
+    areaServed: {
+      "@type": "Country",
+      name: "India",
+    },
+    sameAs: [
+      "https://wa.me/917595056476",
+      "https://www.tmsolutionsindia.com",
+    ],
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "Industrial Print Finishing & Packaging Machines",
+      itemListElement: [
+        { "@type": "Offer", itemOffered: { "@type": "Product", name: "Lamination Machines" } },
+        { "@type": "Offer", itemOffered: { "@type": "Product", name: "Paper Cutting Machines" } },
+        { "@type": "Offer", itemOffered: { "@type": "Product", name: "Hot Foil Stamping Machines" } },
+        { "@type": "Offer", itemOffered: { "@type": "Product", name: "Perfect Binding Machines" } },
+        { "@type": "Offer", itemOffered: { "@type": "Product", name: "Die Cutting Machines" } },
+      ],
+    },
   };
 
   return (
