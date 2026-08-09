@@ -92,14 +92,23 @@ function DeleteModal({ quote, onConfirm, onCancel, deleting }) {
 }
 
 // ── Single lead card ──────────────────────────────────────────────────────────
-function LeadCard({ quote, reply, onToggleReply, onUpdateField, onSendReply, onStatusChange, onDelete }) {
+function LeadCard({ quote, reply, selected, onSelect, onToggleReply, onUpdateField, onSendReply, onStatusChange, onDelete }) {
   const cfg = STATUS_CFG[quote.status] || STATUS_CFG.new;
   const [ac, abg] = AVATAR_PALETTE[nameHash(quote.name)];
 
   return (
-    <article className={`lc-card lc-card--${quote.status}`} style={{ "--lc-accent": cfg.color }}>
-      {/* ── Top row: avatar + details + timestamp ── */}
+    <article className={`lc-card lc-card--${quote.status}${selected ? " lc-card--selected" : ""}`} style={{ "--lc-accent": cfg.color }}>
+      {/* ── Top row: checkbox + avatar + details + timestamp ── */}
       <div className="lc-top">
+        <label className="lc-checkbox-wrap" title="Select lead">
+          <input
+            type="checkbox"
+            className="lc-checkbox"
+            checked={selected}
+            onChange={onSelect}
+            onClick={e => e.stopPropagation()}
+          />
+        </label>
         <div className="lc-avatar" style={{ background: abg, color: ac }}>
           {initials(quote.name)}
         </div>
@@ -244,6 +253,9 @@ function LeadCard({ quote, reply, onToggleReply, onUpdateField, onSendReply, onS
 const TABS = ["all", "new", "reviewed", "closed"];
 const TAB_LABELS = { all: "All", new: "New", reviewed: "In Review", closed: "Closed" };
 
+const BULK_REPLY_TEMPLATE = (names) =>
+  `Dear Customer,\n\nThank you for reaching out to Tara Maa Solutions.\n\nWe have received your enquiry and our team will review your requirements shortly. We will get back to you with pricing, availability, and further details within 24 business hours.\n\nFor urgent queries, feel free to call us at +91 75950 56476.\n\nWarm regards,\nTara Maa Solutions Team`;
+
 export default function QuoteRequestManager({ token }) {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -252,6 +264,11 @@ export default function QuoteRequestManager({ token }) {
   const [toast, setToast] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null); // { quote } | null
   const [deleting, setDeleting] = useState(false);
+  // ── Bulk selection ──
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkReply, setBulkReply] = useState({ open: false, subject: "Response to your enquiry from Tara Maa Solutions", message: "", sending: false });
 
   function showToast(type, message) {
     setToast({ type, message });
@@ -345,6 +362,74 @@ export default function QuoteRequestManager({ token }) {
     }
   }
 
+  // ── Bulk selection handlers ──
+  const displayed_ids_ref = { current: [] }; // populated below at render time
+
+  function toggleSelect(id) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll(displayedQuotes) {
+    const allIds = displayedQuotes.map(q => q._id);
+    const allSelected = allIds.every(id => selectedIds.has(id));
+    if (allSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        allIds.forEach(id => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        allIds.forEach(id => next.add(id));
+        return next;
+      });
+    }
+  }
+
+  async function confirmBulkDelete(displayedQuotes) {
+    const toDelete = displayedQuotes.filter(q => selectedIds.has(q._id));
+    if (!toDelete.length) return;
+    setBulkDeleting(true);
+    let failed = 0;
+    for (const q of toDelete) {
+      try { await api.deleteQuote(token, q._id); }
+      catch { failed++; }
+    }
+    await loadQuotes();
+    setSelectedIds(new Set());
+    setBulkDeleteModal(false);
+    setBulkDeleting(false);
+    if (failed) showToast("error", `${toDelete.length - failed} deleted, ${failed} failed.`);
+    else showToast("success", `${toDelete.length} lead${toDelete.length > 1 ? "s" : ""} deleted.`);
+  }
+
+  async function sendBulkReply(displayedQuotes) {
+    if (!bulkReply.message?.trim()) {
+      showToast("error", "Please write a reply message before sending.");
+      return;
+    }
+    const targets = displayedQuotes.filter(q => selectedIds.has(q._id));
+    if (!targets.length) return;
+    setBulkReply(prev => ({ ...prev, sending: true }));
+    let sent = 0, failed = 0;
+    for (const q of targets) {
+      try {
+        await api.replyToQuote(token, q._id, { subject: bulkReply.subject, message: bulkReply.message });
+        sent++;
+      } catch { failed++; }
+    }
+    await loadQuotes();
+    setSelectedIds(new Set());
+    setBulkReply({ open: false, subject: "Response to your enquiry from Tara Maa Solutions", message: "", sending: false });
+    if (failed) showToast("error", `${sent} sent, ${failed} failed.`);
+    else showToast("success", `Bulk reply sent to ${sent} lead${sent > 1 ? "s" : ""}.`);
+  }
+
   const counts = {
     all: quotes.length,
     new: quotes.filter(q => q.status === "new").length,
@@ -353,6 +438,9 @@ export default function QuoteRequestManager({ token }) {
   };
 
   const displayed = filter === "all" ? quotes : quotes.filter(q => q.status === filter);
+  const selectedInView = displayed.filter(q => selectedIds.has(q._id));
+  const allInViewSelected = displayed.length > 0 && displayed.every(q => selectedIds.has(q._id));
+  const someInViewSelected = selectedInView.length > 0;
 
   return (
     <div className="lm-shell">
@@ -364,6 +452,64 @@ export default function QuoteRequestManager({ token }) {
           onConfirm={confirmDelete}
           onCancel={() => setDeleteModal(null)}
         />
+      )}
+
+      {/* ── Bulk delete confirmation ── */}
+      {bulkDeleteModal && (
+        <div className="lm-modal-overlay" onClick={() => !bulkDeleting && setBulkDeleteModal(false)}>
+          <div className="lm-modal" onClick={e => e.stopPropagation()}>
+            <div className="lm-modal-icon">🗑️</div>
+            <h3 className="lm-modal-title">Delete {selectedInView.length} Lead{selectedInView.length > 1 ? "s" : ""}?</h3>
+            <p className="lm-modal-body">
+              This will permanently delete <strong>{selectedInView.length} selected lead{selectedInView.length > 1 ? "s" : ""}</strong>.
+              This action cannot be undone.
+            </p>
+            <div className="lm-modal-actions">
+              <button className="lm-delete-confirm-btn" onClick={() => confirmBulkDelete(displayed)} disabled={bulkDeleting}>
+                {bulkDeleting ? <><span className="lc-spinner" /> Deleting…</> : `Yes, Delete ${selectedInView.length} Lead${selectedInView.length > 1 ? "s" : ""}`}
+              </button>
+              <button className="secondary" onClick={() => setBulkDeleteModal(false)} disabled={bulkDeleting}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bulk reply panel ── */}
+      {bulkReply.open && (
+        <div className="lm-bulk-reply-overlay">
+          <div className="lm-bulk-reply-panel">
+            <div className="lm-bulk-reply-header">
+              <div>
+                <p className="lm-bulk-reply-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
+                  Bulk Reply — {selectedInView.length} lead{selectedInView.length > 1 ? "s" : ""}
+                </p>
+                <p className="lm-bulk-reply-sub">
+                  Recipients: {selectedInView.slice(0, 3).map(q => q.name.split(" ")[0]).join(", ")}{selectedInView.length > 3 ? ` +${selectedInView.length - 3} more` : ""}
+                </p>
+              </div>
+              <button className="lm-bulk-close" onClick={() => setBulkReply(prev => ({ ...prev, open: false }))}>✕</button>
+            </div>
+            <label className="lc-field">
+              <span>Subject</span>
+              <input value={bulkReply.subject} onChange={e => setBulkReply(prev => ({ ...prev, subject: e.target.value }))} />
+            </label>
+            <label className="lc-field">
+              <span>Message (sent to all selected leads)</span>
+              <textarea rows={8} value={bulkReply.message} onChange={e => setBulkReply(prev => ({ ...prev, message: e.target.value }))} placeholder="Type your reply…" />
+              <span className="lc-char-count">{bulkReply.message.length} / 5000 characters</span>
+            </label>
+            <div className="lc-reply-actions">
+              <button onClick={() => sendBulkReply(displayed)} disabled={bulkReply.sending} className="lc-send-btn">
+                {bulkReply.sending ? <><span className="lc-spinner" /> Sending…</> : <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  Send to {selectedInView.length} Lead{selectedInView.length > 1 ? "s" : ""}
+                </>}
+              </button>
+              <button className="secondary" onClick={() => setBulkReply(prev => ({ ...prev, open: false }))}>Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Page header ── */}
@@ -384,23 +530,70 @@ export default function QuoteRequestManager({ token }) {
           </button>
         </div>
 
-        {/* Filter tabs */}
-        <div className="lm-tabs">
-          {TABS.map(tab => (
-            <button
-              key={tab}
-              type="button"
-              className={`lm-tab${filter === tab ? " lm-tab--active" : ""}`}
-              onClick={() => setFilter(tab)}
-            >
-              {TAB_LABELS[tab]}
-              <span className={`lm-tab-count${filter === tab ? " lm-tab-count--active" : ""}`}>
-                {counts[tab]}
-              </span>
-            </button>
-          ))}
+        {/* Filter tabs + select all */}
+        <div className="lm-tabs-row">
+          <div className="lm-tabs">
+            {TABS.map(tab => (
+              <button
+                key={tab}
+                type="button"
+                className={`lm-tab${filter === tab ? " lm-tab--active" : ""}`}
+                onClick={() => { setFilter(tab); setSelectedIds(new Set()); }}
+              >
+                {TAB_LABELS[tab]}
+                <span className={`lm-tab-count${filter === tab ? " lm-tab-count--active" : ""}`}>
+                  {counts[tab]}
+                </span>
+              </button>
+            ))}
+          </div>
+          {!loading && displayed.length > 0 && (
+            <label className="lm-select-all">
+              <input
+                type="checkbox"
+                className="lc-checkbox"
+                checked={allInViewSelected}
+                ref={el => { if (el) el.indeterminate = someInViewSelected && !allInViewSelected; }}
+                onChange={() => toggleSelectAll(displayed)}
+              />
+              <span>Select all</span>
+            </label>
+          )}
         </div>
       </div>
+
+      {/* ── Bulk action toolbar ── */}
+      {someInViewSelected && (
+        <div className="lm-bulk-bar">
+          <span className="lm-bulk-count">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            {selectedInView.length} selected
+          </span>
+          <div className="lm-bulk-actions">
+            <button
+              className="lm-bulk-reply-btn"
+              onClick={() => setBulkReply(prev => ({
+                ...prev,
+                open: true,
+                message: prev.message || BULK_REPLY_TEMPLATE(selectedInView.map(q => q.name.split(" ")[0])),
+              }))}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
+              Bulk Reply
+            </button>
+            <button
+              className="lm-bulk-delete-btn"
+              onClick={() => setBulkDeleteModal(true)}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              Delete {selectedInView.length}
+            </button>
+            <button className="lm-bulk-clear secondary" onClick={() => setSelectedIds(new Set())}>
+              ✕ Clear
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Cards ── */}
       {loading ? (
@@ -426,6 +619,8 @@ export default function QuoteRequestManager({ token }) {
             <LeadCard
               key={quote._id}
               quote={quote}
+              selected={selectedIds.has(quote._id)}
+              onSelect={() => toggleSelect(quote._id)}
               reply={replyState[quote._id] || { open: false, subject: "", message: "", sending: false }}
               onToggleReply={() => toggleReply(quote)}
               onUpdateField={(field, val) => updateReplyField(quote._id, field, val)}
