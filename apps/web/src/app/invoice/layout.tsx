@@ -25,6 +25,13 @@ export default function InvoiceLayout({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [open,  setOpen]  = useState(false);
 
+  /* Take over the full viewport — hide public site header/footer and strip
+     the z-10 stacking context from <main> so our z-[200] wins globally.  */
+  useEffect(() => {
+    document.body.classList.add("invoice-mode");
+    return () => document.body.classList.remove("invoice-mode");
+  }, []);
+
   useEffect(() => {
     const token = getAccessToken();
     if (!token) {
