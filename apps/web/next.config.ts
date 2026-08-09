@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
         source: "/invoice/:path*",
         destination: "https://tm-solutions-website-11032026-production-afe1.up.railway.app/invoice/:path*",
       },
+      // Proxy all /api/v1/* calls to the Express API service
+      {
+        source: "/api/v1/:path*",
+        destination: "https://api.tmsolutionsindia.com/api/v1/:path*",
+      },
     ];
   },
 };

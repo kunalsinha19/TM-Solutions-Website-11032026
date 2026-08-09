@@ -1,11 +1,8 @@
 import { NextRequest } from "next/server";
 
-function resolveApiBase(raw: string | undefined): string {
-  const base = (raw ?? "http://localhost:4000/api").replace(/\/$/, "");
-  return base.endsWith("/api") ? base : `${base}/api`;
-}
-
-const BACKEND = resolveApiBase(process.env.NEXT_PUBLIC_API_URL);
+// Server-side backend URL — set API_INTERNAL_URL in Railway → web service → Variables
+// e.g. API_INTERNAL_URL=https://api.tmsolutionsindia.com
+const BACKEND = `${(process.env.API_INTERNAL_URL ?? "http://localhost:4000").replace(/\/+$/, "")}/api/v1`;
 const GROQ_KEY = process.env.GROQ_API_KEY ?? "";
 
 // In-memory rate limiter: max 25 messages / IP / minute
@@ -28,7 +25,7 @@ async function buildSystemPrompt(): Promise<string> {
   let categories: string[] = [];
   let products: Array<{ name: string; category: string }> = [];
   let siteName = "Tara Maa Solutions";
-  let email = "taramaasolutions2025@gmail.com";
+  let email = "support.tmsindia@gmail.com";
   let phones = "";
   let address = "";
 
@@ -261,7 +258,7 @@ export async function POST(req: NextRequest) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error("[Chat error]", msg);
         ctrl.enqueue(sse(JSON.stringify({
-          text: "I'm having trouble right now. Please try again or reach us at taramaasolutions2025@gmail.com."
+          text: "I'm having trouble right now. Please try again or reach us at support.tmsindia@gmail.com."
         })));
       } finally {
         ctrl.enqueue(sse("[DONE]"));

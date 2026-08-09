@@ -269,7 +269,7 @@ export default function ChatWidget() {
               isQuoteSuccess: true,
               options: ["Ask another question", "Browse products"],
             }
-          : { role: "bot", text: "⚠️ Quote submission failed. Please try the form at /quote or email us at taramaasolutions2025@gmail.com." };
+          : { role: "bot", text: "⚠️ Quote submission failed. Please try the form at /quote or email us at support.tmsindia@gmail.com." };
         setMessages(prev => { const next = [...prev, confirmMsg]; saveHistory(next); return next; });
         speak(confirmMsg.text);
       } else {
@@ -293,7 +293,7 @@ export default function ChatWidget() {
       if (!open) setUnread(u => u + 1);
     } catch (err: unknown) {
       if ((err as Error)?.name === "AbortError") return;
-      const errMsg = "Sorry, something went wrong. Please try again or email taramaasolutions2025@gmail.com.";
+      const errMsg = "Sorry, something went wrong. Please try again or email support.tmsindia@gmail.com.";
       setMessages(prev => {
         const next = [...prev];
         const last = next[next.length - 1];

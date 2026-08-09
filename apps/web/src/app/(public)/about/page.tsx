@@ -234,8 +234,8 @@ export default function AboutPage() {
               <div className="flex flex-col gap-3 rounded-[1.75rem] border border-border/70 bg-surface p-7 h-full justify-center items-center text-center hover:shadow-card hover:border-accent/20 transition-all duration-300">
                 <div className="text-3xl">📧</div>
                 <p className="font-semibold text-sm">Get in Touch</p>
-                <a href="mailto:taramaasolutions2025@gmail.com" className="text-xs text-accent hover:underline break-all">
-                  taramaasolutions2025@gmail.com
+                <a href="mailto:support.tmsindia@gmail.com" className="text-xs text-accent hover:underline break-all">
+                  support.tmsindia@gmail.com
                 </a>
                 <a href="https://wa.me/917595056476" target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">
                   WhatsApp: +91 75950 56476

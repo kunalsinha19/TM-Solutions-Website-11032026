@@ -93,9 +93,9 @@ export default function QuotePage() {
               <Reveal delay={0.3} className="mt-10 rounded-[1.75rem] border border-border/70 bg-panel p-6 shadow-card">
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted mb-4">Prefer to talk directly?</p>
                 <div className="flex flex-col gap-3">
-                  <a href="mailto:taramaasolutions2025@gmail.com" className="flex items-center gap-3 text-sm hover:text-accent transition-colors">
+                  <a href="mailto:support.tmsindia@gmail.com" className="flex items-center gap-3 text-sm hover:text-accent transition-colors">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-border/60 text-xs">✉️</span>
-                    taramaasolutions2025@gmail.com
+                    support.tmsindia@gmail.com
                   </a>
                   <a href="tel:+917595056476" className="flex items-center gap-3 text-sm hover:text-accent transition-colors">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-border/60 text-xs">📞</span>
