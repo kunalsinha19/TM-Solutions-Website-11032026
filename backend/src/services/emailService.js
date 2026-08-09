@@ -89,6 +89,7 @@ function getTransporter() {
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: EMAIL_TIMEOUT_MS,
+    family: 4,      // Force IPv4 — Railway does not support IPv6 outbound
     logger: true,   // nodemailer internal logging
     debug: false,   // set true for full SMTP conversation (very verbose)
   });
