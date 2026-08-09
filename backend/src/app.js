@@ -56,7 +56,8 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-app.use("/api", routes);
+app.use("/api",    routes);   // Vite admin panel + direct API calls
+app.use("/api/v1", routes);   // Next.js invoice module proxy (/api/v1/* → /api/v1/*)
 app.use(notFound);
 app.use(errorHandler);
 
