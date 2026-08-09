@@ -169,6 +169,60 @@ export function validateNonNegative(v: number, label: string): string | null {
   return null;
 }
 
+/**
+ * IFSC code — 11 chars.
+ * Format: AAAA0XXXXXX
+ *   1–4  bank code (letters)
+ *   5    always 0
+ *   6–11 branch code (alphanumeric)
+ */
+export function validateIFSC(v: string): string | null {
+  if (!v) return null;
+  const i = v.toUpperCase().trim();
+  if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(i))
+    return "Invalid IFSC — expected format: SBIN0001234 (11 chars, 5th char is 0)";
+  return null;
+}
+
+/** Bank account number — 9 to 18 digits. */
+export function validateBankAccount(v: string): string | null {
+  if (!v) return null;
+  const b = v.replace(/\s/g, "");
+  if (!/^\d{9,18}$/.test(b))
+    return "Bank account must be 9–18 digits";
+  return null;
+}
+
+// ── Supplier form type ───────────────────────────────────────────────────────
+
+export type SupplierFormData = {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  gstin: string;
+  pan: string;
+  address: {
+    line1: string;
+    city: string;
+    state: string;
+    stateCode: string;
+    pincode: string;
+    country: string;
+  };
+  bankName: string;
+  bankAccount: string;
+  bankIFSC: string;
+  paymentTerms: number;
+  notes: string;
+};
+
+export const EMPTY_SUPPLIER: SupplierFormData = {
+  name: "", email: "", phone: "", company: "", gstin: "", pan: "",
+  address: { line1: "", city: "", state: "", stateCode: "", pincode: "", country: "India" },
+  bankName: "", bankAccount: "", bankIFSC: "", paymentTerms: 30, notes: "",
+};
+
 // ── Composite: run all customer validations ──────────────────────────────────
 
 export type FieldErrors = Record<string, string>;
@@ -211,6 +265,49 @@ export function validateCustomerForm(fd: CustomerFormData): FieldErrors {
 
   const cdErr = validateNonNegative(Number(fd.creditDays), "Credit days");
   if (cdErr) e.creditDays = cdErr;
+
+  return e;
+}
+
+// ── Composite: run all supplier validations ──────────────────────────────────
+
+export function validateSupplierForm(fd: SupplierFormData): FieldErrors {
+  const e: FieldErrors = {};
+
+  const nameErr = validateName(fd.name, "Supplier name");
+  if (nameErr) e.name = nameErr;
+
+  const emailErr = validateEmail(fd.email);
+  if (emailErr) e.email = emailErr;
+
+  const phoneErr = validatePhone(fd.phone);
+  if (phoneErr) e.phone = phoneErr;
+
+  const gstinErr = validateGSTIN(fd.gstin);
+  if (gstinErr) e.gstin = gstinErr;
+
+  const panErr = validatePAN(fd.pan);
+  if (panErr) e.pan = panErr;
+
+  if (!e.gstin && !e.pan) {
+    const crossErr = crossValidateGSTINPAN(fd.gstin, fd.pan);
+    if (crossErr) e.gstin = crossErr;
+  }
+
+  const pincodeErr = validatePincode(fd.address.pincode);
+  if (pincodeErr) e["addr.pincode"] = pincodeErr;
+
+  const scErr = validateStateCode(fd.address.stateCode);
+  if (scErr) e["addr.stateCode"] = scErr;
+
+  const ifscErr = validateIFSC(fd.bankIFSC);
+  if (ifscErr) e.bankIFSC = ifscErr;
+
+  const baErr = validateBankAccount(fd.bankAccount);
+  if (baErr) e.bankAccount = baErr;
+
+  const ptErr = validateNonNegative(Number(fd.paymentTerms), "Payment terms");
+  if (ptErr) e.paymentTerms = ptErr;
 
   return e;
 }
