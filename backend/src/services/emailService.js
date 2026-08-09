@@ -29,8 +29,10 @@ console.log("[EmailService] boot config:", {
 });
 
 /* ── Resend (HTTPS, never blocked by firewalls) ─────────────────────── */
-async function sendViaResend({ to, subject, html, text, replyTo }) {
-  console.log("[Email/Resend] attempting send →", to, "| subject:", subject);
+async function sendViaResend({ to, cc, subject, html, text, replyTo }) {
+  const toList = Array.isArray(to) ? to : [to];
+  const ccList = cc ? (Array.isArray(cc) ? cc : [cc]).filter(e => e && !toList.includes(e)) : [];
+  console.log("[Email/Resend] attempting send →", toList, ccList.length ? `cc: ${ccList}` : "", "| subject:", subject);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -39,7 +41,8 @@ async function sendViaResend({ to, subject, html, text, replyTo }) {
     },
     body: JSON.stringify({
       from: EMAIL_FROM,
-      to: Array.isArray(to) ? to : [to],
+      to: toList,
+      ...(ccList.length ? { cc: ccList } : {}),
       subject,
       html,
       text,
@@ -56,7 +59,7 @@ async function sendViaResend({ to, subject, html, text, replyTo }) {
   }
 
   const result = await res.json();
-  console.log("[Email/Resend] SUCCESS id:", result?.id, "→", to);
+  console.log("[Email/Resend] SUCCESS id:", result?.id, "→", toList);
   return result;
 }
 
@@ -109,8 +112,8 @@ function withTimeout(promise, label) {
   ]);
 }
 
-async function sendViaSMTP({ to, subject, html, text, replyTo }) {
-  console.log("[Email/SMTP] attempting send →", to, "| from:", EMAIL_FROM, "| subject:", subject);
+async function sendViaSMTP({ to, cc, subject, html, text, replyTo }) {
+  console.log("[Email/SMTP] attempting send →", to, cc ? `cc: ${cc}` : "", "| from:", EMAIL_FROM, "| subject:", subject);
   const t = getTransporter();
 
   // Verify connection before sending
@@ -124,7 +127,7 @@ async function sendViaSMTP({ to, subject, html, text, replyTo }) {
 
   try {
     const info = await withTimeout(
-      t.sendMail({ from: EMAIL_FROM, to, replyTo, subject, text, html }),
+      t.sendMail({ from: EMAIL_FROM, to, cc: cc || undefined, replyTo, subject, text, html }),
       "Email send"
     );
     console.log("[Email/SMTP] SUCCESS messageId:", info.messageId, "| response:", info.response, "→", to);
@@ -142,12 +145,12 @@ async function sendViaSMTP({ to, subject, html, text, replyTo }) {
 }
 
 /* ── Unified send (Resend preferred, SMTP fallback) ─────────────────── */
-async function sendEmail({ to, subject, html, text, replyTo }) {
+async function sendEmail({ to, cc, subject, html, text, replyTo }) {
   if (HAS_RESEND) {
-    return sendViaResend({ to, subject, html, text, replyTo });
+    return sendViaResend({ to, cc, subject, html, text, replyTo });
   }
   if (HAS_REAL_SMTP) {
-    return sendViaSMTP({ to, subject, html, text, replyTo });
+    return sendViaSMTP({ to, cc, subject, html, text, replyTo });
   }
   console.warn("[Email] No email provider configured — skipping send. to:", to);
   throw new Error("No email provider configured (no RESEND_API_KEY, no valid SMTP).");
@@ -187,35 +190,99 @@ async function sendQuoteRequestEmail(quoteRequest) {
   }
 
   const subject = `New quote request from ${quoteRequest.name}`;
+  const source = quoteRequest.source === "chat" ? "chatbot" : "quote form";
   const text = [
     "A new quote request has been received.",
-    `Name: ${quoteRequest.name}`,
-    `Email: ${quoteRequest.email}`,
-    `Phone: ${quoteRequest.phone || "N/A"}`,
-    `Company: ${quoteRequest.company || "N/A"}`,
-    `Message: ${quoteRequest.message}`,
-    `Product ID: ${quoteRequest.product || "N/A"}`
+    "",
+    `Name:       ${quoteRequest.name}`,
+    `Email:      ${quoteRequest.email}`,
+    `Phone:      ${quoteRequest.phone || "N/A"}`,
+    `Company:    ${quoteRequest.company || "N/A"}`,
+    `Message:    ${quoteRequest.message}`,
+    `Product ID: ${quoteRequest.product || "N/A"}`,
+    `Source:     ${source}`,
   ].join("\n");
+
   const html = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
-      <h2>New Quote Request</h2>
-      <p><strong>Name:</strong> ${quoteRequest.name}</p>
-      <p><strong>Email:</strong> ${quoteRequest.email}</p>
-      <p><strong>Phone:</strong> ${quoteRequest.phone || "N/A"}</p>
-      <p><strong>Company:</strong> ${quoteRequest.company || "N/A"}</p>
-      <p><strong>Message:</strong><br/>${quoteRequest.message}</p>
-      <p><strong>Product ID:</strong> ${quoteRequest.product || "N/A"}</p>
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827; max-width: 600px;">
+      <h2 style="color:#b45309; margin-top:0">New Quote Request</h2>
+      <table style="width:100%; border-collapse:collapse; font-size:14px;">
+        <tr><td style="padding:6px 12px; font-weight:bold; width:110px; color:#6b7280">Name</td><td style="padding:6px 12px">${quoteRequest.name}</td></tr>
+        <tr style="background:#f9fafb"><td style="padding:6px 12px; font-weight:bold; color:#6b7280">Email</td><td style="padding:6px 12px"><a href="mailto:${quoteRequest.email}" style="color:#b45309">${quoteRequest.email}</a></td></tr>
+        <tr><td style="padding:6px 12px; font-weight:bold; color:#6b7280">Phone</td><td style="padding:6px 12px">${quoteRequest.phone || "<em style='color:#9ca3af'>N/A</em>"}</td></tr>
+        <tr style="background:#f9fafb"><td style="padding:6px 12px; font-weight:bold; color:#6b7280">Company</td><td style="padding:6px 12px">${quoteRequest.company || "<em style='color:#9ca3af'>N/A</em>"}</td></tr>
+        <tr><td style="padding:6px 12px; font-weight:bold; color:#6b7280; vertical-align:top">Message</td><td style="padding:6px 12px">${(quoteRequest.message || "").replace(/\n/g, "<br/>")}</td></tr>
+        <tr style="background:#f9fafb"><td style="padding:6px 12px; font-weight:bold; color:#6b7280">Product</td><td style="padding:6px 12px">${quoteRequest.product || "<em style='color:#9ca3af'>N/A</em>"}</td></tr>
+        <tr><td style="padding:6px 12px; font-weight:bold; color:#6b7280">Source</td><td style="padding:6px 12px">${source}</td></tr>
+      </table>
+      <p style="margin-top:20px">
+        <a href="mailto:${quoteRequest.email}" style="display:inline-block; background:#b45309; color:#fff; padding:10px 20px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:13px;">Reply to ${quoteRequest.name.split(" ")[0]}</a>
+      </p>
+      <p style="color:#6b7280; font-size:11px; margin-top:24px">Sent from tmsolutionsindia.com — ${source}</p>
     </div>
   `;
 
-  console.log("[Email] sending quote notification to:", notificationEmail);
-  return sendEmail({ to: notificationEmail, replyTo: quoteRequest.email, subject, text, html });
+  // CC: support.tmsindia@gmail.com unless it's already the TO address
+  const CC_EMAIL = process.env.CC_NOTIFICATION_EMAIL || "support.tmsindia@gmail.com";
+  const cc = CC_EMAIL !== notificationEmail ? CC_EMAIL : undefined;
+
+  console.log("[Email] sending quote notification to:", notificationEmail, cc ? `| cc: ${cc}` : "");
+  return sendEmail({ to: notificationEmail, cc, replyTo: quoteRequest.email, subject, text, html });
+}
+
+/**
+ * Customer auto-acknowledgement — sent once when a new quote is first created.
+ * Friendly, non-generic: uses the customer's first name and echoes their requirement.
+ */
+async function sendCustomerAck(quoteRequest) {
+  const email = quoteRequest.email;
+  if (!email) return;
+
+  const firstName = (quoteRequest.name || "there").trim().split(/\s+/)[0];
+  const requirement = (quoteRequest.message || "").slice(0, 160).trim();
+  const requirementSnippet = requirement.length < quoteRequest.message?.length
+    ? requirement + "…"
+    : requirement;
+
+  const subject = "We've received your enquiry — Tara Maa Solutions";
+  const text = [
+    `Dear ${firstName},`,
+    "",
+    "Thank you for reaching out to Tara Maa Solutions.",
+    "",
+    `We've received your enquiry${requirementSnippet ? ` for: "${requirementSnippet}"` : ""} and our sales team will review your requirements shortly.`,
+    "We will get back to you with pricing, availability, and further details within 24 business hours.",
+    "",
+    "For urgent queries, feel free to call us at +91 75950 56476.",
+    "",
+    "Warm regards,",
+    "Tara Maa Solutions Team",
+    "tmsolutionsindia.com",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111827; max-width: 560px;">
+      <p style="margin-top:0">Dear ${firstName},</p>
+      <p>Thank you for reaching out to <strong>Tara Maa Solutions</strong>.</p>
+      ${requirementSnippet ? `<p>We've received your enquiry for: <em>"${requirementSnippet}"</em></p>` : ""}
+      <p>Our sales team will review your requirements shortly and get back to you with <strong>pricing, availability, and further details within 24 business hours</strong>.</p>
+      <p>For urgent queries, feel free to call us at <strong>+91 75950 56476</strong>.</p>
+      <hr style="border:none; border-top:1px solid #e5e7eb; margin:20px 0"/>
+      <p style="margin-bottom:0">Warm regards,<br/><strong>Tara Maa Solutions Team</strong></p>
+      <p style="color:#6b7280; font-size:12px; margin-top:4px">
+        <a href="https://tmsolutionsindia.com" style="color:#b45309">tmsolutionsindia.com</a> &middot; +91 75950 56476 &middot; support.tmsindia@gmail.com
+      </p>
+    </div>
+  `;
+
+  console.log("[Email] sending customer ack to:", email);
+  return sendEmail({ to: email, subject, text, html });
 }
 
 function buildQuoteReply({ name, message }) {
   const safeName = name?.trim() || "Customer";
   const safeMessage = message?.trim() || "Thank you for your enquiry regarding the requested product. We have received your request and will share the details with you shortly.";
-  const alreadyTemplated = /^dear\b/i.test(safeMessage) && /team\s+tms/i.test(safeMessage);
+  const alreadyTemplated = /^dear\b/i.test(safeMessage);
 
   if (alreadyTemplated) {
     return {
@@ -253,6 +320,7 @@ module.exports = {
   sendEmail,
   sendPasswordResetEmail,
   sendQuoteRequestEmail,
+  sendCustomerAck,
   sendQuoteResponseEmail,
   buildQuoteReply
 };

@@ -50,12 +50,33 @@ export const seoPageSchema = z.object({
   status: z.enum(["draft", "published", "archived"]).default("draft")
 });
 
+/**
+ * Phone validation helper used in quoteSchema.
+ * Accepts the frontend's "{countryCode} {digits}" format, e.g. "+91 9876543210".
+ * Indian numbers (+91): exactly 10 digits starting with 6–9.
+ * International: at least 7 raw digits total.
+ */
+function isValidPhone(v: string): boolean {
+  const digits = v.replace(/\D/g, "");
+  if (v.trim().startsWith("+91")) {
+    // Strip the "91" country prefix and check the local 10-digit number
+    const local = digits.startsWith("91") ? digits.slice(2) : digits;
+    return /^[6-9]\d{9}$/.test(local);
+  }
+  return digits.length >= 7;
+}
+
 export const quoteSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().optional(),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Enter a valid email address"),
+  phone: z
+    .string()
+    .optional()
+    .refine((v) => !v || isValidPhone(v), {
+      message: "Enter a valid phone number (Indian: 10 digits starting with 6–9)",
+    }),
   company: z.string().optional(),
-  message: z.string().min(10),
+  message: z.string().min(10, "Message must be at least 10 characters"),
   productId: z.string().optional(),
   sourcePage: z.string().optional(),
   captchaToken: z.string().min(10)
