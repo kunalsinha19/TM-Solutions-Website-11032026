@@ -30,10 +30,12 @@ const invReportsRoutes        = require("./invReportsRoutes");
 
 const debugRoutes         = require("./debugRoutes");
 const physicalStockRoutes = require("./physicalStockRoutes");
+const seedStockRoutes     = require("./seedStockRoutes");
 
 const router = express.Router();
 
 router.use("/debug",              debugRoutes);
+router.use("/seed-stock",         seedStockRoutes);
 router.use("/physical-stock",     physicalStockRoutes);
 router.use("/auth",               authRoutes);
 router.use("/admins",             adminRoutes);
