@@ -425,3 +425,15 @@ body.translated-ltr,
 body.translated-rtl {
   top: 0 !important;
 }
+
+/* ── Invoice mode — hides public chrome so the invoice app owns the full viewport ── */
+body.invoice-mode > header,
+body.invoice-mode > footer {
+  display: none !important;
+}
+/* Strip the stacking context from <main> so invoice layout's z-[200] wins globally */
+body.invoice-mode > main {
+  position: static !important;
+  z-index: auto !important;
+  overflow: hidden !important;
+}
