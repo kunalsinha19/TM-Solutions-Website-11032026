@@ -59,7 +59,7 @@ export default function App() {
   const activeContent = useMemo(() => {
     const t = auth.token;
     switch (activeSection) {
-      case "dashboard":     return <Dashboard token={t} />;
+      case "dashboard":     return <Dashboard token={t} onNavigate={setActiveSection} />;
       case "visitors":      return <VisitorsManager token={t} />;
       case "liveVisitors":  return <LiveVisitors token={t} />;
       case "pageAnalytics": return <PageAnalytics token={t} />;

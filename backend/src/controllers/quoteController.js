@@ -66,6 +66,21 @@ exports.updateQuoteRequest = asyncHandler(async (req, res) => {
   res.json({ success: true, quoteRequest });
 });
 
+exports.deleteQuoteRequest = asyncHandler(async (req, res) => {
+  const quoteRequest = await QuoteRequest.findById(req.params.id);
+  if (!quoteRequest) throw new ApiError(404, "Quote request not found");
+
+  await QuoteRequest.findByIdAndDelete(req.params.id);
+
+  setImmediate(() => log(req, {
+    action: "quote_deleted", category: "quote",
+    details: `Deleted quote request from ${quoteRequest.name} <${quoteRequest.email}>`,
+    resourceId: quoteRequest._id, resourceName: quoteRequest.name,
+  }));
+
+  res.json({ success: true, message: "Lead deleted successfully" });
+});
+
 exports.replyToQuoteRequest = asyncHandler(async (req, res) => {
   const quoteRequest = await QuoteRequest.findById(req.params.id).populate("product");
   if (!quoteRequest) throw new ApiError(404, "Quote request not found");
