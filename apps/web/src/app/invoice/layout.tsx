@@ -26,10 +26,40 @@ export default function InvoiceLayout({ children }: { children: ReactNode }) {
   const [open,  setOpen]  = useState(false);
 
   /* Take over the full viewport — hide public site header/footer and strip
-     the z-10 stacking context from <main> so our z-[200] wins globally.  */
+     the z-10 stacking context from <main> so our z-[200] wins globally.
+     We use both a body class (for CSS) AND direct inline styles (for
+     immediate effect independent of CSS specificity/cache).              */
   useEffect(() => {
+    const siteHeader = document.querySelector<HTMLElement>("body > header");
+    const siteFooter = document.querySelector<HTMLElement>("body > footer");
+    const mainEl     = document.querySelector<HTMLElement>("body > main");
+
+    // Cache original values for restoration on unmount
+    const origHeaderDisplay  = siteHeader?.style.display  ?? "";
+    const origFooterDisplay  = siteFooter?.style.display  ?? "";
+    const origMainPosition   = mainEl?.style.position     ?? "";
+    const origMainZIndex     = mainEl?.style.zIndex       ?? "";
+    const origMainOverflow   = mainEl?.style.overflow     ?? "";
+
+    if (siteHeader) siteHeader.style.display = "none";
+    if (siteFooter) siteFooter.style.display = "none";
+    if (mainEl) {
+      mainEl.style.position = "static";
+      mainEl.style.zIndex   = "auto";
+      mainEl.style.overflow = "hidden";
+    }
     document.body.classList.add("invoice-mode");
-    return () => document.body.classList.remove("invoice-mode");
+
+    return () => {
+      if (siteHeader) siteHeader.style.display = origHeaderDisplay;
+      if (siteFooter) siteFooter.style.display = origFooterDisplay;
+      if (mainEl) {
+        mainEl.style.position = origMainPosition;
+        mainEl.style.zIndex   = origMainZIndex;
+        mainEl.style.overflow = origMainOverflow;
+      }
+      document.body.classList.remove("invoice-mode");
+    };
   }, []);
 
   useEffect(() => {
