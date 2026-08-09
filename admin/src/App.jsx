@@ -20,6 +20,7 @@ import PageAnalytics from "./components/PageAnalytics";
 import LeadsManager from "./components/LeadsManager";
 import BlogManager from "./components/BlogManager";
 import TaraAnalytics from "./components/TaraAnalytics";
+import StockManager from "./components/StockManager";
 
 const PAGE_TITLES = {
   dashboard:    "Dashboard",
@@ -35,6 +36,7 @@ const PAGE_TITLES = {
   leads:        "Tara Leads",
   taraAnalytics:"Tara Analytics",
   blog:         "Blog",
+  stock:        "Physical Stock",
   settings:     "Website Settings",
   admins:       "Admins",
   activityLogs: "Activity Logs",
@@ -72,6 +74,7 @@ export default function App() {
       case "leads":         return <LeadsManager token={t} />;
       case "taraAnalytics": return <TaraAnalytics token={t} />;
       case "blog":          return <BlogManager token={t} />;
+      case "stock":         return <StockManager token={t} />;
       case "settings":      return <SettingsManager token={t} />;
       case "admins":        return <AdminManager token={t} profile={auth.profile} />;
       case "activityLogs":  return <ActivityLogs token={t} />;

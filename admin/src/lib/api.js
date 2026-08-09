@@ -213,6 +213,32 @@ export const api = {
   deleteBlogPost: (token, id) =>
     request(`/blog/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }),
 
+  // ── Physical Stock ───────────────────────────────────────────────────────
+  getStockStats: (token) =>
+    request("/physical-stock/stats", { headers: { Authorization: `Bearer ${token}` } }),
+  getStock: (token, { status, category, q, page = 1, limit = 200 } = {}) => {
+    const p = new URLSearchParams({ page, limit });
+    if (status)   p.set("status",   status);
+    if (category) p.set("category", category);
+    if (q)        p.set("q",        q);
+    return request(`/physical-stock?${p}`, { headers: { Authorization: `Bearer ${token}` } });
+  },
+  getStockItem: (token, id) =>
+    request(`/physical-stock/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+  createStockItem: (token, payload) =>
+    request("/physical-stock", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }),
+  updateStockItem: (token, id, payload) =>
+    request(`/physical-stock/${id}`, { method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }),
+  deleteStockItem: (token, id) =>
+    request(`/physical-stock/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }),
+  recordSale: (token, id, payload) =>
+    request(`/physical-stock/${id}/sell`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }),
+  moveStock: (token, id, payload) =>
+    request(`/physical-stock/${id}/move`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }),
+  bulkImportStock: (token, items) =>
+    request("/physical-stock/bulk-import", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ items }) }),
+  exportStockUrl: (token) => `${API_BASE}/physical-stock/export?token=${token}`,
+
   uploadMedia: async (token, file) => {
     const data = new FormData();
     data.append("file", file);

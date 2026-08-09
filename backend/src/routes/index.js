@@ -28,11 +28,13 @@ const invoiceSettingsRoutes   = require("./invoiceSettingsRoutes");
 const invDashboardRoutes      = require("./invDashboardRoutes");
 const invReportsRoutes        = require("./invReportsRoutes");
 
-const debugRoutes = require("./debugRoutes");
+const debugRoutes         = require("./debugRoutes");
+const physicalStockRoutes = require("./physicalStockRoutes");
 
 const router = express.Router();
 
 router.use("/debug",              debugRoutes);
+router.use("/physical-stock",     physicalStockRoutes);
 router.use("/auth",               authRoutes);
 router.use("/admins",             adminRoutes);
 router.use("/products",           productRoutes);
