@@ -268,10 +268,15 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            {/* All category chips */}
+            {/* All category chips — click to browse that category */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
               {categories.map((cat) => (
-                <TrustBadge key={cat._id} icon={getCategoryIcon(cat.name)} label={cat.name} />
+                <TrustBadge
+                  key={cat._id}
+                  icon={getCategoryIcon(cat.name)}
+                  label={cat.name}
+                  href={`/products?category=${encodeURIComponent(cat.name)}`}
+                />
               ))}
             </div>
           </Reveal>
