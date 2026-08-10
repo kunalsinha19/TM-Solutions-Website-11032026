@@ -24,7 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/quote`,           lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE_URL}/about`,           lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/blog`,            lastModified: new Date(), changeFrequency: "daily",   priority: 0.8 },
-    { url: `${BASE_URL}/contact`,         lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
+    // NOTE: /contact was removed — no such page exists; a 404 in the sitemap
+    // hurts crawl budget and rankings. The /quote page serves as the contact page.
   ];
 
   // ── Products (184 products → all indexed) ──────────────────────────────
