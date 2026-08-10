@@ -8,20 +8,20 @@ export default function AppleIcon() {
     (
       <div
         style={{
-          background: "linear-gradient(135deg, #d97706, #92400e)",
+          background: "linear-gradient(135deg, #1a2f5e, #0f1f42)",
           width: "100%",
           height: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "40px",
+          borderRadius: "50%",
         }}
       >
         <span
           style={{
             color: "white",
-            fontSize: "64px",
+            fontSize: "60px",
             fontWeight: 900,
             fontFamily: "system-ui, sans-serif",
             letterSpacing: "-2px",
@@ -32,11 +32,11 @@ export default function AppleIcon() {
         </span>
         <span
           style={{
-            color: "#fde68a",
-            fontSize: "18px",
+            color: "#a8c0ff",
+            fontSize: "16px",
             fontWeight: 700,
             fontFamily: "system-ui, sans-serif",
-            letterSpacing: "1px",
+            letterSpacing: "2px",
             marginTop: "6px",
           }}
         >

@@ -8,19 +8,19 @@ export default function Icon() {
     (
       <div
         style={{
-          background: "linear-gradient(135deg, #d97706, #92400e)",
+          background: "linear-gradient(135deg, #1a2f5e, #0f1f42)",
           width: "100%",
           height: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "7px",
+          borderRadius: "50%",
         }}
       >
         <span
           style={{
             color: "white",
-            fontSize: "13px",
+            fontSize: "12px",
             fontWeight: 900,
             fontFamily: "system-ui, sans-serif",
             letterSpacing: "-0.5px",
