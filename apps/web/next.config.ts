@@ -10,6 +10,18 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "**" },
     ],
   },
+  async redirects() {
+    return [
+      // Canonical: always redirect www → non-www (301 permanent, good for SEO)
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.tmsolutionsindia.com" }],
+        destination: "https://tmsolutionsindia.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       {
