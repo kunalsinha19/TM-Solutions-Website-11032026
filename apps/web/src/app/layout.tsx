@@ -154,6 +154,10 @@ export default async function RootLayout({
       <head>
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Explicit favicon links help Google and other crawlers find the icon immediately */}
+        <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/apple-icon" sizes="180x180" />
+        <link rel="shortcut icon" href="/icon" />
       </head>
       <body>
         <Script
