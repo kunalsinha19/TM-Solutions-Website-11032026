@@ -3,4 +3,5 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
+# Canonical domain — www redirects to non-www (301)
 Sitemap: https://tmsolutionsindia.com/sitemap.xml
