@@ -10,17 +10,21 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "**" },
     ],
   },
-  async redirects() {
-    return [
-      // Canonical: always redirect www → non-www (301 permanent, good for SEO)
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "www.tmsolutionsindia.com" }],
-        destination: "https://tmsolutionsindia.com/:path*",
-        permanent: true,
-      },
-    ];
-  },
+  // NOTE: www → non-www redirect temporarily disabled to break redirect loop.
+  // Old locked EC2 A records on GoDaddy redirect root → www; if Next.js then
+  // redirects www → root, an infinite loop results (ERR_TOO_MANY_REDIRECTS).
+  // Re-enable once GoDaddy DNS is fixed: delete @ → 15.197.225.128 / 3.33.251.168
+  // and add @ → 69.46.46.13 (Railway IP).
+  // async redirects() {
+  //   return [
+  //     {
+  //       source: "/:path*",
+  //       has: [{ type: "host", value: "www.tmsolutionsindia.com" }],
+  //       destination: "https://tmsolutionsindia.com/:path*",
+  //       permanent: true,
+  //     },
+  //   ];
+  // },
 
   async rewrites() {
     return [
