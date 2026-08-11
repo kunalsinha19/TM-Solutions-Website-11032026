@@ -233,6 +233,10 @@ export type YoutubeShort = {
   likeCount: number;
   commentCount: number;
   duration: string;
+  // Admin-assigned category (null when not assigned)
+  categoryId:   string | null;
+  categorySlug: string | null;
+  categoryName: string | null;
 };
 
 async function getYouTubeShorts(): Promise<YoutubeShort[]> {

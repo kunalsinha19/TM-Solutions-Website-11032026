@@ -271,9 +271,39 @@ function ShortCard({
   );
 }
 
-const CARDS_PER_PAGE = 5;
+const CARDS_PER_PAGE = 10; // 10 cards per page: 2-col mobile, 3-col tablet, 5-col desktop
 
-// ── Main slider ──────────────────────────────────────────────────────────────
+// Renders a compact row of page buttons (dots for ≤6 pages, numbers for more)
+function PageNav({
+  page, totalPages, onGoTo,
+}: { page: number; totalPages: number; onGoTo: (p: number) => void }) {
+  const useDots = totalPages <= 6;
+
+  return (
+    <div className="flex items-center gap-2">
+      {useDots
+        ? Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => onGoTo(i)}
+              aria-label={`Page ${i + 1}`}
+              className={`rounded-full transition-all duration-300 ${
+                i === page
+                  ? "h-2.5 w-6 bg-red-500 shadow-sm shadow-red-500/30"
+                  : "h-2.5 w-2.5 bg-border hover:bg-muted/60"
+              }`}
+            />
+          ))
+        : (
+          <span className="text-sm font-semibold text-muted">
+            Page <span className="text-text">{page + 1}</span> of {totalPages}
+          </span>
+        )}
+    </div>
+  );
+}
+
+// ── Main paginated grid ───────────────────────────────────────────────────────
 export function ShortsSlider({ shorts: initialShorts }: { shorts: YoutubeShort[] }) {
   const [liveShorts, setLiveShorts] = useState<YoutubeShort[]>(initialShorts);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -288,15 +318,8 @@ export function ShortsSlider({ shorts: initialShorts }: { shorts: YoutubeShort[]
     [liveShorts]
   );
 
-  const pages: YoutubeShort[][] = useMemo(() => {
-    const ps: YoutubeShort[][] = [];
-    for (let i = 0; i < sorted.length; i += CARDS_PER_PAGE) {
-      ps.push(sorted.slice(i, i + CARDS_PER_PAGE));
-    }
-    return ps;
-  }, [sorted]);
-
-  const totalPages = pages.length;
+  const totalPages = Math.max(1, Math.ceil(sorted.length / CARDS_PER_PAGE));
+  const pageShorts = sorted.slice(page * CARDS_PER_PAGE, (page + 1) * CARDS_PER_PAGE);
 
   // Fetch fresh stats from our proxy (which calls the backend, which caches YouTube API for 30 min)
   const refresh = useCallback(async (silent = true) => {
@@ -332,7 +355,12 @@ export function ShortsSlider({ shorts: initialShorts }: { shorts: YoutubeShort[]
     return () => clearInterval(timer);
   }, [lastUpdated]);
 
-  const goTo = useCallback((p: number) => { setPage(p); setPlayingId(null); }, []);
+  const goTo = useCallback((p: number) => {
+    setPage(p);
+    setPlayingId(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   const prev = useCallback(() => goTo(Math.max(0, page - 1)), [page, goTo]);
   const next = useCallback(() => goTo(Math.min(totalPages - 1, page + 1)), [page, totalPages, goTo]);
 
@@ -355,8 +383,9 @@ export function ShortsSlider({ shorts: initialShorts }: { shorts: YoutubeShort[]
           Most viewed first
         </span>
 
-        {/* Live stats indicator */}
         <span className="h-3.5 w-px bg-border" />
+
+        {/* Live stats indicator */}
         <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
@@ -386,37 +415,25 @@ export function ShortsSlider({ shorts: initialShorts }: { shorts: YoutubeShort[]
         </button>
       </div>
 
-      {/* Slider track */}
-      <div className="overflow-hidden">
-        <div
-          className="flex transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
-          style={{ transform: `translateX(-${page * 100}%)` }}
-        >
-          {pages.map((pageShorts, pIdx) => (
-            <div
-              key={pIdx}
-              className="grid min-w-full grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4"
-            >
-              {pageShorts.map((short, cardIdx) => {
-                const globalRank = pIdx * CARDS_PER_PAGE + cardIdx + 1;
-                return (
-                  <ShortCard
-                    key={short.id}
-                    short={short}
-                    rank={globalRank}
-                    isPlaying={playingId === short.id}
-                    onPlay={() => setPlayingId(playingId === short.id ? null : short.id)}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
+      {/* ── Card grid (current page only — no translateX trickery) ── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
+        {pageShorts.map((short, cardIdx) => {
+          const globalRank = page * CARDS_PER_PAGE + cardIdx + 1;
+          return (
+            <ShortCard
+              key={short.id}
+              short={short}
+              rank={globalRank}
+              isPlaying={playingId === short.id}
+              onPlay={() => setPlayingId(playingId === short.id ? null : short.id)}
+            />
+          );
+        })}
       </div>
 
-      {/* Navigation */}
+      {/* ── Pagination controls ── */}
       {totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-center gap-4">
+        <div className="mt-10 flex items-center justify-center gap-4">
           <button
             onClick={prev}
             disabled={page === 0}
@@ -428,20 +445,7 @@ export function ShortsSlider({ shorts: initialShorts }: { shorts: YoutubeShort[]
             </svg>
           </button>
 
-          <div className="flex items-center gap-2">
-            {pages.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                aria-label={`Go to page ${i + 1}`}
-                className={`rounded-full transition-all duration-300 ${
-                  i === page
-                    ? "h-2.5 w-6 bg-red-500 shadow-sm shadow-red-500/30"
-                    : "h-2.5 w-2.5 bg-border hover:bg-muted/60"
-                }`}
-              />
-            ))}
-          </div>
+          <PageNav page={page} totalPages={totalPages} onGoTo={goTo} />
 
           <button
             onClick={next}
@@ -456,8 +460,8 @@ export function ShortsSlider({ shorts: initialShorts }: { shorts: YoutubeShort[]
         </div>
       )}
 
-      {/* Channel CTA */}
-      <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+      {/* ── Channel CTA ── */}
+      <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <a
           href={SITE_CONFIG.youtubeChannelUrl}
           target="_blank"

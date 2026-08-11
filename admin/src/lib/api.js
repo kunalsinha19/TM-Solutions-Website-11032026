@@ -195,11 +195,17 @@ export const api = {
   deleteBrochure: (token, id) =>
     request(`/brochures/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }),
 
-  // YouTube Shorts (stub — requires YOUTUBE_API_KEY env var in backend)
+  // YouTube Shorts
   getYouTubeShorts: (token) =>
     request("/youtube/shorts", { headers: { Authorization: `Bearer ${token}` } }),
   syncYouTubeShorts: (token) =>
     request("/youtube/shorts/sync", { method: "POST", headers: { Authorization: `Bearer ${token}` } }),
+  setYouTubeVideoCategory: (token, videoId, categoryId) =>
+    request(`/youtube/shorts/${videoId}/category`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ categoryId: categoryId || null }),
+    }),
 
   // Blog
   getBlogPosts: (token, { page = 1 } = {}) => {
