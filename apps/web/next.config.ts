@@ -10,17 +10,20 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "**" },
     ],
   },
-  async redirects() {
-    return [
-      // Canonical: always redirect www → non-www (301 permanent, good for SEO)
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "www.tmsolutionsindia.com" }],
-        destination: "https://tmsolutionsindia.com/:path*",
-        permanent: true,
-      },
-    ];
-  },
+  // NOTE: www → non-www redirect is temporarily disabled to avoid a redirect loop
+  // caused by old locked EC2 A records on GoDaddy that redirect root → www.
+  // Re-enable this once the old A records are removed from GoDaddy DNS and
+  // a new A record @ → 69.46.46.13 (Railway) is added.
+  // async redirects() {
+  //   return [
+  //     {
+  //       source: "/:path*",
+  //       has: [{ type: "host", value: "www.tmsolutionsindia.com" }],
+  //       destination: "https://tmsolutionsindia.com/:path*",
+  //       permanent: true,
+  //     },
+  //   ];
+  // },
 
   async rewrites() {
     return [
